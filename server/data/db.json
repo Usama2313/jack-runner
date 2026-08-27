@@ -1,0 +1,84 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "JakeSpeed",
+      "password_hash": "$2a$10$76aQxPq6Z8s2xZk3T2nOvei4h2E9oZ5k7B8c9d0e1f2a3b4c5d6e",
+      "created_at": "2026-08-24T03:12:18.676Z"
+    },
+    {
+      "id": 2,
+      "username": "TrickyRunner",
+      "password_hash": "$2a$10$76aQxPq6Z8s2xZk3T2nOvei4h2E9oZ5k7B8c9d0e1f2a3b4c5d6e",
+      "created_at": "2026-08-24T03:12:18.678Z"
+    },
+    {
+      "id": 3,
+      "username": "FreshKing",
+      "password_hash": "$2a$10$76aQxPq6Z8s2xZk3T2nOvei4h2E9oZ5k7B8c9d0e1f2a3b4c5d6e",
+      "created_at": "2026-08-24T03:12:18.678Z"
+    }
+  ],
+  "scores": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "username": "JakeSpeed",
+      "score": 48920,
+      "coins": 342,
+      "distance": 4120,
+      "character": "jake",
+      "created_at": "2026-08-24T02:12:18.678Z"
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "username": "TrickyRunner",
+      "score": 32450,
+      "coins": 215,
+      "distance": 2890,
+      "character": "tricky",
+      "created_at": "2026-08-24T01:12:18.678Z"
+    },
+    {
+      "id": 3,
+      "user_id": 3,
+      "username": "FreshKing",
+      "score": 21100,
+      "coins": 180,
+      "distance": 1950,
+      "character": "fresh",
+      "created_at": "2026-08-24T00:12:18.678Z"
+    },
+    {
+      "id": 4,
+      "user_id": null,
+      "username": "SubwayPro99",
+      "score": 15400,
+      "coins": 95,
+      "distance": 1420,
+      "character": "jake",
+      "created_at": "2026-08-23T23:12:18.678Z"
+    },
+    {
+      "id": 5,
+      "user_id": null,
+      "username": "HoverSurfer",
+      "score": 9800,
+      "coins": 72,
+      "distance": 880,
+      "character": "ninja",
+      "created_at": "2026-08-23T22:12:18.678Z"
+    },
+    {
+      "id": 6,
+      "user_id": null,
+      "username": "Jake Runner",
+      "score": 264,
+      "coins": 4,
+      "distance": 219,
+      "character": "jake",
+      "created_at": "2026-08-25T05:34:52.604Z"
+    }
+  ]
+}
