@@ -6,7 +6,7 @@ export const SubwayArch = ({ z }) => {
   return (
     <group position={[0, 0, z]}>
       {/* Left Pillar */}
-      <mesh position={[-5.85, 3.4, 0]} castShadow>
+      <mesh position={[-5.85, 3.4, 0]}>
         <boxGeometry args={[0.55, 6.8, 0.55]} />
         <meshStandardMaterial color="#334155" roughness={0.4} metalness={0.6} />
       </mesh>
@@ -17,7 +17,7 @@ export const SubwayArch = ({ z }) => {
       </mesh>
 
       {/* Right Pillar */}
-      <mesh position={[5.85, 3.4, 0]} castShadow>
+      <mesh position={[5.85, 3.4, 0]}>
         <boxGeometry args={[0.55, 6.8, 0.55]} />
         <meshStandardMaterial color="#334155" roughness={0.4} metalness={0.6} />
       </mesh>
@@ -28,7 +28,7 @@ export const SubwayArch = ({ z }) => {
       </mesh>
 
       {/* Top Cross Arch Beam */}
-      <mesh position={[0, 6.6, 0]} castShadow>
+      <mesh position={[0, 6.6, 0]}>
         <boxGeometry args={[12.3, 0.7, 0.6]} />
         <meshStandardMaterial color="#1e293b" roughness={0.5} metalness={0.5} />
       </mesh>
@@ -53,7 +53,7 @@ export const SubwayArch = ({ z }) => {
 };
 
 export const BackgroundCity = ({ playerZRef }) => {
-  const count = 18;
+  const count = 8; // Reduced count for smoother performance
   const spacing = 20;
   const range = count * spacing; // 360 meters
 
@@ -134,7 +134,7 @@ export const BackgroundCity = ({ playerZRef }) => {
           position={[b.x, b.y, b.initialZ]}
         >
           {/* Building Main Structure */}
-          <mesh receiveShadow>
+          <mesh>
             <boxGeometry args={[b.width, b.height, b.depth]} />
             <meshStandardMaterial color={b.color} roughness={0.6} metalness={0.5} />
           </mesh>

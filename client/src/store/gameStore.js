@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GAME_STATES, INITIAL_SPEED, MAX_SPEED, SPEED_ACCELERATION, CHARACTERS, HOVERBOARD_SKINS, POWERUP_TYPES } from '../utils/constants';
+import { GAME_STATES, INITIAL_SPEED, MAX_SPEED, SPEED_ACCELERATION, CHARACTERS, HOVERBOARD_SKINS, POWERUP_TYPES, LEVELS } from '../utils/constants';
 import { soundEngine } from '../utils/soundEffects';
 
 const getInitialStorage = (key, fallback) => {
@@ -30,6 +30,12 @@ export const useGameStore = create((set, get) => ({
   isRolling: false,
   isDead: false,
   deathReason: null,
+
+  // Level System
+  currentLevel: 1,
+  levelTimeLeft: LEVELS[0].timeLimit,
+  levelComplete: false,
+  giftCollectedType: null, // for toast notification
 
   // Run Stats
   score: 0,
@@ -102,6 +108,9 @@ export const useGameStore = create((set, get) => ({
       isRolling: false,
       isDead: false,
       deathReason: null,
+      levelTimeLeft: LEVELS[(get().currentLevel - 1)].timeLimit,
+      levelComplete: false,
+      giftCollectedType: null,
       activePowerups: {
         [POWERUP_TYPES.MAGNET]: 0,
         [POWERUP_TYPES.JETPACK]: 0,
@@ -225,6 +234,68 @@ export const useGameStore = create((set, get) => ({
       return changed ? { activePowerups: updated } : {};
     });
   },
+
+  // Level timer tick — call every frame with delta
+  tickLevelTimer: (delta) => {
+    const { levelTimeLeft, levelComplete, gameState, isDead } = get();
+    if (gameState !== GAME_STATES.PLAYING || isDead || levelComplete) return;
+    const newTime = Math.max(0, levelTimeLeft - delta);
+    if (newTime <= 0) {
+      set({ levelTimeLeft: 0, levelComplete: true, gameState: GAME_STATES.LEVEL_COMPLETE });
+    } else {
+      set({ levelTimeLeft: newTime });
+    }
+  },
+
+  // Advance to next level
+  advanceLevel: () => {
+    const next = Math.min(5, get().currentLevel + 1);
+    const levelCfg = LEVELS[next - 1];
+    set({
+      currentLevel: next,
+      levelTimeLeft: levelCfg.timeLimit,
+      levelComplete: false,
+      gameState: GAME_STATES.PLAYING,
+      score: 0,
+      coinsCollected: 0,
+      distanceTraveled: 0,
+      speed: INITIAL_SPEED * levelCfg.speedMult,
+      targetSpeed: INITIAL_SPEED * levelCfg.speedMult,
+      lane: 0, playerY: 0, isJumping: false, isRolling: false, isDead: false, deathReason: null,
+      activePowerups: {
+        [POWERUP_TYPES.MAGNET]: 0,
+        [POWERUP_TYPES.JETPACK]: 0,
+        [POWERUP_TYPES.MULTIPLIER_2X]: 0,
+        [POWERUP_TYPES.SUPER_SNEAKERS]: 0,
+        [POWERUP_TYPES.HOVERBOARD]: 0
+      }
+    });
+    soundEngine.startMusic();
+  },
+
+  // Quick buy powerup mid-run with coins
+  quickBuyPowerup: (type, cost) => {
+    const { totalCoins, gameState, isDead } = get();
+    if (gameState !== GAME_STATES.PLAYING || isDead) return false;
+    if (totalCoins < cost) return false;
+    const newCoins = totalCoins - cost;
+    set({ totalCoins: newCoins });
+    setStorage('subway_total_coins', newCoins);
+    get().activatePowerup(type);
+    return true;
+  },
+
+  // Gift box collected — activate random powerup
+  collectGift: () => {
+    const types = [POWERUP_TYPES.MAGNET, POWERUP_TYPES.MULTIPLIER_2X, POWERUP_TYPES.SUPER_SNEAKERS, POWERUP_TYPES.HOVERBOARD];
+    const type = types[Math.floor(Math.random() * types.length)];
+    get().activatePowerup(type);
+    set({ giftCollectedType: type });
+    setTimeout(() => set({ giftCollectedType: null }), 2500);
+  },
+
+  clearGiftToast: () => set({ giftCollectedType: null })
+  ,
 
   incrementDistanceAndScore: (deltaDistance) => {
     const is2x = get().activePowerups[POWERUP_TYPES.MULTIPLIER_2X] > 0 ? 2 : 1;

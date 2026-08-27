@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { Player } from './Player';
 import { Track } from './Track';
 import { Obstacle } from './Obstacle';
-import { Coin, PowerupItem } from './Collectible';
+import { Coin, PowerupItem, GiftBox } from './Collectible';
 import { SubwayArch, BackgroundCity } from './Environment';
 import { CameraFollow } from './Camera';
 import { ParticleSystem } from './ParticleSystem';
@@ -27,7 +27,11 @@ const DynamicLighting = ({ playerZRef }) => {
   const rimPinkRef = useRef();
   const rimCyanRef = useRef();
 
+  const frameCount = useRef(0);
+
   useFrame(() => {
+    frameCount.current++;
+    if (frameCount.current % 4 !== 0) return; // update lighting every 4 frames only
     const pz = playerZRef && playerZRef.current ? playerZRef.current : 0;
 
     if (dirLightRef.current && dirTargetRef.current) {
@@ -61,7 +65,7 @@ const DynamicLighting = ({ playerZRef }) => {
         position={[15, 28, 12]}
         intensity={1.8}
         color="#ffffff"
-        castShadow
+        castShadow={false}
       />
 
       {/* Dynamic Cyberpunk Rim & Accent lights following player */}
@@ -70,14 +74,14 @@ const DynamicLighting = ({ playerZRef }) => {
         position={[-10, 8, -18]}
         intensity={2.8}
         color="#ec4899"
-        distance={45}
+        distance={25}
       />
       <pointLight
         ref={rimCyanRef}
         position={[10, 8, -18]}
         intensity={2.8}
         color="#06b6d4"
-        distance={45}
+        distance={25}
       />
     </>
   );
@@ -118,6 +122,8 @@ const GameScene = () => {
       activePowerups,
       collectCoin,
       activatePowerup,
+      collectGift,
+      tickLevelTimer,
       incrementDistanceAndScore,
       updatePowerupTimers,
       triggerGameOver
@@ -130,6 +136,7 @@ const GameScene = () => {
     playerZRef.current -= distanceStep;
     incrementDistanceAndScore(distanceStep);
     updatePowerupTimers(delta);
+    tickLevelTimer(delta);
 
     const pz = playerZRef.current;
     const px = lane * LANE_WIDTH;
@@ -213,16 +220,27 @@ const GameScene = () => {
           activatePowerup(pw.type);
         }
       });
+
+      // 4. Gift box collections
+      if (chunk.giftBoxes) {
+        chunk.giftBoxes.forEach((gift) => {
+          if (gift.collected) return;
+          if (checkPowerupCollision(playerCollider, gift)) {
+            gift.collected = true;
+            collectGift();
+          }
+        });
+      }
     });
   });
 
-    return (
+  return (
     <>
       {/* Dynamic Lighting rig that follows player and illuminates track ahead */}
       <DynamicLighting playerZRef={playerZRef} />
 
       {/* Atmospheric Cyber Fog with soft distant horizon blend */}
-      <fog attach="fog" args={['#0f172a', 65, 220]} />
+      <fog attach="fog" args={['#0f172a', 40, 130]} />
 
       {/* Dynamic Follow Camera */}
       <CameraFollow playerZRef={playerZRef} />
@@ -266,6 +284,16 @@ const GameScene = () => {
               collected={pw.collected}
             />
           ))}
+
+          {chunk.giftBoxes && chunk.giftBoxes.map((gift) => (
+            <GiftBox
+              key={gift.id}
+              x={gift.x}
+              y={gift.y}
+              z={gift.z}
+              collected={gift.collected}
+            />
+          ))}
         </group>
       ))}
 
@@ -281,7 +309,8 @@ export const GameCanvas = () => {
     <div style={{ width: '100vw', height: '100vh', position: 'absolute', top: 0, left: 0, zIndex: 1 }}>
       <Canvas
         camera={{ position: [0, 3.6, 6.8], fov: 62 }}
-        gl={{ antialias: true, alpha: false, preserveDrawingBuffer: true, powerPreference: 'high-performance' }}
+        gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
+        shadows={false}
       >
         <color attach="background" args={['#0f172a']} />
         <GameScene />

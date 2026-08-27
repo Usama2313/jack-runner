@@ -2,7 +2,8 @@ export const GAME_STATES = {
   MENU: 'MENU',
   PLAYING: 'PLAYING',
   PAUSED: 'PAUSED',
-  GAME_OVER: 'GAME_OVER'
+  GAME_OVER: 'GAME_OVER',
+  LEVEL_COMPLETE: 'LEVEL_COMPLETE'
 };
 
 // 3 Lanes: Left (-2.6), Center (0), Right (2.6)
@@ -21,6 +22,7 @@ export const INITIAL_SPEED = 24.0;
 export const MAX_SPEED = 62.0;
 export const SPEED_ACCELERATION = 0.28; // Speed increase per 100 meters
 
+export const NUM_SECTIONS = 1; // Reduced sections per chunk for performance
 export const JUMP_HEIGHT = 3.6;
 export const JUMP_DURATION = 0.58; // seconds
 export const ROLL_DURATION = 0.62; // seconds
@@ -31,7 +33,7 @@ export const PLAYER_HEIGHT = 1.6;
 
 // Track Generation
 export const CHUNK_LENGTH = 70;
-export const VISIBLE_CHUNKS = 6;
+export const VISIBLE_CHUNKS = 3; // Reduced visible chunks for smoother performance
 export const DESPAWN_Z = 20;
 
 // Powerup types
@@ -83,13 +85,29 @@ export const POWERUP_CONFIG = {
 
 // Obstacle Types
 export const OBSTACLE_TYPES = {
-  TRAIN: 'TRAIN',              // Full block, high and wide
-  TRAIN_RAMP: 'TRAIN_RAMP',    // Train with climbable ramp
-  BARRIER_LOW: 'BARRIER_LOW',  // Jump over
-  BARRIER_HIGH: 'BARRIER_HIGH',// Slide/roll under
-  TRAFFIC_LIGHT: 'TRAFFIC_LIGHT', // Tall pole on side/lane
-  CONSTRUCTION: 'CONSTRUCTION' // Medium barricade
+  TRAIN: 'TRAIN',
+  TRAIN_RAMP: 'TRAIN_RAMP',
+  BARRIER_LOW: 'BARRIER_LOW',
+  BARRIER_HIGH: 'BARRIER_HIGH',
+  TRAFFIC_LIGHT: 'TRAFFIC_LIGHT',
+  CONSTRUCTION: 'CONSTRUCTION'
 };
+
+// Collectible gift box
+export const COLLECTIBLE_TYPES = {
+  COIN: 'COIN',
+  GIFT: 'GIFT',
+  POWERUP: 'POWERUP'
+};
+
+// 5 Levels — each has a time limit (seconds) and speed multiplier
+export const LEVELS = [
+  { id: 1, name: 'Station Zero',  timeLimit: 60,  speedMult: 1.0,  label: '🚉 STATION ZERO'  },
+  { id: 2, name: 'Downtown Rush', timeLimit: 55,  speedMult: 1.2,  label: '🏙️ DOWNTOWN RUSH' },
+  { id: 3, name: 'Neon Tunnels',  timeLimit: 50,  speedMult: 1.45, label: '🌆 NEON TUNNELS'   },
+  { id: 4, name: 'Sky District',  timeLimit: 45,  speedMult: 1.75, label: '🌃 SKY DISTRICT'   },
+  { id: 5, name: 'Hyper Loop',    timeLimit: 40,  speedMult: 2.1,  label: '⚡ HYPER LOOP'     }
+];
 
 // Characters
 export const CHARACTERS = [

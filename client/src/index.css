@@ -1414,3 +1414,454 @@ body, html {
 @keyframes spin {
   100% { transform: rotate(360deg); }
 }
+
+/* =========================================================
+   LEVEL SYSTEM & TIMER HUD STYLES
+   ========================================================= */
+.hud-level-center {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.hud-level-badge {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.85) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  padding: 6px 18px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+.hud-level-tag {
+  font-family: var(--font-arcade);
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #38bdf8;
+  letter-spacing: 1px;
+  background: rgba(56, 189, 248, 0.15);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.hud-level-name {
+  font-family: var(--font-arcade);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.hud-timer-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px 12px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.hud-timer-bar-bg {
+  width: 140px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.hud-timer-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #38bdf8);
+  border-radius: 999px;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+}
+
+.hud-timer-bar-fill.urgent {
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+}
+
+.hud-timer-text {
+  font-family: var(--font-arcade);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #e2e8f0;
+}
+
+.hud-timer-text.urgent-pulse {
+  color: #f43f5e;
+  animation: pulse-dot 0.6s infinite alternate;
+}
+
+.hud-badge-sky {
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
+  animation: pulse-glow 1s infinite alternate;
+}
+
+.hud-total-coins-badge {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-family: var(--font-main);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: 2px;
+}
+
+/* =========================================================
+   GIFT TOAST NOTIFICATION
+   ========================================================= */
+.hud-gift-toast {
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.95), rgba(139, 92, 246, 0.95));
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 10px 24px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 10px 30px rgba(236, 72, 153, 0.5), 0 0 20px rgba(139, 92, 246, 0.5);
+  animation: pop-modal 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 25;
+}
+
+.gift-toast-icon {
+  color: #fef08a;
+  animation: float-card 1.5s ease-in-out infinite;
+}
+
+.gift-toast-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.gift-toast-title {
+  font-family: var(--font-arcade);
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.gift-toast-desc {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fce7f3;
+}
+
+/* =========================================================
+   INSTANT POWER QUICK-BUY SHOP (HUD)
+   ========================================================= */
+.hud-quickbuy-panel {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  pointer-events: auto;
+  background: var(--bg-surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-glow);
+  padding: 10px 14px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud-quickbuy-title {
+  font-family: var(--font-arcade);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: var(--primary-neon);
+  text-align: center;
+}
+
+.hud-quickbuy-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.quickbuy-btn {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  color: #ffffff;
+}
+
+.quickbuy-btn:hover:not(.disabled) {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: var(--primary-neon);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4);
+}
+
+.quickbuy-btn.hoverboard-btn:hover:not(.disabled) {
+  background: rgba(139, 92, 246, 0.25);
+  border-color: #8b5cf6;
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+}
+
+.quickbuy-btn.jetpack-btn:hover:not(.disabled) {
+  background: rgba(236, 72, 153, 0.25);
+  border-color: #ec4899;
+  box-shadow: 0 6px 16px rgba(236, 72, 153, 0.4);
+}
+
+.quickbuy-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+.quickbuy-icon {
+  font-size: 1.2rem;
+}
+
+.quickbuy-name {
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.quickbuy-cost {
+  font-family: var(--font-arcade);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #fef08a;
+  background: rgba(250, 204, 21, 0.15);
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-top: 2px;
+}
+
+/* =========================================================
+   LEVEL COMPLETE MODAL
+   ========================================================= */
+.level-complete-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 35;
+  background: radial-gradient(circle at 50% 40%, rgba(15, 23, 42, 0.85) 0%, rgba(9, 13, 22, 0.95) 100%);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.level-complete-card {
+  background: var(--bg-surface-solid);
+  border: 1px solid var(--border-glow);
+  border-radius: 28px;
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(56, 189, 248, 0.35);
+  animation: pop-modal 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.level-complete-badge {
+  background: linear-gradient(135deg, #10b981, #06b6d4);
+  color: #ffffff;
+  font-family: var(--font-arcade);
+  font-weight: 900;
+  font-size: 0.95rem;
+  letter-spacing: 2px;
+  padding: 6px 20px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+}
+
+.sparkle-icon {
+  animation: spin 3s linear infinite;
+}
+
+.level-title-cleared {
+  font-family: var(--font-arcade);
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  background: linear-gradient(180deg, #ffffff 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+
+.level-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.level-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.level-stat-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label-mini {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+}
+
+.stat-number-glow {
+  font-family: var(--font-arcade);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #38bdf8;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+}
+
+.stat-number-coins {
+  font-family: var(--font-arcade);
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #fef08a;
+}
+
+.next-level-preview {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 16px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.next-level-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-arcade);
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #10b981;
+}
+
+.next-level-specs {
+  display: flex;
+  gap: 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.grand-champion-banner {
+  background: linear-gradient(135deg, #f59e0b, #ec4899);
+  color: #ffffff;
+  font-family: var(--font-arcade);
+  font-size: 0.85rem;
+  font-weight: 900;
+  padding: 12px 16px;
+  border-radius: 14px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+}
+
+.level-complete-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.level-next-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #10b981 100%);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 16px;
+  font-family: var(--font-arcade);
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(56, 189, 248, 0.5);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.level-next-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(56, 189, 248, 0.7);
+}
+
+.level-menu-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid #334155;
+  color: white;
+  padding: 10px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.level-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+

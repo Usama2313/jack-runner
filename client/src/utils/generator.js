@@ -1,4 +1,4 @@
-import { LANES, LANE_WIDTH, OBSTACLE_TYPES, POWERUP_TYPES, CHUNK_LENGTH } from './constants';
+import { LANES, LANE_WIDTH, OBSTACLE_TYPES, POWERUP_TYPES, CHUNK_LENGTH, NUM_SECTIONS } from './constants';
 
 let nextEntityId = 1;
 const lanePositions = [LANES.LEFT, LANES.CENTER, LANES.RIGHT];
@@ -11,10 +11,11 @@ export const generateTrackChunk = (chunkIndex) => {
   const obstacles = [];
   const coins = [];
   const powerups = [];
+  const giftBoxes = [];
   const arches = [];
 
-  // Spawn subway arches every 25m along chunk
-  for (let z = startZ; z > endZ; z -= 22) {
+  // Spawn subway arches every 40m along chunk (reduced from 22 for performance)
+  for (let z = startZ; z > endZ; z -= 40) {
     arches.push({
       id: `arch-${nextEntityId++}`,
       z
@@ -53,11 +54,20 @@ export const generateTrackChunk = (chunkIndex) => {
       collected: false
     });
 
-    return { chunkIndex, startZ, endZ, obstacles, coins, powerups, arches };
+    // Starter Gift Box
+    giftBoxes.push({
+      id: `gift-${nextEntityId++}`,
+      x: LANES.RIGHT,
+      y: 1.0,
+      z: -25,
+      collected: false
+    });
+
+    return { chunkIndex, startZ, endZ, obstacles, coins, powerups, giftBoxes, arches };
   }
 
   // For subsequent chunks, generate pattern-based sets of obstacles
-  const numSections = 3;
+  const numSections = NUM_SECTIONS;
   const sectionLength = CHUNK_LENGTH / numSections;
 
   for (let s = 0; s < numSections; s++) {
@@ -174,7 +184,7 @@ export const generateTrackChunk = (chunkIndex) => {
       }
     });
 
-    // 25% chance of powerup per section if none in current section
+    // 28% chance of powerup per section
     if (Math.random() < 0.28) {
       const types = [
         POWERUP_TYPES.MAGNET,
@@ -195,18 +205,18 @@ export const generateTrackChunk = (chunkIndex) => {
       });
     }
 
-    // Sky coins for Jetpack flyers
-    for (let jz = sectionZ; jz > sectionZ - 18; jz -= 3.5) {
-      coins.push({
-        id: `sky-coin-${nextEntityId++}`,
-        x: lanePositions[s % 3],
-        y: 6.2,
-        z: jz,
-        isSky: true,
+    // 40% chance of Gift Box per section in safe lane
+    if (Math.random() < 0.40) {
+      const targetLane = lanePositions[safeLaneIdx];
+      giftBoxes.push({
+        id: `gift-${nextEntityId++}`,
+        x: targetLane,
+        y: 1.0,
+        z: sectionZ - 8,
         collected: false
       });
     }
   }
 
-  return { chunkIndex, startZ, endZ, obstacles, coins, powerups, arches };
+  return { chunkIndex, startZ, endZ, obstacles, coins, powerups, giftBoxes, arches };
 };

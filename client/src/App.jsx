@@ -3,6 +3,7 @@ import { GameCanvas } from './components/game/GameCanvas';
 import { HUD } from './components/ui/HUD';
 import { MainMenu } from './components/ui/MainMenu';
 import { GameOver } from './components/ui/GameOver';
+import { LevelComplete } from './components/ui/LevelComplete';
 import { PauseOverlay } from './components/ui/PauseOverlay';
 import { LeaderboardModal } from './components/ui/LeaderboardModal';
 import { ShopModal } from './components/ui/ShopModal';
@@ -49,6 +50,9 @@ export default function App() {
 
       {/* Pause Screen */}
       {gameState === GAME_STATES.PAUSED && <PauseOverlay />}
+
+      {/* Level Cleared Screen */}
+      {gameState === GAME_STATES.LEVEL_COMPLETE && <LevelComplete />}
 
       {/* Game Over Screen */}
       {gameState === GAME_STATES.GAME_OVER && (
