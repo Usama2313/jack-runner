@@ -1,11 +1,40 @@
 import { create } from 'zustand';
-import { GAME_STATES, INITIAL_SPEED, MAX_SPEED, SPEED_ACCELERATION, CHARACTERS, HOVERBOARD_SKINS, POWERUP_TYPES, LEVELS } from '../utils/constants';
+import {
+  GAME_STATES,
+  INITIAL_SPEED,
+  MAX_SPEED,
+  SPEED_ACCELERATION,
+  CHARACTERS,
+  HOVERBOARD_SKINS,
+  POWERUP_TYPES,
+  LEVELS,
+  CHASER_CONFIG
+} from '../utils/constants';
 import { soundEngine } from '../utils/soundEffects';
+
+const parseValidNumber = (val, fallback = 0) => {
+  if (val === null || val === undefined) return fallback;
+  const num = typeof val === 'number' ? val : Number(val);
+  return isNaN(num) ? fallback : num;
+};
+
+const parseValidLevel = (val, fallback = 1) => {
+  const num = parseValidNumber(val, fallback);
+  return Math.max(1, Math.min(LEVELS.length, Math.floor(num)));
+};
 
 const getInitialStorage = (key, fallback) => {
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : fallback;
+    if (!item || item === 'undefined' || item === 'null' || item === 'NaN') return fallback;
+    const parsed = JSON.parse(item);
+    if (typeof fallback === 'number') {
+      return parseValidNumber(parsed, fallback);
+    }
+    if (Array.isArray(fallback)) {
+      return Array.isArray(parsed) ? parsed : fallback;
+    }
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
   } catch {
     return fallback;
   }
@@ -17,442 +46,669 @@ const setStorage = (key, value) => {
   } catch {}
 };
 
-export const useGameStore = create((set, get) => ({
-  // Game Flow
-  gameState: GAME_STATES.MENU,
-  speed: INITIAL_SPEED,
-  targetSpeed: INITIAL_SPEED,
+// Debounced storage sync for coins to prevent frame drops during runs
+let saveCoinsTimeout = null;
+const debouncedSaveTotalCoins = (coins) => {
+  if (saveCoinsTimeout) clearTimeout(saveCoinsTimeout);
+  saveCoinsTimeout = setTimeout(() => {
+    setStorage('kinetic_total_coins', coins);
+  }, 300);
+};
 
-  // Player Run State
-  lane: 0, // -1: Left, 0: Center, 1: Right
-  playerY: 0,
-  isJumping: false,
-  isRolling: false,
-  isDead: false,
-  deathReason: null,
+export const useGameStore = create((set, get) => {
+  const initialLevel = parseValidLevel(getInitialStorage('kinetic_current_level', 1));
+  const initialLevelCfg = LEVELS[initialLevel - 1] || LEVELS[0];
 
-  // Level System
-  currentLevel: 1,
-  levelTimeLeft: LEVELS[0].timeLimit,
-  levelComplete: false,
-  giftCollectedType: null, // for toast notification
+  return {
+    // Game Flow
+    gameState: GAME_STATES.MENU,
+    speed: INITIAL_SPEED * initialLevelCfg.speedMult,
+    targetSpeed: INITIAL_SPEED * initialLevelCfg.speedMult,
+    isActivated: getInitialStorage('kinetic_is_activated', false),
+    showPaymentModal: false,
 
-  // Run Stats
-  score: 0,
-  coinsCollected: 0,
-  distanceTraveled: 0,
-  baseMultiplier: 1,
-  
-  // Powerups State
-  activePowerups: {
-    [POWERUP_TYPES.MAGNET]: 0,
-    [POWERUP_TYPES.JETPACK]: 0,
-    [POWERUP_TYPES.MULTIPLIER_2X]: 0,
-    [POWERUP_TYPES.SUPER_SNEAKERS]: 0,
-    [POWERUP_TYPES.HOVERBOARD]: 0
-  },
+    // Player Run State
+    lane: 0, // -1: Left, 0: Center, 1: Right
+    playerY: 0,
+    isJumping: false,
+    isRolling: false,
+    isDead: false,
+    deathReason: null,
 
-  // Persistent Player Profile & Inventory
-  username: getInitialStorage('subway_username', 'Jake Runner'),
-  totalCoins: getInitialStorage('subway_total_coins', 450),
-  highscore: getInitialStorage('subway_highscore', 0),
-  totalDistance: getInitialStorage('subway_total_distance', 0),
-  unlockedCharacters: getInitialStorage('subway_unlocked_chars', ['jake']),
-  selectedCharacter: getInitialStorage('subway_selected_char', 'jake'),
-  unlockedBoards: getInitialStorage('subway_unlocked_boards', ['classic']),
-  selectedBoard: getInitialStorage('subway_selected_board', 'classic'),
-  upgrades: getInitialStorage('subway_upgrades', {
-    [POWERUP_TYPES.MAGNET]: 1,
-    [POWERUP_TYPES.JETPACK]: 1,
-    [POWERUP_TYPES.MULTIPLIER_2X]: 1,
-    [POWERUP_TYPES.SUPER_SNEAKERS]: 1
-  }),
+    // Robot Destroyer / Repairer Chaser State
+    chaserDistance: CHASER_CONFIG.NORMAL_DISTANCE,
+    isStumbling: false,
+    stumbleTimer: 0,
+    isCaptured: false,
 
-  // Audio & Settings
-  isMuted: getInitialStorage('subway_muted', false),
-  sfxVolume: getInitialStorage('subway_sfx_vol', 0.8),
-  musicVolume: getInitialStorage('subway_music_vol', 0.5),
+    // Level System (30 progressive levels)
+    currentLevel: initialLevel,
+    unlockedLevels: getInitialStorage('kinetic_unlocked_levels', [1]),
+    levelTimeLeft: initialLevelCfg.timeLimit || 50,
+    levelComplete: false,
 
-  // Online & Auth
-  authToken: getInitialStorage('subway_auth_token', null),
-  authUser: getInitialStorage('subway_auth_user', null),
-  leaderboard: [],
-  onlineCount: 1,
+    // Mystery Box — Track collected during run, reveal at end
+    activeMysteryBox: null,
+    isMysteryBoxPaused: false,
+    mysteryBoxCount: 0,  // boxes collected during current run
+    pendingBoxRewards: [], // rewards to reveal at game-over screen
 
-  // Actions
-  setGameState: (state) => {
-    const current = get().gameState;
-    if (state === GAME_STATES.PLAYING && current !== GAME_STATES.PLAYING) {
-      soundEngine.startMusic();
-    } else if (state === GAME_STATES.GAME_OVER || state === GAME_STATES.MENU) {
-      soundEngine.stopMusic();
-    }
-    set({ gameState: state });
-  },
+    // Run Stats
+    score: 0,
+    coinsCollected: 0,
+    distanceTraveled: 0,
+    baseMultiplier: 1,
 
-  startGame: () => {
-    soundEngine.init();
-    const character = CHARACTERS.find(c => c.id === get().selectedCharacter);
-    const hasNinjaBonus = character?.id === 'ninja';
+    // Powerups State
+    activePowerups: {
+      [POWERUP_TYPES.MAGNET]: 0,
+      [POWERUP_TYPES.JETPACK]: 0,
+      [POWERUP_TYPES.MULTIPLIER_2X]: 0,
+      [POWERUP_TYPES.SUPER_SNEAKERS]: 0,
+      [POWERUP_TYPES.HOVERBOARD]: 0
+    },
 
-    set({
-      gameState: GAME_STATES.PLAYING,
-      score: 0,
-      coinsCollected: 0,
-      distanceTraveled: 0,
-      speed: INITIAL_SPEED,
-      targetSpeed: INITIAL_SPEED,
-      lane: 0,
-      playerY: 0,
-      isJumping: false,
-      isRolling: false,
-      isDead: false,
-      deathReason: null,
-      levelTimeLeft: LEVELS[(get().currentLevel - 1)].timeLimit,
-      levelComplete: false,
-      giftCollectedType: null,
-      activePowerups: {
-        [POWERUP_TYPES.MAGNET]: 0,
-        [POWERUP_TYPES.JETPACK]: 0,
-        [POWERUP_TYPES.MULTIPLIER_2X]: 0,
-        [POWERUP_TYPES.SUPER_SNEAKERS]: 0,
-        [POWERUP_TYPES.HOVERBOARD]: hasNinjaBonus ? 15 : 0
+    // Persistent Player Profile & Inventory
+    username: getInitialStorage('kinetic_username', 'Kinetic Jack'),
+    totalCoins: parseValidNumber(getInitialStorage('kinetic_total_coins', 2500), 2500),
+    highscore: parseValidNumber(getInitialStorage('kinetic_highscore', 0), 0),
+    totalDistance: parseValidNumber(getInitialStorage('kinetic_total_distance', 0), 0),
+    unlockedCharacters: getInitialStorage('kinetic_unlocked_chars', ['jack']),
+    selectedCharacter: getInitialStorage('kinetic_selected_char', 'jack'),
+    unlockedBoards: getInitialStorage('kinetic_unlocked_boards', ['classic']),
+    selectedBoard: getInitialStorage('kinetic_selected_board', 'classic'),
+    upgrades: getInitialStorage('kinetic_upgrades', {
+      [POWERUP_TYPES.MAGNET]: 1,
+      [POWERUP_TYPES.JETPACK]: 1,
+      [POWERUP_TYPES.MULTIPLIER_2X]: 1,
+      [POWERUP_TYPES.SUPER_SNEAKERS]: 1
+    }),
+
+    // Audio & Settings
+    isMuted: getInitialStorage('kinetic_muted', false),
+    sfxVolume: parseValidNumber(getInitialStorage('kinetic_sfx_vol', 0.8), 0.8),
+    musicVolume: parseValidNumber(getInitialStorage('kinetic_music_vol', 0.5), 0.5),
+
+    // Online & Auth
+    authToken: getInitialStorage('kinetic_auth_token', null),
+    authUser: getInitialStorage('kinetic_auth_user', null),
+    leaderboard: [],
+    onlineCount: 1,
+
+    // Actions
+    setGameState: (state) => {
+      const current = get().gameState;
+      if (state === GAME_STATES.PLAYING && current !== GAME_STATES.PLAYING) {
+        soundEngine.startMusic();
+      } else if (state === GAME_STATES.GAME_OVER || state === GAME_STATES.MENU) {
+        soundEngine.stopMusic();
       }
-    });
+      set({ gameState: state });
+    },
 
-    soundEngine.startMusic();
-  },
+    startGame: (levelOverride = null) => {
+      soundEngine.init();
+      const isActivated = get().isActivated;
+      const targetLvl = levelOverride !== null && levelOverride !== undefined ? levelOverride : get().currentLevel;
+      const clampedLevel = parseValidLevel(targetLvl);
 
-  pauseGame: () => {
-    if (get().gameState === GAME_STATES.PLAYING) {
-      soundEngine.stopMusic();
-      set({ gameState: GAME_STATES.PAUSED });
-    }
-  },
-
-  resumeGame: () => {
-    if (get().gameState === GAME_STATES.PAUSED) {
-      soundEngine.startMusic();
-      set({ gameState: GAME_STATES.PLAYING });
-    }
-  },
-
-  setLane: (targetLane) => {
-    if (get().gameState !== GAME_STATES.PLAYING || get().isDead) return;
-    const clamped = Math.max(-1, Math.min(1, targetLane));
-    if (clamped !== get().lane) {
-      soundEngine.playLaneSwitch();
-      set({ lane: clamped });
-    }
-  },
-
-  moveLeft: () => {
-    const current = get().lane;
-    if (current > -1) get().setLane(current - 1);
-  },
-
-  moveRight: () => {
-    const current = get().lane;
-    if (current < 1) get().setLane(current + 1);
-  },
-
-  jump: () => {
-    if (get().gameState !== GAME_STATES.PLAYING || get().isDead) return;
-    const isSneakers = get().activePowerups[POWERUP_TYPES.SUPER_SNEAKERS] > 0;
-    const isJetpack = get().activePowerups[POWERUP_TYPES.JETPACK] > 0;
-    if (isJetpack) return;
-
-    if (!get().isJumping) {
-      soundEngine.playJump();
-      set({ isJumping: true, isRolling: false });
-    }
-  },
-
-  roll: () => {
-    if (get().gameState !== GAME_STATES.PLAYING || get().isDead) return;
-    const isJetpack = get().activePowerups[POWERUP_TYPES.JETPACK] > 0;
-    if (isJetpack) return;
-
-    soundEngine.playSlide();
-    set({ isRolling: true, isJumping: false });
-  },
-
-  setJumping: (isJumping) => set({ isJumping }),
-  setRolling: (isRolling) => set({ isRolling }),
-
-  collectCoin: (multiplier = 1) => {
-    const char = CHARACTERS.find(c => c.id === get().selectedCharacter);
-    const coinBonus = char?.id === 'jake' ? 1.05 : 1.0;
-    const is2x = get().activePowerups[POWERUP_TYPES.MULTIPLIER_2X] > 0 ? 2 : 1;
-    const pointsGained = Math.round(10 * is2x * coinBonus * multiplier);
-
-    soundEngine.playCoin(1.0 + (get().coinsCollected % 20) * 0.03);
-
-    set((state) => ({
-      coinsCollected: state.coinsCollected + 1,
-      totalCoins: state.totalCoins + 1,
-      score: state.score + pointsGained
-    }));
-
-    setStorage('subway_total_coins', get().totalCoins);
-  },
-
-  activatePowerup: (type) => {
-    soundEngine.playPowerup();
-    const upgradeLevel = get().upgrades[type] || 1;
-    const baseDuration = type === POWERUP_TYPES.JETPACK ? 7 : (type === POWERUP_TYPES.HOVERBOARD ? 25 : 10);
-    const totalDuration = baseDuration + (upgradeLevel - 1) * 3;
-
-    set((state) => ({
-      activePowerups: {
-        ...state.activePowerups,
-        [type]: totalDuration
+      if (clampedLevel > 1 && !isActivated) {
+        set({ showPaymentModal: true });
+        return;
       }
-    }));
-  },
 
-  activateHoverboard: () => {
-    if (get().gameState !== GAME_STATES.PLAYING || get().isDead) return;
-    const current = get().activePowerups[POWERUP_TYPES.HOVERBOARD];
-    if (current <= 0) {
-      get().activatePowerup(POWERUP_TYPES.HOVERBOARD);
-    }
-  },
+      const levelCfg = LEVELS[clampedLevel - 1] || LEVELS[0];
 
-  updatePowerupTimers: (delta) => {
-    set((state) => {
-      const updated = { ...state.activePowerups };
-      let changed = false;
+      const character = CHARACTERS.find((c) => c.id === get().selectedCharacter);
+      const hasBoardBonus = character?.id === 'phantom';
 
-      Object.keys(updated).forEach((key) => {
-        if (updated[key] > 0) {
-          updated[key] = Math.max(0, updated[key] - delta);
-          changed = true;
+      setStorage('kinetic_current_level', clampedLevel);
+
+      set({
+        gameState: GAME_STATES.PLAYING,
+        currentLevel: clampedLevel,
+        score: 0,
+        coinsCollected: 0,
+        distanceTraveled: 0,
+        speed: INITIAL_SPEED * levelCfg.speedMult,
+        targetSpeed: INITIAL_SPEED * levelCfg.speedMult,
+        lane: 0,
+        playerY: 0,
+        isJumping: false,
+        isRolling: false,
+        isDead: false,
+        deathReason: null,
+        isCaptured: false,
+        isStumbling: false,
+        stumbleTimer: 0,
+        chaserDistance: CHASER_CONFIG.NORMAL_DISTANCE,
+        levelTimeLeft: levelCfg.timeLimit,
+        levelComplete: false,
+        activeMysteryBox: null,
+        isMysteryBoxPaused: false,
+        mysteryBoxCount: 0,
+        pendingBoxRewards: [],
+        activePowerups: {
+          [POWERUP_TYPES.MAGNET]: 0,
+          [POWERUP_TYPES.JETPACK]: 0,
+          [POWERUP_TYPES.MULTIPLIER_2X]: 0,
+          [POWERUP_TYPES.SUPER_SNEAKERS]: 0,
+          [POWERUP_TYPES.HOVERBOARD]: hasBoardBonus ? 25 : 0
         }
       });
 
-      return changed ? { activePowerups: updated } : {};
-    });
-  },
+      soundEngine.startMusic();
+    },
 
-  // Level timer tick — call every frame with delta
-  tickLevelTimer: (delta) => {
-    const { levelTimeLeft, levelComplete, gameState, isDead } = get();
-    if (gameState !== GAME_STATES.PLAYING || isDead || levelComplete) return;
-    const newTime = Math.max(0, levelTimeLeft - delta);
-    if (newTime <= 0) {
-      set({ levelTimeLeft: 0, levelComplete: true, gameState: GAME_STATES.LEVEL_COMPLETE });
-    } else {
-      set({ levelTimeLeft: newTime });
-    }
-  },
-
-  // Advance to next level
-  advanceLevel: () => {
-    const next = Math.min(5, get().currentLevel + 1);
-    const levelCfg = LEVELS[next - 1];
-    set({
-      currentLevel: next,
-      levelTimeLeft: levelCfg.timeLimit,
-      levelComplete: false,
-      gameState: GAME_STATES.PLAYING,
-      score: 0,
-      coinsCollected: 0,
-      distanceTraveled: 0,
-      speed: INITIAL_SPEED * levelCfg.speedMult,
-      targetSpeed: INITIAL_SPEED * levelCfg.speedMult,
-      lane: 0, playerY: 0, isJumping: false, isRolling: false, isDead: false, deathReason: null,
-      activePowerups: {
-        [POWERUP_TYPES.MAGNET]: 0,
-        [POWERUP_TYPES.JETPACK]: 0,
-        [POWERUP_TYPES.MULTIPLIER_2X]: 0,
-        [POWERUP_TYPES.SUPER_SNEAKERS]: 0,
-        [POWERUP_TYPES.HOVERBOARD]: 0
+    selectLevel: (levelId) => {
+      const isActivated = get().isActivated;
+      const clamped = parseValidLevel(levelId);
+      if (clamped > 1 && !isActivated) {
+        set({ showPaymentModal: true });
+        return;
       }
-    });
-    soundEngine.startMusic();
-  },
+      const levelCfg = LEVELS[clamped - 1] || LEVELS[0];
+      set({
+        currentLevel: clamped,
+        levelTimeLeft: levelCfg.timeLimit,
+        speed: INITIAL_SPEED * levelCfg.speedMult,
+        targetSpeed: INITIAL_SPEED * levelCfg.speedMult
+      });
+      setStorage('kinetic_current_level', clamped);
+    },
 
-  // Quick buy powerup mid-run with coins
-  quickBuyPowerup: (type, cost) => {
-    const { totalCoins, gameState, isDead } = get();
-    if (gameState !== GAME_STATES.PLAYING || isDead) return false;
-    if (totalCoins < cost) return false;
-    const newCoins = totalCoins - cost;
-    set({ totalCoins: newCoins });
-    setStorage('subway_total_coins', newCoins);
-    get().activatePowerup(type);
-    return true;
-  },
+    setActivated: (val) => {
+      set({ isActivated: val });
+      setStorage('kinetic_is_activated', val);
+    },
 
-  // Gift box collected — activate random powerup
-  collectGift: () => {
-    const types = [POWERUP_TYPES.MAGNET, POWERUP_TYPES.MULTIPLIER_2X, POWERUP_TYPES.SUPER_SNEAKERS, POWERUP_TYPES.HOVERBOARD];
-    const type = types[Math.floor(Math.random() * types.length)];
-    get().activatePowerup(type);
-    set({ giftCollectedType: type });
-    setTimeout(() => set({ giftCollectedType: null }), 2500);
-  },
+    setShowPaymentModal: (val) => set({ showPaymentModal: val }),
 
-  clearGiftToast: () => set({ giftCollectedType: null })
-  ,
+    pauseGame: () => {
+      if (get().gameState === GAME_STATES.PLAYING) {
+        soundEngine.stopMusic();
+        set({ gameState: GAME_STATES.PAUSED });
+      }
+    },
 
-  incrementDistanceAndScore: (deltaDistance) => {
-    const is2x = get().activePowerups[POWERUP_TYPES.MULTIPLIER_2X] > 0 ? 2 : 1;
-    const scoreToAdd = Math.round(deltaDistance * is2x);
+    resumeGame: () => {
+      if (get().gameState === GAME_STATES.PAUSED) {
+        soundEngine.startMusic();
+        set({ gameState: GAME_STATES.PLAYING });
+      }
+    },
 
-    set((state) => {
-      const newDistance = state.distanceTraveled + deltaDistance;
-      const newScore = state.score + scoreToAdd;
-      const newSpeed = Math.min(
-        MAX_SPEED,
-        INITIAL_SPEED + (newDistance / 100) * SPEED_ACCELERATION
-      );
+    setLane: (targetLane) => {
+      if (get().gameState !== GAME_STATES.PLAYING || get().isDead) return;
+      const clamped = Math.max(-1, Math.min(1, targetLane));
+      if (clamped !== get().lane) {
+        soundEngine.playLaneSwitch();
+        set({ lane: clamped });
+      }
+    },
 
-      return {
-        distanceTraveled: newDistance,
-        score: newScore,
-        speed: newSpeed
-      };
-    });
-  },
+    moveLeft: () => {
+      const current = get().lane;
+      if (current > -1) get().setLane(current - 1);
+    },
 
-  triggerGameOver: (reason = 'train_collision') => {
-    // Check if hoverboard saved player
-    if (get().activePowerups[POWERUP_TYPES.HOVERBOARD] > 0) {
-      soundEngine.playHoverboardSave();
+    moveRight: () => {
+      const current = get().lane;
+      if (current < 1) get().setLane(current + 1);
+    },
+
+    jump: () => {
+      if (get().gameState !== GAME_STATES.PLAYING || get().isDead) return;
+      const isJetpack = get().activePowerups[POWERUP_TYPES.JETPACK] > 0;
+      if (isJetpack) return;
+
+      if (!get().isJumping) {
+        soundEngine.playJump();
+        set({ isJumping: true, isRolling: false });
+      }
+    },
+
+    roll: () => {
+      if (get().gameState !== GAME_STATES.PLAYING || get().isDead) return;
+      const isJetpack = get().activePowerups[POWERUP_TYPES.JETPACK] > 0;
+      if (isJetpack) return;
+
+      soundEngine.playSlide();
+      set({ isRolling: true, isJumping: false });
+    },
+
+    setJumping: (isJumping) => set({ isJumping }),
+    setRolling: (isRolling) => set({ isRolling }),
+
+    // Accurate Ring / Coin Collection
+    collectCoin: (multiplier = 1) => {
+      const char = CHARACTERS.find((c) => c.id === get().selectedCharacter);
+      const coinBonus = char?.id === 'jack' ? 1.10 : 1.0;
+      const is2x = get().activePowerups[POWERUP_TYPES.MULTIPLIER_2X] > 0 ? 2 : 1;
+      const pointsGained = Math.round(20 * is2x * coinBonus * multiplier);
+
+      soundEngine.playCoin(1.0 + (get().coinsCollected % 25) * 0.025);
+
+      set((state) => {
+        const newCoinsCollected = state.coinsCollected + 1;
+        const newTotal = state.totalCoins + 1;
+        const newScore = state.score + pointsGained;
+        debouncedSaveTotalCoins(newTotal);
+
+        return {
+          coinsCollected: newCoinsCollected,
+          totalCoins: newTotal,
+          score: newScore
+        };
+      });
+    },
+
+    activatePowerup: (type) => {
+      soundEngine.playPowerup();
+      const upgradeLevel = get().upgrades[type] || 1;
+      const char = CHARACTERS.find((c) => c.id === get().selectedCharacter);
+      let baseDuration = type === POWERUP_TYPES.JETPACK ? 8 : (type === POWERUP_TYPES.HOVERBOARD ? 25 : 12);
+      if (type === POWERUP_TYPES.JETPACK && char?.id === 'aerobot') {
+        baseDuration += 4;
+      }
+      const totalDuration = baseDuration + (upgradeLevel - 1) * 3;
+
       set((state) => ({
         activePowerups: {
           ...state.activePowerups,
-          [POWERUP_TYPES.HOVERBOARD]: 0
+          [type]: totalDuration
         }
       }));
-      return false; // Prevent game over
-    }
+    },
 
-    soundEngine.playCrash();
-    soundEngine.stopMusic();
+    activateHoverboard: () => {
+      if (get().gameState !== GAME_STATES.PLAYING || get().isDead) return;
+      const current = get().activePowerups[POWERUP_TYPES.HOVERBOARD];
+      if (current <= 0) {
+        get().activatePowerup(POWERUP_TYPES.HOVERBOARD);
+      }
+    },
 
-    const finalScore = get().score;
-    const currentHigh = get().highscore;
-    const isNewHigh = finalScore > currentHigh;
-    const newHighscore = isNewHigh ? finalScore : currentHigh;
+    updatePowerupTimers: (delta) => {
+      set((state) => {
+        const updated = { ...state.activePowerups };
+        let changed = false;
 
-    setStorage('subway_highscore', newHighscore);
-    setStorage('subway_total_coins', get().totalCoins);
-    setStorage('subway_total_distance', get().totalDistance + get().distanceTraveled);
+        Object.keys(updated).forEach((key) => {
+          if (updated[key] > 0) {
+            updated[key] = Math.max(0, updated[key] - delta);
+            changed = true;
+          }
+        });
 
-    set({
-      isDead: true,
-      deathReason: reason,
-      highscore: newHighscore,
-      gameState: GAME_STATES.GAME_OVER
-    });
-
-    return true;
-  },
-
-  // Shop & Customization
-  selectCharacter: (charId) => {
-    if (get().unlockedCharacters.includes(charId)) {
-      set({ selectedCharacter: charId });
-      setStorage('subway_selected_char', charId);
-    }
-  },
-
-  buyCharacter: (charId, price) => {
-    const coins = get().totalCoins;
-    if (coins >= price && !get().unlockedCharacters.includes(charId)) {
-      const newUnlocked = [...get().unlockedCharacters, charId];
-      const newCoins = coins - price;
-      set({
-        totalCoins: newCoins,
-        unlockedCharacters: newUnlocked,
-        selectedCharacter: charId
+        return changed ? { activePowerups: updated } : {};
       });
-      setStorage('subway_total_coins', newCoins);
-      setStorage('subway_unlocked_chars', newUnlocked);
-      setStorage('subway_selected_char', charId);
-      soundEngine.playPowerup();
-      return true;
-    }
-    return false;
-  },
+    },
 
-  selectBoard: (boardId) => {
-    if (get().unlockedBoards.includes(boardId)) {
-      set({ selectedBoard: boardId });
-      setStorage('subway_selected_board', boardId);
-    }
-  },
+    // Stumble detection on minor hurdle clip
+    stumble: (reason = 'minor_hit') => {
+      const { activePowerups, isStumbling, chaserDistance, isDead, gameState } = get();
+      if (gameState !== GAME_STATES.PLAYING || isDead) return;
 
-  buyBoard: (boardId, price) => {
-    const coins = get().totalCoins;
-    if (coins >= price && !get().unlockedBoards.includes(boardId)) {
-      const newUnlocked = [...get().unlockedBoards, boardId];
-      const newCoins = coins - price;
+      // Hoverboard shields from stumble
+      if (activePowerups[POWERUP_TYPES.HOVERBOARD] > 0) {
+        soundEngine.playHoverboardSave();
+        set((state) => ({
+          activePowerups: { ...state.activePowerups, [POWERUP_TYPES.HOVERBOARD]: 0 }
+        }));
+        return;
+      }
+
+      // If already stumbling and chaser is aggressively close, captured!
+      if (isStumbling && chaserDistance <= CHASER_CONFIG.CLOSE_DISTANCE + 1.2) {
+        get().triggerGameOver('captured_by_destroyer');
+        return;
+      }
+
+      // Trigger stumble reaction
+      soundEngine.playStumble();
+      soundEngine.playSiren();
+
+      set((state) => ({
+        isStumbling: true,
+        stumbleTimer: CHASER_CONFIG.STUMBLE_DURATION,
+        speed: Math.max(INITIAL_SPEED * 0.7, state.speed * 0.75)
+      }));
+    },
+
+    // Head-on lethal crash
+    triggerCrash: (reason = 'obstacle_crash') => {
+      get().triggerGameOver(reason);
+    },
+
+    updateChaser: (delta) => {
+      const { isStumbling, stumbleTimer, chaserDistance, isDead, isCaptured } = get();
+      if (isDead || isCaptured) return;
+
+      if (isStumbling) {
+        const newTimer = Math.max(0, stumbleTimer - delta);
+        // Rapid approach
+        const newDist = Math.max(
+          CHASER_CONFIG.CLOSE_DISTANCE,
+          chaserDistance - CHASER_CONFIG.APPROACH_SPEED * delta
+        );
+        set({
+          stumbleTimer: newTimer,
+          isStumbling: newTimer > 0,
+          chaserDistance: newDist
+        });
+      } else {
+        // Gentle retreat back to normal trailing distance
+        if (chaserDistance < CHASER_CONFIG.NORMAL_DISTANCE) {
+          const newDist = Math.min(
+            CHASER_CONFIG.NORMAL_DISTANCE,
+            chaserDistance + CHASER_CONFIG.RETREAT_SPEED * delta
+          );
+          set({ chaserDistance: newDist });
+        }
+      }
+    },
+
+    // Level timer tick with safe bounds
+    tickLevelTimer: (delta) => {
+      const { levelTimeLeft, levelComplete, gameState, isDead, currentLevel, unlockedLevels } = get();
+      if (gameState !== GAME_STATES.PLAYING || isDead || levelComplete) return;
+
+      const safeLevel = parseValidLevel(currentLevel);
+      const newTime = Math.max(0, levelTimeLeft - delta);
+      if (newTime <= 0) {
+        // Unlock next level
+        const nextLevel = Math.min(LEVELS.length, safeLevel + 1);
+        const newUnlocked = Array.from(new Set([...(unlockedLevels || [1]), nextLevel]));
+        setStorage('kinetic_unlocked_levels', newUnlocked);
+
+        soundEngine.stopMusic();
+        set({
+          levelTimeLeft: 0,
+          levelComplete: true,
+          unlockedLevels: newUnlocked,
+          gameState: GAME_STATES.LEVEL_COMPLETE
+        });
+      } else {
+        set({ levelTimeLeft: newTime });
+      }
+    },
+
+    // Advance to next level safely
+    advanceLevel: () => {
+      const isActivated = get().isActivated;
+      const current = parseValidLevel(get().currentLevel);
+      if (!isActivated && current >= 1) {
+        set({ showPaymentModal: true, gameState: GAME_STATES.MENU });
+        return;
+      }
+
+      const next = Math.min(LEVELS.length, current + 1);
+      const levelCfg = LEVELS[next - 1] || LEVELS[LEVELS.length - 1];
+      const newUnlocked = Array.from(new Set([...(get().unlockedLevels || [1]), next]));
+      setStorage('kinetic_unlocked_levels', newUnlocked);
+      setStorage('kinetic_current_level', next);
+
       set({
-        totalCoins: newCoins,
-        unlockedBoards: newUnlocked,
-        selectedBoard: boardId
+        currentLevel: next,
+        unlockedLevels: newUnlocked,
+        levelTimeLeft: levelCfg.timeLimit,
+        levelComplete: false,
+        gameState: GAME_STATES.PLAYING,
+        score: get().score,
+        coinsCollected: get().coinsCollected,
+        distanceTraveled: 0,
+        speed: INITIAL_SPEED * levelCfg.speedMult,
+        targetSpeed: INITIAL_SPEED * levelCfg.speedMult,
+        lane: 0,
+        playerY: 0,
+        isJumping: false,
+        isRolling: false,
+        isDead: false,
+        deathReason: null,
+        isCaptured: false,
+        isStumbling: false,
+        stumbleTimer: 0,
+        chaserDistance: CHASER_CONFIG.NORMAL_DISTANCE,
+        activeMysteryBox: null,
+        isMysteryBoxPaused: false,
+        activePowerups: {
+          [POWERUP_TYPES.MAGNET]: 0,
+          [POWERUP_TYPES.JETPACK]: 0,
+          [POWERUP_TYPES.MULTIPLIER_2X]: 0,
+          [POWERUP_TYPES.SUPER_SNEAKERS]: 0,
+          [POWERUP_TYPES.HOVERBOARD]: 0
+        }
       });
-      setStorage('subway_total_coins', newCoins);
-      setStorage('subway_unlocked_boards', newUnlocked);
-      setStorage('subway_selected_board', boardId);
-      soundEngine.playPowerup();
+      soundEngine.startMusic();
+    },
+
+    // Quick buy powerup mid-run with coins
+    quickBuyPowerup: (type, cost) => {
+      const { totalCoins, gameState, isDead } = get();
+      if (gameState !== GAME_STATES.PLAYING || isDead) return false;
+      if (totalCoins < cost) return false;
+      const newCoins = totalCoins - cost;
+      set({ totalCoins: newCoins });
+      setStorage('kinetic_total_coins', newCoins);
+      get().activatePowerup(type);
       return true;
-    }
-    return false;
-  },
+    },
 
-  upgradePowerup: (type, cost) => {
-    const coins = get().totalCoins;
-    const currentLevel = get().upgrades[type] || 1;
-    if (coins >= cost && currentLevel < 5) {
-      const newCoins = coins - cost;
-      const newUpgrades = {
-        ...get().upgrades,
-        [type]: currentLevel + 1
-      };
-      set({ totalCoins: newCoins, upgrades: newUpgrades });
-      setStorage('subway_total_coins', newCoins);
-      setStorage('subway_upgrades', newUpgrades);
+    // Mystery Box collected: Just track count during run — open all at end
+    collectMysteryBox: () => {
       soundEngine.playPowerup();
+      // Generate the reward NOW but don't reveal it yet
+      const coinAmounts = [500, 800, 1200, 1500, 2000, 3000, 5000];
+      const coinsWon = coinAmounts[Math.floor(Math.random() * coinAmounts.length)];
+      const types = [
+        POWERUP_TYPES.MAGNET,
+        POWERUP_TYPES.JETPACK,
+        POWERUP_TYPES.MULTIPLIER_2X,
+        POWERUP_TYPES.SUPER_SNEAKERS,
+        POWERUP_TYPES.HOVERBOARD
+      ];
+      const powerupWon = types[Math.floor(Math.random() * types.length)];
+      const bonusItems = [];
+      // Extra random bonus items in each box
+      const numBonus = 2 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < numBonus; i++) {
+        bonusItems.push(types[Math.floor(Math.random() * types.length)]);
+      }
+      set((state) => ({
+        mysteryBoxCount: state.mysteryBoxCount + 1,
+        pendingBoxRewards: [
+          ...state.pendingBoxRewards,
+          { coins: coinsWon, powerup: powerupWon, bonusItems }
+        ]
+      }));
+    },
+
+    // Open all mystery boxes at end of run — award all rewards at once
+    openAllMysteryBoxes: () => {
+      const rewards = get().pendingBoxRewards;
+      if (!rewards || rewards.length === 0) return;
+      let totalCoinsWon = 0;
+      rewards.forEach((r) => { totalCoinsWon += r.coins; });
+      const newTotal = (get().totalCoins || 0) + totalCoinsWon;
+      setStorage('kinetic_total_coins', newTotal);
+      set({ totalCoins: newTotal, activeMysteryBox: { rewards, totalCoins: totalCoinsWon }, pendingBoxRewards: [], mysteryBoxCount: 0 });
+    },
+
+    incrementDistanceAndScore: (deltaDistance) => {
+      const char = CHARACTERS.find((c) => c.id === get().selectedCharacter);
+      const scoreBonus = char?.id === 'valkyrie' ? 1.25 : 1.0;
+      const is2x = get().activePowerups[POWERUP_TYPES.MULTIPLIER_2X] > 0 ? 2 : 1;
+      const scoreToAdd = Math.round(deltaDistance * is2x * scoreBonus);
+
+      set((state) => {
+        const newDistance = state.distanceTraveled + deltaDistance;
+        const newScore = state.score + scoreToAdd;
+        const safeLvl = parseValidLevel(state.currentLevel);
+        const baseLevelCfg = LEVELS[safeLvl - 1] || LEVELS[0];
+        const newSpeed = Math.min(
+          MAX_SPEED,
+          INITIAL_SPEED * baseLevelCfg.speedMult + (newDistance / 100) * SPEED_ACCELERATION
+        );
+
+        return {
+          distanceTraveled: newDistance,
+          score: newScore,
+          speed: newSpeed
+        };
+      });
+    },
+
+    triggerGameOver: (reason = 'obstacle_collision') => {
+      // Check if hoverboard saved player
+      if (get().activePowerups[POWERUP_TYPES.HOVERBOARD] > 0) {
+        soundEngine.playHoverboardSave();
+        set((state) => ({
+          activePowerups: {
+            ...state.activePowerups,
+            [POWERUP_TYPES.HOVERBOARD]: 0
+          }
+        }));
+        return false; // Saved by hoverboard
+      }
+
+      soundEngine.playCrash();
+      soundEngine.stopMusic();
+
+      const finalScore = get().score;
+      const currentHigh = get().highscore;
+      const isNewHigh = finalScore > currentHigh;
+      const newHighscore = isNewHigh ? finalScore : currentHigh;
+
+      setStorage('kinetic_highscore', newHighscore);
+      setStorage('kinetic_total_coins', get().totalCoins);
+      setStorage('kinetic_total_distance', get().totalDistance + get().distanceTraveled);
+
+      const isCaptured = reason === 'captured_by_destroyer';
+
+      set({
+        isDead: true,
+        isCaptured,
+        deathReason: reason,
+        highscore: newHighscore,
+        gameState: GAME_STATES.GAME_OVER
+      });
+
       return true;
-    }
-    return false;
-  },
+    },
 
-  // Settings
-  toggleMute: () => {
-    const muted = !get().isMuted;
-    soundEngine.setMuted(muted);
-    set({ isMuted: muted });
-    setStorage('subway_muted', muted);
-  },
+    // Shop & Customization - Instant Character / Robot Switching with Coins
+    selectCharacter: (charId) => {
+      const unlocked = get().unlockedCharacters || ['jack'];
+      if (unlocked.includes(charId)) {
+        set({ selectedCharacter: charId });
+        setStorage('kinetic_selected_char', charId);
+        soundEngine.playPowerup();
+        return true;
+      }
+      return false;
+    },
 
-  setVolume: (sfx, music) => {
-    soundEngine.setVolume(sfx, music);
-    set({ sfxVolume: sfx, musicVolume: music });
-    setStorage('subway_sfx_vol', sfx);
-    setStorage('subway_music_vol', music);
-  },
+    buyCharacter: (charId, price) => {
+      const coins = parseValidNumber(get().totalCoins, 0);
+      const unlocked = get().unlockedCharacters || ['jack'];
+      if (coins >= price && !unlocked.includes(charId)) {
+        const newUnlocked = [...unlocked, charId];
+        const newCoins = coins - price;
+        set({
+          totalCoins: newCoins,
+          unlockedCharacters: newUnlocked,
+          selectedCharacter: charId
+        });
+        setStorage('kinetic_total_coins', newCoins);
+        setStorage('kinetic_unlocked_chars', newUnlocked);
+        setStorage('kinetic_selected_char', charId);
+        soundEngine.playPowerup();
+        return true;
+      }
+      return false;
+    },
 
-  setUsername: (name) => {
-    const clean = name.trim().slice(0, 16) || 'Jake Runner';
-    set({ username: clean });
-    setStorage('subway_username', clean);
-  },
+    selectBoard: (boardId) => {
+      const unlocked = get().unlockedBoards || ['classic'];
+      if (unlocked.includes(boardId)) {
+        set({ selectedBoard: boardId });
+        setStorage('kinetic_selected_board', boardId);
+        soundEngine.playPowerup();
+        return true;
+      }
+      return false;
+    },
 
-  setAuth: (user, token) => {
-    set({ authUser: user, authToken: token, username: user?.username || get().username });
-    if (token) setStorage('subway_auth_token', token);
-    if (user) setStorage('subway_auth_user', user);
-  },
+    buyBoard: (boardId, price) => {
+      const coins = parseValidNumber(get().totalCoins, 0);
+      const unlocked = get().unlockedBoards || ['classic'];
+      if (coins >= price && !unlocked.includes(boardId)) {
+        const newUnlocked = [...unlocked, boardId];
+        const newCoins = coins - price;
+        set({
+          totalCoins: newCoins,
+          unlockedBoards: newUnlocked,
+          selectedBoard: boardId
+        });
+        setStorage('kinetic_total_coins', newCoins);
+        setStorage('kinetic_unlocked_boards', newUnlocked);
+        setStorage('kinetic_selected_board', boardId);
+        soundEngine.playPowerup();
+        return true;
+      }
+      return false;
+    },
 
-  setLeaderboard: (leaderboard) => set({ leaderboard }),
-  setOnlineCount: (count) => set({ onlineCount: count })
-}));
+    upgradePowerup: (type, cost) => {
+      const coins = parseValidNumber(get().totalCoins, 0);
+      const currentLevel = get().upgrades[type] || 1;
+      if (coins >= cost && currentLevel < 5) {
+        const newCoins = coins - cost;
+        const newUpgrades = {
+          ...get().upgrades,
+          [type]: currentLevel + 1
+        };
+        set({ totalCoins: newCoins, upgrades: newUpgrades });
+        setStorage('kinetic_total_coins', newCoins);
+        setStorage('kinetic_upgrades', newUpgrades);
+        soundEngine.playPowerup();
+        return true;
+      }
+      return false;
+    },
+
+    // Settings
+    toggleMute: () => {
+      const muted = !get().isMuted;
+      soundEngine.setMuted(muted);
+      set({ isMuted: muted });
+      setStorage('kinetic_muted', muted);
+    },
+
+    setVolume: (sfx, music) => {
+      soundEngine.setVolume(sfx, music);
+      set({ sfxVolume: sfx, musicVolume: music });
+      setStorage('kinetic_sfx_vol', sfx);
+      setStorage('kinetic_music_vol', music);
+    },
+
+    setUsername: (name) => {
+      const clean = name.trim().slice(0, 16) || 'Kinetic Jack';
+      set({ username: clean });
+      setStorage('kinetic_username', clean);
+    },
+
+    setAuth: (user, token) => {
+      set({ authUser: user, authToken: token, username: user?.username || get().username });
+      if (token) setStorage('kinetic_auth_token', token);
+      if (user) setStorage('kinetic_auth_user', user);
+    },
+
+    setLeaderboard: (leaderboard) => set({ leaderboard }),
+    setOnlineCount: (count) => set({ onlineCount: count })
+  };
+});
 
 if (typeof window !== 'undefined') {
   window.__store = useGameStore;

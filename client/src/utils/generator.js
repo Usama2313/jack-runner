@@ -1,12 +1,69 @@
-import { LANES, LANE_WIDTH, OBSTACLE_TYPES, POWERUP_TYPES, CHUNK_LENGTH, NUM_SECTIONS } from './constants';
+import { LANES, LANE_WIDTH, OBSTACLE_TYPES, POWERUP_TYPES, CHUNK_LENGTH, NUM_SECTIONS, LEVELS } from './constants';
 
 let nextEntityId = 1;
 const lanePositions = [LANES.LEFT, LANES.CENTER, LANES.RIGHT];
 
-export const generateTrackChunk = (chunkIndex) => {
+/* Helper: get bounds for each obstacle type for proper collision boxes */
+const getObstacleBounds = (type) => {
+  switch (type) {
+    case OBSTACLE_TYPES.TRAIN:
+      return { width: 2.3, height: 3.2, depth: 14.0, yOffset: 0 };
+    case OBSTACLE_TYPES.BUS:
+      return { width: 2.2, height: 3.6, depth: 8.0, yOffset: 0 };
+    case OBSTACLE_TYPES.MOTORBIKE:
+      return { width: 0.8, height: 1.2, depth: 2.2, yOffset: 0 };
+    case OBSTACLE_TYPES.BARRIER_LOW:
+      return { width: 2.2, height: 1.1, depth: 0.6, yOffset: 0 };
+    case OBSTACLE_TYPES.BARRIER_HIGH:
+      return { width: 2.3, height: 2.4, depth: 0.6, yOffset: 0.75 };
+    case OBSTACLE_TYPES.CONCRETE_BARRIER:
+      return { width: 2.2, height: 1.1, depth: 0.8, yOffset: 0 };
+    case OBSTACLE_TYPES.CONSTRUCTION:
+      return { width: 0.9, height: 1.0, depth: 0.9, yOffset: 0 };
+    case OBSTACLE_TYPES.TESLA_COIL:
+      return { width: 2.1, height: 1.3, depth: 0.6, yOffset: 0 };
+    case OBSTACLE_TYPES.MAGMA_PYLON:
+      return { width: 2.2, height: 1.25, depth: 0.6, yOffset: 0 };
+    case OBSTACLE_TYPES.PLASMA_WALL:
+      return { width: 2.4, height: 2.5, depth: 0.5, yOffset: 0.8 };
+    case OBSTACLE_TYPES.ICE_SPIKE:
+      return { width: 2.1, height: 1.2, depth: 0.6, yOffset: 0 };
+    case OBSTACLE_TYPES.TITAN_PISTON:
+      return { width: 2.3, height: 2.6, depth: 1.2, yOffset: 0 };
+    case OBSTACLE_TYPES.VOID_CRYSTAL:
+      return { width: 2.2, height: 2.8, depth: 1.0, yOffset: 0 };
+    case OBSTACLE_TYPES.ROBOT_BARRIER:
+      return { width: 2.3, height: 2.3, depth: 0.6, yOffset: 0.75 };
+    default:
+      return { width: 2.2, height: 1.1, depth: 0.6, yOffset: 0 };
+  }
+};
+
+/* Does this obstacle type require sliding under? */
+const isSlideUnder = (type) => {
+  return [
+    OBSTACLE_TYPES.BARRIER_HIGH,
+    OBSTACLE_TYPES.PLASMA_WALL,
+    OBSTACLE_TYPES.ROBOT_BARRIER
+  ].includes(type);
+};
+
+/* Does this obstacle type need jumping over? */
+const isJumpOver = (type) => {
+  return [
+    OBSTACLE_TYPES.BARRIER_LOW,
+    OBSTACLE_TYPES.CONCRETE_BARRIER,
+    OBSTACLE_TYPES.CONSTRUCTION,
+    OBSTACLE_TYPES.TESLA_COIL,
+    OBSTACLE_TYPES.MAGMA_PYLON,
+    OBSTACLE_TYPES.ICE_SPIKE,
+    OBSTACLE_TYPES.MOTORBIKE
+  ].includes(type);
+};
+
+export const generateTrackChunk = (chunkIndex, currentLevel = 1) => {
   const startZ = -chunkIndex * CHUNK_LENGTH;
   const endZ = startZ - CHUNK_LENGTH;
-  const chunkCenterZ = (startZ + endZ) / 2;
 
   const obstacles = [];
   const coins = [];
@@ -14,43 +71,59 @@ export const generateTrackChunk = (chunkIndex) => {
   const giftBoxes = [];
   const arches = [];
 
-  // Spawn subway arches every 40m along chunk (reduced from 22 for performance)
-  for (let z = startZ; z > endZ; z -= 40) {
+  const levelCfg = LEVELS[Math.min(LEVELS.length - 1, Math.max(0, currentLevel - 1))] || LEVELS[0];
+  const hurdleSet = levelCfg.hurdleSet || ['BARRIER_LOW', 'BARRIER_HIGH', 'TRAIN'];
+
+  // Spawn subway arches every 35m
+  for (let z = startZ; z > endZ; z -= 35) {
     arches.push({
       id: `arch-${nextEntityId++}`,
       z
     });
   }
 
-  // First chunk is introductory (safe start zone with coins)
+  // ─── First chunk: Safe intro zone ──────────────────────────────
   if (chunkIndex === 0) {
-    // Generate gentle starter coin trails in center lane
+    // Gentle starter coin trail
     for (let z = -15; z > -60; z -= 3.2) {
       coins.push({
         id: `coin-${nextEntityId++}`,
         x: LANES.CENTER,
-        y: 0.8,
+        y: 0.85,
         z,
         collected: false
       });
     }
 
-    // Single simple low barrier at z = -45 in left lane
+    // Jumping arc over center
+    for (let i = 0; i < 5; i++) {
+      const cz = -35 - i * 2.5;
+      const arcY = 1.0 + Math.sin((i / 4) * Math.PI) * 2.4;
+      coins.push({
+        id: `coin-${nextEntityId++}`,
+        x: LANES.CENTER,
+        y: arcY,
+        z: cz,
+        collected: false
+      });
+    }
+
+    // Single intro barrier
     obstacles.push({
       id: `obs-${nextEntityId++}`,
       type: OBSTACLE_TYPES.BARRIER_LOW,
       x: LANES.LEFT,
-      z: -45,
-      bounds: { width: 2.2, height: 1.1, depth: 0.5, yOffset: 0 }
+      z: -48,
+      bounds: getObstacleBounds(OBSTACLE_TYPES.BARRIER_LOW)
     });
 
-    // Magnet powerup at start
+    // Starter Magnet
     powerups.push({
       id: `pw-${nextEntityId++}`,
       type: POWERUP_TYPES.MAGNET,
       x: LANES.CENTER,
-      y: 1.1,
-      z: -32,
+      y: 1.2,
+      z: -28,
       collected: false
     });
 
@@ -58,51 +131,67 @@ export const generateTrackChunk = (chunkIndex) => {
     giftBoxes.push({
       id: `gift-${nextEntityId++}`,
       x: LANES.RIGHT,
-      y: 1.0,
-      z: -25,
+      y: 1.1,
+      z: -22,
       collected: false
     });
 
     return { chunkIndex, startZ, endZ, obstacles, coins, powerups, giftBoxes, arches };
   }
 
-  // For subsequent chunks, generate pattern-based sets of obstacles
+  // ─── Procedural obstacle sections ─────────────────────────────
   const numSections = NUM_SECTIONS;
   const sectionLength = CHUNK_LENGTH / numSections;
 
   for (let s = 0; s < numSections; s++) {
     const sectionZ = startZ - s * sectionLength - 12;
-    const patternType = Math.floor(Math.random() * 6);
 
-    // Guaranteed at least one safe lane
+    // Guaranteed safe lane
     const safeLaneIdx = Math.floor(Math.random() * 3);
 
     lanePositions.forEach((laneX, laneIdx) => {
       if (laneIdx === safeLaneIdx) {
-        // Safe lane: Place a coin trail or powerup!
+        // Safe lane: coin patterns
         const coinPattern = Math.random();
-        if (coinPattern < 0.65) {
-          // Arc or line of coins
-          for (let i = 0; i < 5; i++) {
-            const cz = sectionZ - i * 2.8;
+
+        if (coinPattern < 0.40) {
+          // Ground ring line
+          for (let i = 0; i < 6; i++) {
             coins.push({
               id: `coin-${nextEntityId++}`,
               x: laneX,
-              y: 0.8,
-              z: cz,
+              y: 0.85,
+              z: sectionZ - i * 2.6,
               collected: false
             });
           }
-        } else if (coinPattern < 0.85) {
-          // Jumping coin arc
-          for (let i = 0; i < 5; i++) {
-            const cz = sectionZ - i * 2.8;
-            const arcY = 0.8 + Math.sin((i / 4) * Math.PI) * 2.2;
+        } else if (coinPattern < 0.75) {
+          // High aerial arc
+          for (let i = 0; i < 6; i++) {
+            const arcY = 0.9 + Math.sin((i / 5) * Math.PI) * 2.8;
             coins.push({
               id: `coin-${nextEntityId++}`,
               x: laneX,
               y: arcY,
-              z: cz,
+              z: sectionZ - i * 2.6,
+              collected: false
+            });
+          }
+        } else {
+          // Sky ring cluster (Jetpack level)
+          for (let i = 0; i < 5; i++) {
+            coins.push({
+              id: `coin-${nextEntityId++}`,
+              x: laneX,
+              y: 5.2,
+              z: sectionZ - i * 3.0,
+              collected: false
+            });
+            coins.push({
+              id: `coin-${nextEntityId++}`,
+              x: laneX,
+              y: 0.85,
+              z: sectionZ - i * 3.0,
               collected: false
             });
           }
@@ -110,82 +199,60 @@ export const generateTrackChunk = (chunkIndex) => {
         return;
       }
 
-      // Non-safe lane: Place an obstacle
-      const roll = Math.random();
+      // ─── Non-safe lane: spawn level-specific hurdle ─────────────
+      const randomHurdle = hurdleSet[Math.floor(Math.random() * hurdleSet.length)] || 'BARRIER_LOW';
+      const obstType = OBSTACLE_TYPES[randomHurdle] || OBSTACLE_TYPES.BARRIER_LOW;
+      const bounds = getObstacleBounds(obstType);
 
-      if (patternType === 0 || roll < 0.3) {
-        // Low Barrier: Jump over
-        obstacles.push({
-          id: `obs-${nextEntityId++}`,
-          type: OBSTACLE_TYPES.BARRIER_LOW,
-          x: laneX,
-          z: sectionZ,
-          bounds: { width: 2.2, height: 1.05, depth: 0.6, yOffset: 0 }
-        });
+      // Vehicles can optionally move towards the player
+      const isVehicle = [OBSTACLE_TYPES.TRAIN, OBSTACLE_TYPES.BUS, OBSTACLE_TYPES.MOTORBIKE].includes(obstType);
+      const isMoving = isVehicle && chunkIndex > 1 && Math.random() < 0.4;
 
-        // Place a coin arc above the low barrier to reward jumping!
+      obstacles.push({
+        id: `obs-${nextEntityId++}`,
+        type: obstType,
+        x: laneX,
+        z: sectionZ,
+        speed: isMoving ? (obstType === OBSTACLE_TYPES.MOTORBIKE ? 18 : 12) : 0,
+        bounds,
+        color: levelCfg.railColor || '#dc2626'
+      });
+
+      // Place reward coins near obstacles
+      if (isSlideUnder(obstType)) {
+        // Low ring under the gate to reward sliding
         coins.push({
           id: `coin-${nextEntityId++}`,
           x: laneX,
-          y: 2.4,
+          y: 0.45,
           z: sectionZ,
           collected: false
         });
-      } else if (patternType === 1 || roll < 0.55) {
-        // High Barrier: Slide under
-        obstacles.push({
-          id: `obs-${nextEntityId++}`,
-          type: OBSTACLE_TYPES.BARRIER_HIGH,
-          x: laneX,
-          z: sectionZ,
-          bounds: { width: 2.3, height: 2.4, depth: 0.6, yOffset: 0.75 }
-        });
-
-        // Place a low coin under the barrier to reward sliding!
+      } else if (isJumpOver(obstType)) {
+        // High ring above the obstacle to reward jumping
         coins.push({
           id: `coin-${nextEntityId++}`,
           x: laneX,
-          y: 0.5,
+          y: 2.6,
           z: sectionZ,
           collected: false
         });
-      } else if (patternType === 2 || roll < 0.82) {
-        // Subway Train!
-        const isMoving = chunkIndex > 1 && Math.random() < 0.45;
-        obstacles.push({
-          id: `obs-${nextEntityId++}`,
-          type: OBSTACLE_TYPES.TRAIN,
-          x: laneX,
-          z: sectionZ,
-          speed: isMoving ? 12 : 0,
-          bounds: { width: 2.3, height: 3.2, depth: 14.0, yOffset: 0 },
-          color: Math.random() > 0.5 ? '#dc2626' : '#2563eb'
-        });
-
-        // Place coins along top of the train
-        for (let cz = sectionZ + 4; cz > sectionZ - 4; cz -= 2.6) {
+      } else if (isVehicle) {
+        // Rings along roof of vehicle
+        for (let cz = sectionZ + 3; cz > sectionZ - 3; cz -= 2.6) {
           coins.push({
             id: `coin-${nextEntityId++}`,
             x: laneX,
-            y: 3.8,
+            y: 3.9,
             z: cz,
             collected: false
           });
         }
-      } else {
-        // Construction barrier / traffic light
-        obstacles.push({
-          id: `obs-${nextEntityId++}`,
-          type: OBSTACLE_TYPES.CONSTRUCTION,
-          x: laneX,
-          z: sectionZ,
-          bounds: { width: 2.2, height: 1.8, depth: 0.8, yOffset: 0 }
-        });
       }
     });
 
-    // 28% chance of powerup per section
-    if (Math.random() < 0.28) {
+    // 32% powerup chance
+    if (Math.random() < 0.32) {
       const types = [
         POWERUP_TYPES.MAGNET,
         POWERUP_TYPES.JETPACK,
@@ -199,20 +266,34 @@ export const generateTrackChunk = (chunkIndex) => {
         id: `pw-${nextEntityId++}`,
         type: selectedType,
         x: targetLane,
-        y: 1.2,
+        y: 1.25,
         z: sectionZ - 14,
         collected: false
       });
     }
 
-    // 40% chance of Gift Box per section in safe lane
-    if (Math.random() < 0.40) {
+    // 45% Mystery Gift Box chance
+    if (Math.random() < 0.45) {
       const targetLane = lanePositions[safeLaneIdx];
       giftBoxes.push({
         id: `gift-${nextEntityId++}`,
         x: targetLane,
-        y: 1.0,
-        z: sectionZ - 8,
+        y: 1.1,
+        z: sectionZ - 7,
+        collected: false
+      });
+    }
+  }
+
+  // Spawn continuous sky coins for Jetpack flight at the top
+  for (let z = startZ - 5; z > endZ; z -= 7) {
+    if (Math.random() < 0.5) {
+      const randomLane = lanePositions[Math.floor(Math.random() * 3)];
+      coins.push({
+        id: `coin-${nextEntityId++}`,
+        x: randomLane,
+        y: 5.2,
+        z,
         collected: false
       });
     }

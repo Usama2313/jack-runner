@@ -8,7 +8,10 @@ import { PauseOverlay } from './components/ui/PauseOverlay';
 import { LeaderboardModal } from './components/ui/LeaderboardModal';
 import { ShopModal } from './components/ui/ShopModal';
 import { AuthModal } from './components/ui/AuthModal';
+import { LevelSelectModal } from './components/ui/LevelSelectModal';
+import { MysteryBoxModal } from './components/ui/MysteryBoxModal';
 import { TouchControls } from './components/ui/TouchControls';
+import { PaymentModal } from './components/ui/PaymentModal';
 import { useGameStore } from './store/gameStore';
 import { useInput } from './hooks/useInput';
 import { useSocket } from './hooks/useSocket';
@@ -59,6 +62,9 @@ export default function App() {
         <GameOver onOpenLeaderboard={() => setShowLeaderboard(true)} />
       )}
 
+      {/* Mystery Box Reveal Animation Popup */}
+      <MysteryBoxModal />
+
       {/* Modals */}
       {showLeaderboard && (
         <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
@@ -71,6 +77,9 @@ export default function App() {
       {showAuth && (
         <AuthModal onClose={() => setShowAuth(false)} />
       )}
+
+      {/* Payment / Activation Modal */}
+      <PaymentModal />
     </div>
   );
 }

@@ -13,10 +13,14 @@ export const GameOver = ({ onOpenLeaderboard }) => {
   const coinsCollected = useGameStore((s) => s.coinsCollected);
   const distanceTraveled = useGameStore((s) => s.distanceTraveled);
   const selectedCharacter = useGameStore((s) => s.selectedCharacter);
+  const deathReason = useGameStore((s) => s.deathReason);
+  const isCaptured = useGameStore((s) => s.isCaptured);
   const username = useGameStore((s) => s.username);
   const authToken = useGameStore((s) => s.authToken);
   const startGame = useGameStore((s) => s.startGame);
   const setGameState = useGameStore((s) => s.setGameState);
+  const pendingBoxRewards = useGameStore((s) => s.pendingBoxRewards) || [];
+  const openAllMysteryBoxes = useGameStore((s) => s.openAllMysteryBoxes);
 
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -81,7 +85,11 @@ export const GameOver = ({ onOpenLeaderboard }) => {
   return (
     <div className="game-over-overlay">
       <div className="game-over-modal">
-        {isNewRecord ? (
+        {deathReason === 'captured_by_destroyer' || isCaptured ? (
+          <div className="record-banner" style={{ background: 'linear-gradient(135deg, #ef4444, #b91c1c)' }}>
+            🤖 CAPTURED BY ROBOT DESTROYER!
+          </div>
+        ) : isNewRecord ? (
           <div className="record-banner">🎉 NEW PERSONAL RECORD! 🎉</div>
         ) : (
           <div className="game-over-title">RUN CRASHED!</div>
@@ -117,6 +125,18 @@ export const GameOver = ({ onOpenLeaderboard }) => {
             </div>
           </div>
         </div>
+
+        {/* Open Mystery Boxes Section */}
+        {pendingBoxRewards.length > 0 && (
+          <div className="game-over-mystery-section">
+            <button
+              className="open-mystery-boxes-btn animate-pulse-slow"
+              onClick={openAllMysteryBoxes}
+            >
+              🎁 OPEN {pendingBoxRewards.length} MYSTERY BOXES!
+            </button>
+          </div>
+        )}
 
         {/* Submit to Online Leaderboard */}
         <div className="submit-score-section">

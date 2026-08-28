@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSpring, animated } from '@react-spring/web';
 import { useGameStore } from '../../store/gameStore';
-import { POWERUP_CONFIG, POWERUP_TYPES, LEVELS } from '../../utils/constants';
-import { Pause, Volume2, VolumeX, Sparkles, Gift, Rocket, Shield, Magnet } from 'lucide-react';
+import { POWERUP_CONFIG, POWERUP_TYPES, LEVELS, CHARACTERS } from '../../utils/constants';
+import { Pause, Volume2, VolumeX, MapPin, AlertTriangle, Users, Sparkles, Shield } from 'lucide-react';
+import { LevelSelectModal } from './LevelSelectModal';
+import { ShopModal } from './ShopModal';
+
+const parseValidLevel = (val) => {
+  const num = typeof val === 'number' ? val : Number(val);
+  return !isNaN(num) && num >= 1 ? Math.max(1, Math.min(LEVELS.length, Math.floor(num))) : 1;
+};
 
 export const HUD = () => {
   const score = useGameStore((s) => s.score);
@@ -11,163 +18,216 @@ export const HUD = () => {
   const distanceTraveled = useGameStore((s) => s.distanceTraveled);
   const activePowerups = useGameStore((s) => s.activePowerups);
   const pauseGame = useGameStore((s) => s.pauseGame);
-  const isMuted = useGameStore((s) => s.isMuted);
-  const toggleMute = useGameStore((s) => s.toggleMute);
-  const activateHoverboard = useGameStore((s) => s.activateHoverboard);
-  const quickBuyPowerup = useGameStore((s) => s.quickBuyPowerup);
   const currentLevel = useGameStore((s) => s.currentLevel);
   const levelTimeLeft = useGameStore((s) => s.levelTimeLeft);
-  const giftCollectedType = useGameStore((s) => s.giftCollectedType);
+  const isMuted = useGameStore((s) => s.isMuted);
+  const toggleMute = useGameStore((s) => s.toggleMute);
+  const selectedCharacter = useGameStore((s) => s.selectedCharacter);
+  const unlockedCharacters = useGameStore((s) => s.unlockedCharacters) || ['jack'];
+  const selectCharacter = useGameStore((s) => s.selectCharacter);
+  const speed = useGameStore((s) => s.speed);
+  const isStumbling = useGameStore((s) => s.isStumbling);
+  const chaserDistance = useGameStore((s) => s.chaserDistance);
+  const mysteryBoxCount = useGameStore((s) => s.mysteryBoxCount);
+  const isActivated = useGameStore((s) => s.isActivated);
 
-  const levelInfo = LEVELS[currentLevel - 1] || LEVELS[0];
-  const maxLevelTime = levelInfo.timeLimit;
-  const timePercent = Math.max(0, Math.min(100, (levelTimeLeft / maxLevelTime) * 100));
+  const [showLevelSelect, setShowLevelSelect] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const [showCharDropdown, setShowCharDropdown] = useState(false);
 
-  // Score bounce spring animation
-  const { scoreVal } = useSpring({
-    scoreVal: score,
-    config: { tension: 280, friction: 20 }
+  const safeLevel = parseValidLevel(currentLevel);
+  const levelInfo = LEVELS[safeLevel - 1] || LEVELS[0];
+  const activeChar = CHARACTERS.find((c) => c.id === selectedCharacter) || CHARACTERS[0];
+  const safeTimeLeft = Math.max(0, Math.ceil(levelTimeLeft || 0));
+  const isLowTime = safeTimeLeft <= 10;
+  const isChaserClose = chaserDistance < 4.5;
+
+  const { animatedScore } = useSpring({
+    animatedScore: score || 0,
+    config: { tension: 160, friction: 16 }
   });
 
-  const is2xActive = activePowerups[POWERUP_TYPES.MULTIPLIER_2X] > 0;
-  const isHoverboardActive = activePowerups[POWERUP_TYPES.HOVERBOARD] > 0;
-  const isJetpackActive = activePowerups[POWERUP_TYPES.JETPACK] > 0;
+  const { animatedCoins } = useSpring({
+    animatedCoins: coinsCollected || 0,
+    config: { tension: 160, friction: 16 }
+  });
+
+  // Active powerup list
+  const activePowerupList = Object.entries(activePowerups)
+    .filter(([, time]) => time > 0)
+    .map(([type, time]) => ({
+      type,
+      time,
+      config: POWERUP_CONFIG[type]
+    }));
 
   return (
-    <div className="hud-overlay">
-      {/* Top Left: Score & Distance */}
-      <div className="hud-score-card">
-        <div className="hud-label">SCORE</div>
-        <animated.div className="hud-score-number">
-          {scoreVal.to((val) => Math.floor(val).toLocaleString())}
-        </animated.div>
-        <div className="hud-sub-stats">
-          <span className="hud-distance">{Math.floor(distanceTraveled)} m</span>
-          {is2xActive && <span className="hud-badge-2x">⚡ 2X ACTIVE</span>}
-          {isJetpackActive && <span className="hud-badge-sky">🚀 SKY FLIGHT</span>}
-        </div>
-      </div>
-
-      {/* Top Center: World-Class Level Status & Timer Ring */}
-      <div className="hud-level-center">
-        <div className="hud-level-badge">
-          <span className="hud-level-tag">STAGE {currentLevel}/5</span>
-          <span className="hud-level-name">{levelInfo.name}</span>
-        </div>
-        <div className="hud-timer-container">
-          <div className="hud-timer-bar-bg">
-            <div
-              className={`hud-timer-bar-fill ${levelTimeLeft < 10 ? 'urgent' : ''}`}
-              style={{ width: `${timePercent}%` }}
-            />
+    <>
+      <div className="hud-overlay" style={{ pointerEvents: 'none' }}>
+        {/* ─── TOP BAR ──────────────────────────────────────────────── */}
+        <div className="hud-top-bar" style={{ pointerEvents: 'auto' }}>
+          {/* Score */}
+          <div className="hud-score-card">
+            <div className="hud-score-label">SCORE</div>
+            <animated.div className="hud-score-number">
+              {animatedScore.to((n) => Math.floor(n).toLocaleString())}
+            </animated.div>
           </div>
-          <span className={`hud-timer-text ${levelTimeLeft < 10 ? 'urgent-pulse' : ''}`}>
-            ⏱️ {Math.ceil(levelTimeLeft)}s
-          </span>
-        </div>
-      </div>
 
-      {/* Top Right: Coins, Mute & Pause */}
-      <div className="hud-right-panel">
-        <div className="hud-coins-pill" title="Coins collected this run + Banked">
-          <span className="hud-coin-icon">🪙</span>
-          <span className="hud-coin-count">{coinsCollected}</span>
-          <span className="hud-total-coins-badge">Bank: {totalCoins}</span>
-        </div>
-
-        <button className="hud-icon-btn" onClick={toggleMute} title="Toggle Sound">
-          {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-        </button>
-
-        <button className="hud-icon-btn" onClick={pauseGame} title="Pause Game (ESC)">
-          <Pause size={20} />
-        </button>
-      </div>
-
-      {/* Center Left: Active Powerups Countdown Timers */}
-      <div className="hud-powerups-list">
-        {Object.entries(activePowerups).map(([type, timeLeft]) => {
-          if (timeLeft <= 0) return null;
-          const config = POWERUP_CONFIG[type];
-          const maxDur = type === POWERUP_TYPES.JETPACK ? 7 : (type === POWERUP_TYPES.HOVERBOARD ? 25 : 10);
-          const percent = Math.min(100, (timeLeft / maxDur) * 100);
-
-          return (
-            <div key={type} className="hud-powerup-bar" style={{ borderColor: config.color }}>
-              <span className="hud-pw-icon">{config.icon}</span>
-              <div className="hud-pw-info">
-                <div className="hud-pw-name">{config.name}</div>
-                <div className="hud-pw-progress-bg">
-                  <div
-                    className="hud-pw-progress-fill"
-                    style={{ width: `${percent}%`, backgroundColor: config.color }}
-                  />
-                </div>
-              </div>
-              <span className="hud-pw-time">{Math.ceil(timeLeft)}s</span>
+          {/* Stage Center Banner */}
+          <div
+            className="hud-level-center"
+            style={{
+              borderColor: levelInfo.neonColor || '#38bdf8',
+              boxShadow: `0 0 15px ${levelInfo.neonColor || '#38bdf8'}40`,
+              position: 'relative'
+            }}
+            onClick={() => setShowLevelSelect(true)}
+          >
+            <div className="hud-level-tag" style={{ color: levelInfo.neonColor || '#38bdf8' }}>
+              STAGE {safeLevel}/30
             </div>
-          );
-        })}
-      </div>
+            <div className="hud-level-name">{levelInfo.name}</div>
+            {levelInfo.city && <div className="hud-level-city">{levelInfo.city}</div>}
+          </div>
 
-      {/* Gift Mystery Box Notification Toast */}
-      {giftCollectedType && (
-        <div className="hud-gift-toast">
-          <Gift size={28} className="gift-toast-icon" />
-          <div className="gift-toast-text">
-            <span className="gift-toast-title">MYSTERY GIFT UNBOXED! 🎁</span>
-            <span className="gift-toast-desc">
-              Powerup Granted: {POWERUP_CONFIG[giftCollectedType]?.name || 'Special Power'}!
-            </span>
+          {/* Timer */}
+          <div className={`hud-timer-card ${isLowTime ? 'low-time' : ''}`}>
+            <div className="hud-timer-label">⏱️ TIME</div>
+            <div className="hud-timer-number">{safeTimeLeft}s</div>
+          </div>
+
+          {/* Coins */}
+          <div className="hud-coins-pill">
+            💎 <animated.span>{animatedCoins.to((n) => Math.floor(n))}</animated.span>
+            <span className="hud-coin-total">(🪙 {(totalCoins || 0).toLocaleString()})</span>
+          </div>
+
+          {/* Mystery Box Count */}
+          {mysteryBoxCount > 0 && (
+            <div className="hud-mystery-pill">
+              🎁 <span>x{mysteryBoxCount}</span>
+            </div>
+          )}
+
+          {/* Speed Indicator */}
+          <div className="hud-speed-pill" style={{ borderColor: levelInfo.railColor }}>
+            ⚡ {Math.round(speed || 0)} km/h
+          </div>
+
+          {/* Trial Unlock Button */}
+          {!isActivated && (
+            <button className="hud-trial-unlock-btn animate-pulse-slow" onClick={() => useGameStore.getState().setShowPaymentModal(true)}>
+              🔓 UNLOCK FULL GAME
+            </button>
+          )}
+
+          {/* Quick Action Buttons */}
+          <div className="hud-quick-btns">
+            {/* Character Pill */}
+            <div
+              className="hud-char-pill"
+              onClick={() => setShowCharDropdown(!showCharDropdown)}
+            >
+              <span className="hud-char-avatar">{activeChar.avatar}</span>
+              <span className="hud-char-name">{activeChar.name.split(' ')[0]}</span>
+            </div>
+
+            <button className="top-quick-btn" onClick={toggleMute}>
+              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            </button>
+            <button className="top-quick-btn" onClick={pauseGame}>
+              <Pause size={18} />
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Bottom Left: In-Run Coin Powerup Quick-Buy Shop */}
-      <div className="hud-quickbuy-panel">
-        <div className="hud-quickbuy-title">
-          <span>⚡ INSTANT POWER SHOP</span>
-        </div>
-        <div className="hud-quickbuy-buttons">
-          <button
-            className={`quickbuy-btn ${totalCoins < 50 ? 'disabled' : ''}`}
-            onClick={() => quickBuyPowerup(POWERUP_TYPES.MAGNET, 50)}
-            title="Buy Magnet (50 Coins)"
-          >
-            <span className="quickbuy-icon">🧲</span>
-            <span className="quickbuy-name">Magnet</span>
-            <span className="quickbuy-cost">🪙 50</span>
-          </button>
+        {/* ─── Character Quick-Switch Dropdown ──────────────────────── */}
+        {showCharDropdown && (
+          <div className="hud-char-dropdown" style={{ pointerEvents: 'auto' }}>
+            <div className="hud-char-dropdown-title">⚡ SWITCH RUNNER</div>
+            <div className="hud-char-dropdown-list">
+              {CHARACTERS.map((char) => {
+                const isUnlocked = unlockedCharacters.includes(char.id);
+                const isActive = selectedCharacter === char.id;
+                return (
+                  <div
+                    key={char.id}
+                    className={`hud-char-option ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`}
+                    style={{ borderColor: isActive ? char.color : 'transparent' }}
+                    onClick={() => {
+                      if (isUnlocked) {
+                        selectCharacter(char.id);
+                        setShowCharDropdown(false);
+                      } else {
+                        setShowShop(true);
+                        setShowCharDropdown(false);
+                      }
+                    }}
+                  >
+                    <span className="hud-char-option-avatar">{char.avatar}</span>
+                    <div className="hud-char-option-info">
+                      <span className="hud-char-option-name">{char.name}</span>
+                      <span className="hud-char-option-bonus">{isUnlocked ? char.bonus : `🔒 ${char.price} coins`}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-          <button
-            className={`quickbuy-btn hoverboard-btn ${totalCoins < 80 ? 'disabled' : ''}`}
-            onClick={() => quickBuyPowerup(POWERUP_TYPES.HOVERBOARD, 80)}
-            title="Buy Skateboard / Hoverboard (80 Coins)"
-          >
-            <span className="quickbuy-icon">🛹</span>
-            <span className="quickbuy-name">Skate</span>
-            <span className="quickbuy-cost">🪙 80</span>
-          </button>
+        {/* ─── Stage Perk Banner ────────────────────────────────────── */}
+        {levelInfo.stagePerk && (
+          <div className="hud-stage-perk" style={{ pointerEvents: 'none' }}>
+            <Shield size={14} />
+            <span>{levelInfo.stagePerk}</span>
+          </div>
+        )}
 
-          <button
-            className={`quickbuy-btn jetpack-btn ${totalCoins < 120 ? 'disabled' : ''}`}
-            onClick={() => quickBuyPowerup(POWERUP_TYPES.JETPACK, 120)}
-            title="Buy Sky Flyer Jetpack (120 Coins)"
-          >
-            <span className="quickbuy-icon">🚀</span>
-            <span className="quickbuy-name">Sky Jet</span>
-            <span className="quickbuy-cost">🪙 120</span>
-          </button>
+        {/* ─── Active Powerups Bar ─────────────────────────────────── */}
+        {activePowerupList.length > 0 && (
+          <div className="hud-powerups-bar" style={{ pointerEvents: 'none' }}>
+            {activePowerupList.map(({ type, time, config }) => (
+              <div
+                key={type}
+                className="hud-powerup-pill"
+                style={{ borderColor: config.color, boxShadow: `0 0 10px ${config.color}50` }}
+              >
+                <span className="hud-powerup-icon">{config.icon}</span>
+                <span className="hud-powerup-name">{config.name}</span>
+                <span className="hud-powerup-timer" style={{ color: config.color }}>
+                  {Math.ceil(time)}s
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ─── Robot Destroyer / Chaser Alert ──────────────────────── */}
+        {(isStumbling || isChaserClose) && (
+          <div className={`chaser-alert-banner ${isStumbling ? 'stumbling' : 'close'}`} style={{ pointerEvents: 'none' }}>
+            <AlertTriangle size={20} color="#ef4444" />
+            <div className="chaser-alert-content">
+              <span className="chaser-alert-title">
+                {isStumbling ? '⚠️ ROBOT DESTROYER INCOMING!' : '🔴 DESTROYER CLOSING IN!'}
+              </span>
+              <span className="chaser-alert-sub">
+                {isStumbling ? 'Stumble detected! Run faster or get captured!' : `Distance: ${chaserDistance.toFixed(1)}m — EVADE NOW!`}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* ─── Distance Meter ──────────────────────────────────────── */}
+        <div className="hud-distance-bar" style={{ pointerEvents: 'none' }}>
+          <span>🏃‍♂️ {Math.floor(distanceTraveled || 0).toLocaleString()}m</span>
         </div>
       </div>
 
-      {/* Bottom Center: Quick Hoverboard Key Reminder */}
-      {!isHoverboardActive && (
-        <button className="hud-hoverboard-quick-btn" onClick={activateHoverboard}>
-          <span>🛹</span>
-          <span>ACTIVATE SKATEBOARD (B)</span>
-        </button>
-      )}
-    </div>
+      {/* Modals */}
+      {showLevelSelect && <LevelSelectModal onClose={() => setShowLevelSelect(false)} />}
+      {showShop && <ShopModal onClose={() => setShowShop(false)} />}
+    </>
   );
 };

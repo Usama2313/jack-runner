@@ -1,24 +1,56 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { CHARACTERS, HOVERBOARD_SKINS, POWERUP_CONFIG, POWERUP_TYPES } from '../../utils/constants';
-import { ShoppingBag, X, Check, Lock, ArrowUpCircle } from 'lucide-react';
+import { ShoppingBag, X, Check, Lock, ArrowUpCircle, Sparkles } from 'lucide-react';
 
 export const ShopModal = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState('characters'); // 'characters' | 'boards' | 'upgrades'
+  const [feedbackMsg, setFeedbackMsg] = useState(null);
 
-  const totalCoins = useGameStore((s) => s.totalCoins);
+  const totalCoins = useGameStore((s) => s.totalCoins) || 0;
   const selectedCharacter = useGameStore((s) => s.selectedCharacter);
-  const unlockedCharacters = useGameStore((s) => s.unlockedCharacters);
+  const unlockedCharacters = useGameStore((s) => s.unlockedCharacters) || ['jack'];
   const selectCharacter = useGameStore((s) => s.selectCharacter);
   const buyCharacter = useGameStore((s) => s.buyCharacter);
 
   const selectedBoard = useGameStore((s) => s.selectedBoard);
-  const unlockedBoards = useGameStore((s) => s.unlockedBoards);
+  const unlockedBoards = useGameStore((s) => s.unlockedBoards) || ['classic'];
   const selectBoard = useGameStore((s) => s.selectBoard);
   const buyBoard = useGameStore((s) => s.buyBoard);
 
-  const upgrades = useGameStore((s) => s.upgrades);
+  const upgrades = useGameStore((s) => s.upgrades) || {};
   const upgradePowerup = useGameStore((s) => s.upgradePowerup);
+
+  const showToast = (msg) => {
+    setFeedbackMsg(msg);
+    setTimeout(() => setFeedbackMsg(null), 2500);
+  };
+
+  const handleCharacterAction = (char) => {
+    const isUnlocked = unlockedCharacters.includes(char.id);
+    if (isUnlocked) {
+      selectCharacter(char.id);
+      showToast(`⚡ Equipped ${char.name}!`);
+    } else if (totalCoins >= char.price) {
+      buyCharacter(char.id, char.price);
+      showToast(`🎉 Unlocked & Equipped ${char.name}!`);
+    } else {
+      showToast(`❌ Need ${(char.price - totalCoins).toLocaleString()} more coins!`);
+    }
+  };
+
+  const handleBoardAction = (board) => {
+    const isUnlocked = unlockedBoards.includes(board.id);
+    if (isUnlocked) {
+      selectBoard(board.id);
+      showToast(`🛹 Equipped ${board.name}!`);
+    } else if (totalCoins >= board.price) {
+      buyBoard(board.id, board.price);
+      showToast(`🎉 Unlocked & Equipped ${board.name}!`);
+    } else {
+      showToast(`❌ Need ${(board.price - totalCoins).toLocaleString()} more coins!`);
+    }
+  };
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -27,7 +59,7 @@ export const ShopModal = ({ onClose }) => {
         <div className="modal-header">
           <div className="modal-title-row">
             <ShoppingBag size={26} color="#38bdf8" />
-            <h2>SUBWAY SHOP & UPGRADES</h2>
+            <h2>KINETIC JACK GEAR & SHOP</h2>
           </div>
           <div className="shop-balance-badge">
             <span>🪙</span>
@@ -38,19 +70,27 @@ export const ShopModal = ({ onClose }) => {
           </button>
         </div>
 
+        {/* Action Feedback Toast */}
+        {feedbackMsg && (
+          <div className="shop-feedback-toast">
+            <Sparkles size={16} />
+            <span>{feedbackMsg}</span>
+          </div>
+        )}
+
         {/* Tab Navigation */}
         <div className="shop-tabs">
           <button
             className={`shop-tab ${activeTab === 'characters' ? 'active' : ''}`}
             onClick={() => setActiveTab('characters')}
           >
-            CHARACTERS
+            ROBOTS & RUNNERS
           </button>
           <button
             className={`shop-tab ${activeTab === 'boards' ? 'active' : ''}`}
             onClick={() => setActiveTab('boards')}
           >
-            HOVERBOARDS
+            PLASMA BOARDS
           </button>
           <button
             className={`shop-tab ${activeTab === 'upgrades' ? 'active' : ''}`}
@@ -73,10 +113,13 @@ export const ShopModal = ({ onClose }) => {
                 return (
                   <div
                     key={char.id}
-                    className={`shop-card ${isSelected ? 'selected' : ''}`}
+                    className={`shop-card ${isSelected ? 'selected' : ''} ${!isUnlocked ? 'locked' : ''}`}
                     style={{ borderColor: isSelected ? char.color : '#334155' }}
+                    onClick={() => handleCharacterAction(char)}
                   >
-                    <div className="shop-card-avatar">{char.avatar}</div>
+                    <div className="shop-card-avatar" style={{ backgroundColor: `${char.color}22` }}>
+                      {char.avatar}
+                    </div>
                     <h3 className="shop-card-name">{char.name}</h3>
                     <p className="shop-card-title">{char.title}</p>
                     <div className="shop-card-bonus">{char.bonus}</div>
@@ -84,19 +127,25 @@ export const ShopModal = ({ onClose }) => {
                     <div className="shop-card-action">
                       {isSelected ? (
                         <div className="status-badge selected-badge">
-                          <Check size={16} /> SELECTED
+                          <Check size={16} /> ACTIVE RUNNER
                         </div>
                       ) : isUnlocked ? (
                         <button
                           className="shop-action-btn select-btn"
-                          onClick={() => selectCharacter(char.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCharacterAction(char);
+                          }}
                         >
-                          EQUIP
+                          SELECT & EQUIP
                         </button>
                       ) : (
                         <button
                           className={`shop-action-btn buy-btn ${!canAfford ? 'disabled' : ''}`}
-                          onClick={() => canAfford && buyCharacter(char.id, char.price)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCharacterAction(char);
+                          }}
                           disabled={!canAfford}
                         >
                           <Lock size={14} /> 🪙 {char.price.toLocaleString()}
@@ -109,7 +158,7 @@ export const ShopModal = ({ onClose }) => {
             </div>
           )}
 
-          {/* HOVERBOARDS TAB */}
+          {/* PLASMA BOARDS TAB */}
           {activeTab === 'boards' && (
             <div className="shop-cards-grid">
               {HOVERBOARD_SKINS.map((board) => {
@@ -120,31 +169,38 @@ export const ShopModal = ({ onClose }) => {
                 return (
                   <div
                     key={board.id}
-                    className={`shop-card ${isSelected ? 'selected' : ''}`}
+                    className={`shop-card ${isSelected ? 'selected' : ''} ${!isUnlocked ? 'locked' : ''}`}
                     style={{ borderColor: isSelected ? board.color : '#334155' }}
+                    onClick={() => handleBoardAction(board)}
                   >
                     <div className="shop-board-preview" style={{ backgroundColor: board.color }}>
                       🛹
                     </div>
                     <h3 className="shop-card-name">{board.name}</h3>
-                    <p className="shop-card-title">Protects against 1 crash</p>
+                    <p className="shop-card-title">Shields from 1 collision crash</p>
 
                     <div className="shop-card-action">
                       {isSelected ? (
                         <div className="status-badge selected-badge">
-                          <Check size={16} /> EQUIPPED
+                          <Check size={16} /> ACTIVE BOARD
                         </div>
                       ) : isUnlocked ? (
                         <button
                           className="shop-action-btn select-btn"
-                          onClick={() => selectBoard(board.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBoardAction(board);
+                          }}
                         >
-                          EQUIP
+                          SELECT & EQUIP
                         </button>
                       ) : (
                         <button
                           className={`shop-action-btn buy-btn ${!canAfford ? 'disabled' : ''}`}
-                          onClick={() => canAfford && buyBoard(board.id, board.price)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBoardAction(board);
+                          }}
                           disabled={!canAfford}
                         >
                           <Lock size={14} /> 🪙 {board.price.toLocaleString()}
@@ -190,11 +246,16 @@ export const ShopModal = ({ onClose }) => {
 
                     <div className="upgrade-action">
                       {isMax ? (
-                        <div className="max-badge">MAXED OUT</div>
+                        <div className="max-badge">MAX LEVEL</div>
                       ) : (
                         <button
                           className={`upgrade-btn ${!canAfford ? 'disabled' : ''}`}
-                          onClick={() => canAfford && upgradePowerup(type, cost)}
+                          onClick={() => {
+                            if (canAfford) {
+                              upgradePowerup(type, cost);
+                              showToast(`⚡ Upgraded ${config.name}!`);
+                            }
+                          }}
                           disabled={!canAfford}
                         >
                           <ArrowUpCircle size={16} />

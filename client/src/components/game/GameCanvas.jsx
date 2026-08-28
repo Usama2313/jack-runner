@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Player } from './Player';
+import { RobotChaser } from './RobotChaser';
 import { Track } from './Track';
 import { Obstacle } from './Obstacle';
 import { Coin, PowerupItem, GiftBox } from './Collectible';
@@ -15,24 +16,30 @@ import {
   VISIBLE_CHUNKS,
   LANE_WIDTH,
   PLAYER_Y_BASE,
-  POWERUP_TYPES
+  POWERUP_TYPES,
+  LEVELS
 } from '../../utils/constants';
 import { generateTrackChunk } from '../../utils/generator';
 import { checkObstacleCollision, checkCoinCollision, checkPowerupCollision } from '../../utils/collision';
 
-/** Dynamic lighting rig that follows the player forward each frame */
+const parseValidLevel = (val) => {
+  const num = typeof val === 'number' ? val : Number(val);
+  return !isNaN(num) && num >= 1 ? Math.max(1, Math.min(LEVELS.length, Math.floor(num))) : 1;
+};
+
+/** Dynamic lighting rig that follows the player and uses level theme colors */
 const DynamicLighting = ({ playerZRef }) => {
+  const currentLevel = useGameStore((s) => s.currentLevel);
+  const safeLevel = parseValidLevel(currentLevel);
+  const levelInfo = LEVELS[safeLevel - 1] || LEVELS[0];
+
   const dirLightRef = useRef();
   const dirTargetRef = useRef();
   const rimPinkRef = useRef();
   const rimCyanRef = useRef();
 
-  const frameCount = useRef(0);
-
   useFrame(() => {
-    frameCount.current++;
-    if (frameCount.current % 4 !== 0) return; // update lighting every 4 frames only
-    const pz = playerZRef && playerZRef.current ? playerZRef.current : 0;
+    const pz = playerZRef && playerZRef.current !== undefined ? playerZRef.current : 0;
 
     if (dirLightRef.current && dirTargetRef.current) {
       dirLightRef.current.position.set(15, 28, pz + 12);
@@ -50,68 +57,73 @@ const DynamicLighting = ({ playerZRef }) => {
 
   return (
     <>
-      {/* Ambient & Sky fill */}
-      <ambientLight intensity={1.1} color="#c7d2fe" />
+      {/* Ambient & Sky fill dynamically themed */}
+      <ambientLight intensity={1.3} color={levelInfo.skyColor || '#c7d2fe'} />
       <hemisphereLight
-        skyColor="#818cf8"
-        groundColor="#1e1b4b"
-        intensity={0.9}
+        skyColor={levelInfo.neonColor || '#818cf8'}
+        groundColor={levelInfo.fogColor || '#1e1b4b'}
+        intensity={1.1}
       />
 
-      {/* Main sun/key light following player */}
+      {/* Main sun/key light */}
       <object3D ref={dirTargetRef} />
       <directionalLight
         ref={dirLightRef}
         position={[15, 28, 12]}
-        intensity={1.8}
+        intensity={2.2}
         color="#ffffff"
         castShadow={false}
       />
 
-      {/* Dynamic Cyberpunk Rim & Accent lights following player */}
+      {/* Dynamic Cyberpunk Rim & Accent lights */}
       <pointLight
         ref={rimPinkRef}
         position={[-10, 8, -18]}
-        intensity={2.8}
-        color="#ec4899"
-        distance={25}
+        intensity={3.5}
+        color={levelInfo.neonColor || '#ec4899'}
+        distance={35}
       />
       <pointLight
         ref={rimCyanRef}
         position={[10, 8, -18]}
-        intensity={2.8}
-        color="#06b6d4"
-        distance={25}
+        intensity={3.5}
+        color={levelInfo.railColor || '#06b6d4'}
+        distance={35}
       />
     </>
   );
 };
 
-
 // ─── Main Game Scene ──────────────────────────────────────────────────────────
 const GameScene = () => {
-  // Only subscribe to gameState so 60fps physics updates don't cause React re-renders!
   const gameState = useGameStore((s) => s.gameState);
+  const currentLevel = useGameStore((s) => s.currentLevel);
+  const safeLevel = parseValidLevel(currentLevel);
+  const levelInfo = LEVELS[safeLevel - 1] || LEVELS[0];
+  const isMysteryBoxPaused = useGameStore((s) => s.isMysteryBoxPaused);
 
   const playerZRef = useRef(0);
   const currentChunkIndexRef = useRef(0);
 
   // Active chunks management
   const [chunks, setChunks] = useState(() => {
-    return Array.from({ length: VISIBLE_CHUNKS }, (_, i) => generateTrackChunk(i));
+    return Array.from({ length: VISIBLE_CHUNKS }, (_, i) => generateTrackChunk(i, safeLevel));
   });
 
-  // Reset track on game restart
+  // Reset track on game start or level change
   useEffect(() => {
     if (gameState === GAME_STATES.PLAYING) {
       playerZRef.current = 0;
       currentChunkIndexRef.current = 0;
-      setChunks(Array.from({ length: VISIBLE_CHUNKS }, (_, i) => generateTrackChunk(i)));
+      setChunks(Array.from({ length: VISIBLE_CHUNKS }, (_, i) => generateTrackChunk(i, safeLevel)));
     }
-  }, [gameState]);
+  }, [gameState, safeLevel]);
 
   // Main 60fps Game Loop
-  useFrame((state, delta) => {
+  useFrame((state, rawDelta) => {
+    // Clamp delta to prevent tunneling during lag
+    const delta = Math.min(rawDelta, 0.045);
+
     const store = useGameStore.getState();
     const {
       speed,
@@ -119,17 +131,21 @@ const GameScene = () => {
       isJumping,
       isRolling,
       isDead,
+      isCaptured,
       activePowerups,
       collectCoin,
       activatePowerup,
-      collectGift,
+      collectMysteryBox,
+      stumble,
+      triggerCrash,
+      updateChaser,
       tickLevelTimer,
       incrementDistanceAndScore,
-      updatePowerupTimers,
-      triggerGameOver
+      updatePowerupTimers
     } = store;
 
-    if (store.gameState !== GAME_STATES.PLAYING || isDead) return;
+    // Halt movement when not playing, dead, captured, or unboxing mystery box
+    if (store.gameState !== GAME_STATES.PLAYING || isDead || isCaptured || isMysteryBoxPaused) return;
 
     // Advance player forward in negative Z
     const distanceStep = speed * delta;
@@ -137,6 +153,7 @@ const GameScene = () => {
     incrementDistanceAndScore(distanceStep);
     updatePowerupTimers(delta);
     tickLevelTimer(delta);
+    updateChaser(delta);
 
     const pz = playerZRef.current;
     const px = lane * LANE_WIDTH;
@@ -172,7 +189,7 @@ const GameScene = () => {
         const needed = [];
         for (let i = minIdx; i <= maxIdx; i++) {
           if (!currentSet.has(i)) {
-            needed.push(generateTrackChunk(i));
+            needed.push(generateTrackChunk(i, safeLevel));
           }
         }
         const retained = prev.filter((c) => c.chunkIndex >= minIdx && c.chunkIndex <= maxIdx);
@@ -180,19 +197,24 @@ const GameScene = () => {
       });
     }
 
-    // Process collisions on current and neighboring chunks
+    // Process collisions on active chunks
     chunks.forEach((chunk) => {
       // 1. Obstacle collisions
       chunk.obstacles.forEach((obs) => {
         if (obs.speed > 0) {
           obs.z += obs.speed * delta;
         }
-        if (checkObstacleCollision(playerCollider, obs)) {
-          triggerGameOver(obs.type);
+        const { collided, isStumble } = checkObstacleCollision(playerCollider, obs);
+        if (collided) {
+          if (isStumble) {
+            stumble(obs.type);
+          } else {
+            triggerCrash(obs.type);
+          }
         }
       });
 
-      // 2. Coin collections & Magnet pull
+      // 2. Celestial Rings collections & Magnet pull
       chunk.coins.forEach((coin) => {
         if (coin.collected) return;
 
@@ -202,9 +224,9 @@ const GameScene = () => {
           coin.collected = true;
           collectCoin();
         } else if (shouldMagnetize) {
-          coin.x += (px - coin.x) * delta * 12;
-          coin.y += (py - coin.y) * delta * 12;
-          coin.z += (pz - coin.z) * delta * 12;
+          coin.x += (px - coin.x) * delta * 14;
+          coin.y += (py - coin.y) * delta * 14;
+          coin.z += (pz - coin.z) * delta * 14;
           if (Math.abs(coin.z - pz) < 1.0) {
             coin.collected = true;
             collectCoin();
@@ -221,13 +243,13 @@ const GameScene = () => {
         }
       });
 
-      // 4. Gift box collections
+      // 4. Mystery Box collections (Auto-Pauses game)
       if (chunk.giftBoxes) {
         chunk.giftBoxes.forEach((gift) => {
           if (gift.collected) return;
           if (checkPowerupCollision(playerCollider, gift)) {
             gift.collected = true;
-            collectGift();
+            collectMysteryBox();
           }
         });
       }
@@ -236,17 +258,20 @@ const GameScene = () => {
 
   return (
     <>
-      {/* Dynamic Lighting rig that follows player and illuminates track ahead */}
+      {/* Dynamic Lighting rig that follows player */}
       <DynamicLighting playerZRef={playerZRef} />
 
-      {/* Atmospheric Cyber Fog with soft distant horizon blend */}
-      <fog attach="fog" args={['#0f172a', 40, 130]} />
+      {/* Atmospheric Fog dynamically matched to level theme */}
+      <fog key={`fog-stage-${safeLevel}`} attach="fog" args={[levelInfo.fogColor || '#0f172a', 45, 145]} />
 
       {/* Dynamic Follow Camera */}
       <CameraFollow playerZRef={playerZRef} />
 
       {/* 3D Animated Player */}
       <Player playerZRef={playerZRef} />
+
+      {/* 3D Robot Destroyer Pursuer */}
+      <RobotChaser playerZRef={playerZRef} />
 
       {/* Speed Dust & Exhaust Particle Systems */}
       <ParticleSystem playerZRef={playerZRef} />
@@ -305,6 +330,10 @@ const GameScene = () => {
 
 // ─── Canvas Wrapper ───────────────────────────────────────────────────────────
 export const GameCanvas = () => {
+  const currentLevel = useGameStore((s) => s.currentLevel);
+  const safeLevel = parseValidLevel(currentLevel);
+  const levelInfo = LEVELS[safeLevel - 1] || LEVELS[0];
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'absolute', top: 0, left: 0, zIndex: 1 }}>
       <Canvas
@@ -312,7 +341,7 @@ export const GameCanvas = () => {
         gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
         shadows={false}
       >
-        <color attach="background" args={['#0f172a']} />
+        <color key={`bg-stage-${safeLevel}`} attach="background" args={[levelInfo.fogColor || '#0f172a']} />
         <GameScene />
       </Canvas>
     </div>
