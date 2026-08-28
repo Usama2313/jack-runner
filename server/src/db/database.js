@@ -93,7 +93,22 @@ const db = {
     const userScores = (data.scores || []).filter(s => s.username.toLowerCase() === username.toLowerCase());
     if (!userScores.length) return null;
     return userScores.reduce((max, s) => s.score > max.score ? s : max, userScores[0]);
+  },
+  setUserUnlockedLevels: (userId, levelsArray) => {
+    const data = readDb();
+    const user = data.users.find(u => u.id === Number(userId));
+    if (!user) return false;
+    user.unlocked_levels = levelsArray;
+    writeDb(data);
+    return true;
+  },
+  setUserActivated: (userId, activated) => {
+    const data = readDb();
+    const user = data.users.find(u => u.id === Number(userId));
+    if (!user) return false;
+    user.is_activated = activated;
+    writeDb(data);
+    return true;
   }
 };
-
-module.exports = { db };
+module.exports = db;

@@ -16,6 +16,8 @@ import { useGameStore } from './store/gameStore';
 import { useInput } from './hooks/useInput';
 import { useSocket } from './hooks/useSocket';
 import { GAME_STATES } from './utils/constants';
+import AdminPanel from './pages/AdminPanel';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 export default function App() {
   const gameState = useGameStore((s) => s.gameState);
@@ -30,56 +32,63 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false);
 
   return (
-    <div className="game-app-root">
-      {/* 3D WebGL Canvas always active in background with dynamic camera */}
-      <GameCanvas />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/" element={
+          <div className="game-app-root">
+            {/* 3D WebGL Canvas always active in background with dynamic camera */}
+            <GameCanvas />
 
-      {/* In-Game Heads Up Display */}
-      {gameState === GAME_STATES.PLAYING && (
-        <>
-          <HUD />
-          <TouchControls />
-        </>
-      )}
+            {/* In-Game Heads Up Display */}
+            {gameState === GAME_STATES.PLAYING && (
+              <>
+                <HUD />
+                <TouchControls />
+              </>
+            )}
 
-      {/* Main Menu Screen */}
-      {gameState === GAME_STATES.MENU && (
-        <MainMenu
-          onOpenLeaderboard={() => setShowLeaderboard(true)}
-          onOpenShop={() => setShowShop(true)}
-          onOpenAuth={() => setShowAuth(true)}
-        />
-      )}
+            {/* Main Menu Screen */}
+            {gameState === GAME_STATES.MENU && (
+              <MainMenu
+                onOpenLeaderboard={() => setShowLeaderboard(true)}
+                onOpenShop={() => setShowShop(true)}
+                onOpenAuth={() => setShowAuth(true)}
+              />
+            )}
 
-      {/* Pause Screen */}
-      {gameState === GAME_STATES.PAUSED && <PauseOverlay />}
+            {/* Pause Screen */}
+            {gameState === GAME_STATES.PAUSED && <PauseOverlay />}
 
-      {/* Level Cleared Screen */}
-      {gameState === GAME_STATES.LEVEL_COMPLETE && <LevelComplete />}
+            {/* Level Cleared Screen */}
+            {gameState === GAME_STATES.LEVEL_COMPLETE && <LevelComplete />}
 
-      {/* Game Over Screen */}
-      {gameState === GAME_STATES.GAME_OVER && (
-        <GameOver onOpenLeaderboard={() => setShowLeaderboard(true)} />
-      )}
+            {/* Game Over Screen */}
+            {gameState === GAME_STATES.GAME_OVER && (
+              <GameOver onOpenLeaderboard={() => setShowLeaderboard(true)} />
+            )}
 
-      {/* Mystery Box Reveal Animation Popup */}
-      <MysteryBoxModal />
+            {/* Mystery Box Reveal Animation Popup */}
+            <MysteryBoxModal />
 
-      {/* Modals */}
-      {showLeaderboard && (
-        <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
-      )}
+            {/* Modals */}
+            {showLeaderboard && (
+              <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
+            )}
 
-      {showShop && (
-        <ShopModal onClose={() => setShowShop(false)} />
-      )}
+            {showShop && (
+              <ShopModal onClose={() => setShowShop(false)} />
+            )}
 
-      {showAuth && (
-        <AuthModal onClose={() => setShowAuth(false)} />
-      )}
+            {showAuth && (
+              <AuthModal onClose={() => setShowAuth(false)} />
+            )}
 
-      {/* Payment / Activation Modal */}
-      <PaymentModal />
-    </div>
+            {/* Payment / Activation Modal */}
+            <PaymentModal />
+          </div>
+        } />
+      </Routes>
+    </BrowserRouter>
   );
 }
