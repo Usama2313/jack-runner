@@ -111,4 +111,6 @@ const db = {
     return true;
   }
 };
+
 module.exports = db;
+module.exports.db = db;
