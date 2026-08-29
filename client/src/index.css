@@ -3704,51 +3704,56 @@ body, html {
 }
 
 /* =========================================================
-   MOBILE RESPONSIVE TWEAKS & HIDING DPAD CONTROLS
+   UNIVERSAL OVERFLOW AUTO (X & Y) ACROSS ALL GAME MODALS & PANELS
    ========================================================= */
-@media (max-width: 768px) {
-  .touch-controls-container {
-    display: none !important;
-  }
+.game-app-root,
+.main-menu-overlay,
+.game-over-overlay,
+.game-over-modal,
+.modal-backdrop,
+.modal-container,
+.payment-modal-backdrop,
+.payment-modal-container,
+.shop-modal,
+.shop-content-scroll,
+.leaderboard-modal,
+.leaderboard-list-container,
+.auth-modal,
+.level-select-modal,
+.level-select-grid,
+.level-complete-modal,
+.mystery-box-backdrop,
+.mystery-box-modal,
+.batch-mystery-modal,
+.batch-rewards-scroll-list,
+.pause-overlay,
+.pause-modal,
+.admin-panel,
+.admin-panel-container {
+  overflow: auto !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.4) rgba(15, 23, 42, 0.6);
+}
 
-  .hud-top-bar {
-    gap: 6px !important;
-    padding: 6px !important;
-    flex-wrap: wrap !important;
-  }
+/* Custom smooth scrollbars for all game elements */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
 
-  .hud-coins-pill {
-    display: flex !important;
-    font-size: 0.85rem !important;
-    padding: 4px 10px !important;
-    min-width: auto !important;
-    z-index: 50 !important;
-    order: 2;
-  }
+*::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 999px;
+}
 
-  .hud-score-card {
-    min-width: 90px !important;
-    padding: 4px 10px !important;
-    order: 1;
-  }
+*::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.4);
+  border-radius: 999px;
+}
 
-  .hud-score-number {
-    font-size: 1.2rem !important;
-  }
-
-  .hud-level-center {
-    max-width: 150px !important;
-    padding: 4px 8px !important;
-    order: 3;
-  }
-
-  .hud-timer-card {
-    padding: 4px 8px !important;
-    font-size: 0.85rem !important;
-    order: 4;
-  }
-
-  .hud-quick-btns {
-    order: 5;
-  }
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-neon, #38bdf8);
 }
