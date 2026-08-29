@@ -57,6 +57,21 @@ export const Player = ({ playerZRef }) => {
   const rollProgressRef = useRef(0);
   const runCycleRef = useRef(0);
 
+  const gameState = useGameStore((s) => s.gameState);
+
+  React.useEffect(() => {
+    if (gameState === 'PLAYING') {
+      currentRotZRef.current = 0;
+      currentRotXRef.current = 0;
+      currentScaleYRef.current = 1;
+      currentScaleZRef.current = 1;
+      currentXRef.current = 0;
+      currentBankZRef.current = 0;
+      jumpProgressRef.current = 0;
+      rollProgressRef.current = 0;
+    }
+  }, [gameState]);
+
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 

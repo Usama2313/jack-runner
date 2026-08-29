@@ -535,6 +535,10 @@ export const useGameStore = create((set, get) => {
       set({ totalCoins: newTotal, activeMysteryBox: { rewards, totalCoins: totalCoinsWon }, pendingBoxRewards: [], mysteryBoxCount: 0 });
     },
 
+    closeMysteryBox: () => {
+      set({ activeMysteryBox: null, isMysteryBoxPaused: false });
+    },
+
     incrementDistanceAndScore: (deltaDistance) => {
       const char = CHARACTERS.find((c) => c.id === get().selectedCharacter);
       const scoreBonus = char?.id === 'valkyrie' ? 1.25 : 1.0;

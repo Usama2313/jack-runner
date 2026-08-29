@@ -35,3 +35,5 @@ yarn-error.log*
 # SQLite / data files (server generates these at runtime)
 server/data/*.db
 server/data/*.sqlite
+
+.vercel

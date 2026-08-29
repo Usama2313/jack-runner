@@ -3426,6 +3426,329 @@ body, html {
   100% { transform: scale(1.02); opacity: 1; }
 }
 
+/* =========================================================
+   PAYMENT MODAL & MOBILE OVERFLOW-Y STYLES
+   ========================================================= */
+.payment-modal-backdrop,
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(9, 13, 22, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+}
 
+.payment-modal-container,
+.modal-container {
+  background: #0f172a;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.2);
+  display: flex;
+  flex-direction: column;
+}
 
+.payment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
 
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #38bdf8;
+}
+
+.modal-title-row h2 {
+  font-family: var(--font-arcade);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover {
+  color: #ffffff;
+}
+
+.payment-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto !important;
+}
+
+.trial-badge-container {
+  display: flex;
+  justify-content: center;
+}
+
+.trial-badge {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 4px 14px;
+  border-radius: 999px;
+  letter-spacing: 1px;
+}
+
+.payment-desc {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.jazzcash-card {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(15, 23, 42, 0.8));
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 10px 25px rgba(220, 38, 38, 0.15);
+}
+
+.jc-logo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.jc-brand {
+  font-family: var(--font-arcade);
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #ef4444;
+}
+
+.jc-fee {
+  background: #facc15;
+  color: #000000;
+  font-weight: 900;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.jc-instructions p {
+  font-size: 0.88rem;
+  color: #cbd5e1;
+  margin-bottom: 10px;
+}
+
+.account-number-box {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+
+.account-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.account-action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.account-number {
+  font-family: var(--font-arcade);
+  font-size: 1.2rem;
+  color: #fef08a;
+  letter-spacing: 1px;
+}
+
+.copy-btn {
+  background: rgba(56, 189, 248, 0.2);
+  border: 1px solid var(--primary-neon);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.holder-row {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-top: 8px;
+}
+
+.activation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tid-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.submit-tid-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.error-message {
+  color: #f87171;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.form-note {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.activation-success-card {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  color: #ffffff;
+}
+
+.tester-action-row {
+  margin-top: 8px;
+}
+
+.demo-bypass-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: rgba(250, 204, 21, 0.15);
+  border: 1px solid #facc15;
+  color: #fef08a;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* =========================================================
+   MOBILE RESPONSIVE TWEAKS & HIDING DPAD CONTROLS
+   ========================================================= */
+@media (max-width: 768px) {
+  .touch-controls-container {
+    display: none !important;
+  }
+
+  .hud-top-bar {
+    gap: 6px !important;
+    padding: 6px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .hud-coins-pill {
+    display: flex !important;
+    font-size: 0.85rem !important;
+    padding: 4px 10px !important;
+    min-width: auto !important;
+    z-index: 50 !important;
+    order: 2;
+  }
+
+  .hud-score-card {
+    min-width: 90px !important;
+    padding: 4px 10px !important;
+    order: 1;
+  }
+
+  .hud-score-number {
+    font-size: 1.2rem !important;
+  }
+
+  .hud-level-center {
+    max-width: 150px !important;
+    padding: 4px 8px !important;
+    order: 3;
+  }
+
+  .hud-timer-card {
+    padding: 4px 8px !important;
+    font-size: 0.85rem !important;
+    order: 4;
+  }
+
+  .hud-quick-btns {
+    order: 5;
+  }
+}
