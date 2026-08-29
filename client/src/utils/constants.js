@@ -52,7 +52,10 @@ export const POWERUP_TYPES = {
   JETPACK: 'JETPACK',
   MULTIPLIER_2X: 'MULTIPLIER_2X',
   SUPER_SNEAKERS: 'SUPER_SNEAKERS',
-  HOVERBOARD: 'HOVERBOARD'
+  HOVERBOARD: 'HOVERBOARD',
+  ROBOT_REPAIR: 'ROBOT_REPAIR',
+  PLASMA_SHIELD: 'PLASMA_SHIELD',
+  KINETIC_BLASTER: 'KINETIC_BLASTER'
 };
 
 export const POWERUP_CONFIG = {
@@ -90,6 +93,27 @@ export const POWERUP_CONFIG = {
     color: '#8b5cf6',
     icon: '🛹',
     description: 'Absorbs 1 collision crash and prevents robot capture'
+  },
+  [POWERUP_TYPES.ROBOT_REPAIR]: {
+    name: 'Nano Repair Kit',
+    duration: 6,
+    color: '#34d399',
+    icon: '🔧',
+    description: 'Instantly repairs robot armor damage — grants 6s invulnerability shield'
+  },
+  [POWERUP_TYPES.PLASMA_SHIELD]: {
+    name: 'Plasma Shield',
+    duration: 8,
+    color: '#06b6d4',
+    icon: '🛡️',
+    description: 'Activates protective force field — destroy elemental hurdles on contact!'
+  },
+  [POWERUP_TYPES.KINETIC_BLASTER]: {
+    name: 'Kinetic Blaster',
+    duration: 6,
+    color: '#f97316',
+    icon: '💥',
+    description: 'Fires energy blasts — smash through Fire, Water, Sand, Tornado & Thunder obstacles!'
   }
 };
 
@@ -109,8 +133,25 @@ export const OBSTACLE_TYPES = {
   ICE_SPIKE: 'ICE_SPIKE',               // Cryo crystal spikes
   TITAN_PISTON: 'TITAN_PISTON',         // Industrial crusher piston
   VOID_CRYSTAL: 'VOID_CRYSTAL',         // Dark matter anomaly monolith
-  ROBOT_BARRIER: 'ROBOT_BARRIER'        // Autonomous police sentry barricade
+  ROBOT_BARRIER: 'ROBOT_BARRIER',       // Autonomous police sentry barricade
+  // NEW: 5 Elemental Destruction Hurdles (destroys robot on 2nd hit):
+  FIRE_PILLAR: 'FIRE_PILLAR',           // 🔥 Roaring molten fire vortex — dodge or blast through
+  WATER_SURGE: 'WATER_SURGE',           // 💧 Hydro tsunami wave — jump over or shield
+  SAND_STORM: 'SAND_STORM',             // 🏜️ Whirling desert sand cyclone — slide under
+  TORNADO: 'TORNADO',                   // 🌪️ Spinning twister with suction vortex — lane-switch escape
+  THUNDER_STRIKE: 'THUNDER_STRIKE'      // ⚡ Lightning arc pillar — only Plasma Shield or Blaster destroys
 };
+
+// Elemental hurdle config — these cause 2-hit robot destruction
+export const ELEMENTAL_HURDLES = [
+  'FIRE_PILLAR', 'WATER_SURGE', 'SAND_STORM', 'TORNADO', 'THUNDER_STRIKE'
+];
+
+// Hurdles that can be destroyed by Plasma Shield or Kinetic Blaster
+export const DESTRUCTIBLE_HURDLES = [
+  'FIRE_PILLAR', 'WATER_SURGE', 'SAND_STORM', 'TORNADO', 'THUNDER_STRIKE',
+  'TESLA_COIL', 'MAGMA_PYLON'
+];
 
 // 30 Progressive World-Class Real-World & Futuristic Stages
 export const LEVELS = [
@@ -566,7 +607,9 @@ export const LEVELS = [
   }
 ];
 
-// Characters — featuring Jack, Aero Bot, Cyber Titan, Neon Phantom, and Solar Valkyrie
+// Characters — 3 FREE base robots (jack, neon, blitz). All others require payment/admin activation.
+export const FREE_ROBOT_IDS = ['jack', 'neon', 'blitz'];
+
 export const CHARACTERS = [
   {
     id: 'jack',
@@ -581,13 +624,46 @@ export const CHARACTERS = [
     capColor: '#facc15',
     price: 0,
     unlocked: true,
+    isFree: true,
     bonus: '+10% Ring Collection Points'
+  },
+  {
+    id: 'neon',
+    name: 'Neon Striker',
+    title: 'Fast Lane Cyber Runner',
+    avatar: '⚡',
+    type: 'jack',
+    color: '#a855f7',
+    accent: '#f472b6',
+    shirtColor: '#6b21a8',
+    pantsColor: '#0f172a',
+    capColor: '#d946ef',
+    price: 0,
+    unlocked: true,
+    isFree: true,
+    bonus: '+15% Speed Bonus on lane switch'
+  },
+  {
+    id: 'blitz',
+    name: 'Blitz Runner',
+    title: 'Heavy Armored Sprint Bot',
+    avatar: '🤖',
+    type: 'aerobot',
+    color: '#10b981',
+    accent: '#34d399',
+    shirtColor: '#065f46',
+    pantsColor: '#0f172a',
+    capColor: '#34d399',
+    price: 0,
+    unlocked: true,
+    isFree: true,
+    bonus: '1 free armor hit before stumble'
   },
   {
     id: 'aerobot',
     name: 'Aero Bot',
     title: 'High-Altitude Aerial Runner',
-    avatar: '🤖',
+    avatar: '🛸',
     type: 'aerobot',
     color: '#06b6d4',
     accent: '#ffffff',
@@ -596,6 +672,8 @@ export const CHARACTERS = [
     capColor: '#0f172a',
     price: 200,
     unlocked: false,
+    isFree: false,
+    requiresPayment: true,
     bonus: '+20% Jetpack Flight Time'
   },
   {

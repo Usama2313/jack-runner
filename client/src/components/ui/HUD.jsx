@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useSpring, animated } from '@react-spring/web';
 import { useGameStore } from '../../store/gameStore';
 import { POWERUP_CONFIG, POWERUP_TYPES, LEVELS, CHARACTERS } from '../../utils/constants';
-import { Pause, Volume2, VolumeX, MapPin, AlertTriangle, Users, Sparkles, Shield } from 'lucide-react';
+import { Pause, Volume2, VolumeX, MapPin, AlertTriangle, Users, Sparkles, Shield, HelpCircle } from 'lucide-react';
 import { LevelSelectModal } from './LevelSelectModal';
 import { ShopModal } from './ShopModal';
+import { Toaster } from './Toaster';
+import { HelpModal } from './HelpModal';
 
 const parseValidLevel = (val) => {
   const num = typeof val === 'number' ? val : Number(val);
@@ -34,6 +36,7 @@ export const HUD = () => {
   const [showLevelSelect, setShowLevelSelect] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showCharDropdown, setShowCharDropdown] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const safeLevel = parseValidLevel(currentLevel);
   const levelInfo = LEVELS[safeLevel - 1] || LEVELS[0];
@@ -63,81 +66,100 @@ export const HUD = () => {
 
   return (
     <>
+      <Toaster />
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       <div className="hud-overlay" style={{ pointerEvents: 'none' }}>
-        {/* ─── TOP BAR ──────────────────────────────────────────────── */}
+        {/* ─── TOP BAR (Responsive 3-Column Header) ──────────────────── */}
         <div className="hud-top-bar" style={{ pointerEvents: 'auto' }}>
-          {/* Score */}
-          <div className="hud-score-card">
-            <div className="hud-score-label">SCORE</div>
-            <animated.div className="hud-score-number">
-              {animatedScore.to((n) => Math.floor(n).toLocaleString())}
-            </animated.div>
-          </div>
-
-          {/* Stage Center Banner */}
-          <div
-            className="hud-level-center"
-            style={{
-              borderColor: levelInfo.neonColor || '#38bdf8',
-              boxShadow: `0 0 15px ${levelInfo.neonColor || '#38bdf8'}40`,
-              position: 'relative'
-            }}
-            onClick={() => setShowLevelSelect(true)}
-          >
-            <div className="hud-level-tag" style={{ color: levelInfo.neonColor || '#38bdf8' }}>
-              STAGE {safeLevel}/30
+          
+          {/* Left Group: Score & Coins */}
+          <div className="hud-left-group">
+            {/* Score Card */}
+            <div className="hud-score-card">
+              <div className="hud-score-label">SCORE</div>
+              <animated.div className="hud-score-number">
+                {animatedScore.to((n) => Math.floor(n).toLocaleString())}
+              </animated.div>
             </div>
-            <div className="hud-level-name">{levelInfo.name}</div>
-            {levelInfo.city && <div className="hud-level-city">{levelInfo.city}</div>}
-          </div>
 
-          {/* Timer */}
-          <div className={`hud-timer-card ${isLowTime ? 'low-time' : ''}`}>
-            <div className="hud-timer-label">⏱️ TIME</div>
-            <div className="hud-timer-number">{safeTimeLeft}s</div>
-          </div>
-
-          {/* Coins */}
-          <div className="hud-coins-pill">
-            💎 <animated.span>{animatedCoins.to((n) => Math.floor(n))}</animated.span>
-            <span className="hud-coin-total">(🪙 {(totalCoins || 0).toLocaleString()})</span>
-          </div>
-
-          {/* Mystery Box Count */}
-          {mysteryBoxCount > 0 && (
-            <div className="hud-mystery-pill">
-              🎁 <span>x{mysteryBoxCount}</span>
+            {/* Coins Collected */}
+            <div className="hud-coins-pill" onClick={() => setShowShop(true)} title="Coins collected this run">
+              <span>🪙</span>
+              <animated.span className="hud-coins-val">
+                {animatedCoins.to((n) => Math.floor(n))}
+              </animated.span>
             </div>
-          )}
-
-          {/* Speed Indicator */}
-          <div className="hud-speed-pill" style={{ borderColor: levelInfo.railColor }}>
-            ⚡ {Math.round(speed || 0)} km/h
           </div>
 
-          {/* Trial Unlock Button */}
-          {!isActivated && (
-            <button className="hud-trial-unlock-btn animate-pulse-slow" onClick={() => useGameStore.getState().setShowPaymentModal(true)}>
-              🔓 UNLOCK FULL GAME
-            </button>
-          )}
+          {/* Center Group: Stage & Timer & Speed */}
+          <div className="hud-center-group">
+            {/* Stage Center Banner */}
+            <div
+              className="hud-level-center"
+              style={{
+                borderColor: levelInfo.neonColor || '#38bdf8',
+                boxShadow: `0 0 15px ${levelInfo.neonColor || '#38bdf8'}40`,
+              }}
+              onClick={() => setShowLevelSelect(true)}
+              title="Click to view stages"
+            >
+              <div className="hud-level-tag" style={{ color: levelInfo.neonColor || '#38bdf8' }}>
+                STAGE {safeLevel}/30
+              </div>
+              <div className="hud-level-name">{levelInfo.name}</div>
+            </div>
 
-          {/* Quick Action Buttons */}
-          <div className="hud-quick-btns">
-            {/* Character Pill */}
+            {/* Timer & Speed Row */}
+            <div className="hud-meta-row">
+              <div className={`hud-timer-card ${isLowTime ? 'low-time' : ''}`}>
+                <span>⏱️ {safeTimeLeft}s</span>
+              </div>
+              <div className="hud-speed-pill">
+                <span>⚡ {Math.round(speed || 0)} km/h</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Group: Action Controls (Always Visible & Accessible on Mobile) */}
+          <div className="hud-right-group">
+            {/* Runner Selector Pill */}
             <div
               className="hud-char-pill"
               onClick={() => setShowCharDropdown(!showCharDropdown)}
+              title="Switch Runner"
             >
               <span className="hud-char-avatar">{activeChar.avatar}</span>
               <span className="hud-char-name">{activeChar.name.split(' ')[0]}</span>
             </div>
 
-            <button className="top-quick-btn" onClick={toggleMute}>
-              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            {/* Help / Guide Button */}
+            <button
+              className="hud-action-btn hud-help-btn"
+              onClick={() => setShowHelp(true)}
+              title="How to Play"
+              aria-label="How to Play"
+            >
+              <HelpCircle size={20} />
             </button>
-            <button className="top-quick-btn" onClick={pauseGame}>
-              <Pause size={18} />
+
+            {/* Audio Mute/Unmute */}
+            <button
+              className="hud-action-btn hud-mute-btn"
+              onClick={toggleMute}
+              title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+              aria-label="Mute or Unmute Audio"
+            >
+              {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </button>
+
+            {/* Pause Button (Always Top-Right & High Contrast) */}
+            <button
+              className="hud-action-btn hud-pause-btn"
+              onClick={pauseGame}
+              title="Pause Game (ESC / P)"
+              aria-label="Pause Game"
+            >
+              <Pause size={22} fill="currentColor" />
             </button>
           </div>
         </div>
@@ -148,7 +170,7 @@ export const HUD = () => {
             <div className="hud-char-dropdown-title">⚡ SWITCH RUNNER</div>
             <div className="hud-char-dropdown-list">
               {CHARACTERS.map((char) => {
-                const isUnlocked = unlockedCharacters.includes(char.id);
+                const isUnlocked = unlockedCharacters.includes(char.id) || char.isFree;
                 const isActive = selectedCharacter === char.id;
                 return (
                   <div

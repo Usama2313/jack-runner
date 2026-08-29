@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { CHARACTERS, LEVELS } from '../../utils/constants';
-import { Play, Trophy, ShoppingBag, MapPin, User, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { Play, Trophy, ShoppingBag, MapPin, User, Volume2, VolumeX, HelpCircle } from 'lucide-react';
 import { LevelSelectModal } from './LevelSelectModal';
+import { HelpModal } from './HelpModal';
 
 const parseValidLevel = (val) => {
   const num = typeof val === 'number' ? val : Number(val);
@@ -21,13 +22,14 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
   const isMuted = useGameStore((s) => s.isMuted);
   const toggleMute = useGameStore((s) => s.toggleMute);
   const currentLevel = useGameStore((s) => s.currentLevel);
+  const isActivated = useGameStore((s) => s.isActivated);
 
   const [showLevelSelect, setShowLevelSelect] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const safeLevel = parseValidLevel(currentLevel);
   const activeChar = CHARACTERS.find((c) => c.id === selectedCharacter) || CHARACTERS[0];
   const levelInfo = LEVELS[safeLevel - 1] || LEVELS[0];
-  const isActivated = useGameStore((s) => s.isActivated);
 
   return (
     <>
@@ -41,14 +43,14 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
           </div>
 
           <div className="menu-header-right">
-            {/* Unlock Pill */}
+            {/* Activate VIP pill */}
             {!isActivated && (
               <div className="menu-unlock-pill animate-pulse-slow" onClick={() => useGameStore.getState().setShowPaymentModal(true)}>
-                <span>🔓 ACTIVATE</span>
+                <span>🔓 ACTIVATE VIP</span>
               </div>
             )}
 
-            {/* Level Quick Jump Pill */}
+            {/* Stage pill */}
             <div className="menu-level-pill" onClick={() => setShowLevelSelect(true)}>
               <MapPin size={16} color="#38bdf8" />
               <span>STAGE {safeLevel}/30</span>
@@ -62,10 +64,14 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
             <button className="menu-icon-btn" onClick={toggleMute} title="Mute/Unmute Audio">
               {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
             </button>
+
+            <button className="menu-icon-btn help-btn" onClick={() => setShowHelp(true)} title="How to Play">
+              <HelpCircle size={20} />
+            </button>
           </div>
         </div>
 
-        {/* Hero Title & Logo: KINETIC JACK */}
+        {/* Hero Title */}
         <div className="menu-hero">
           <div className="menu-logo-container">
             <h1 className="menu-logo-sub">KINETIC</h1>
@@ -73,42 +79,54 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
             <div className="menu-logo-tagline">3D CYBER ENDLESS RUNNER • 30 STAGES</div>
           </div>
 
-          {/* Highscore Pill */}
           <div className="menu-highscore-badge">
             <Trophy size={18} color="#facc15" />
             <span>BEST SCORE: <strong>{(highscore || 0).toLocaleString()}</strong></span>
           </div>
         </div>
 
-        {/* Character Showcase & Instant Selector */}
+        {/* Character Showcase */}
         <div className="menu-char-showcase">
           <div className="menu-char-card" style={{ borderColor: activeChar.color }}>
             <div className="menu-char-avatar">{activeChar.avatar}</div>
             <div className="menu-char-name">{activeChar.name}</div>
             <div className="menu-char-title">{activeChar.title}</div>
             <div className="menu-char-bonus">{activeChar.bonus}</div>
+            {activeChar.isFree && (
+              <div style={{ marginTop: '6px', fontSize: '0.7rem', color: '#34d399', fontWeight: '700', background: 'rgba(16,185,129,0.15)', padding: '2px 8px', borderRadius: '999px', border: '1px solid #10b981', display: 'inline-block' }}>
+                🆓 FREE ROBOT
+              </div>
+            )}
           </div>
 
           {/* Quick Character Selector */}
           <div className="menu-char-selector">
             {CHARACTERS.map((char) => {
-              const isUnlocked = unlockedCharacters.includes(char.id);
+              const isUnlocked = unlockedCharacters.includes(char.id) || char.isFree;
               const isSelected = selectedCharacter === char.id;
+              const needsPayment = !char.isFree && !isActivated && !unlockedCharacters.includes(char.id);
 
               return (
                 <button
                   key={char.id}
                   className={`menu-char-dot ${isSelected ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`}
                   onClick={() => {
-                    if (isUnlocked) {
+                    if (isUnlocked && !needsPayment) {
                       selectCharacter(char.id);
                     } else {
                       onOpenShop();
                     }
                   }}
-                  title={isUnlocked ? `Select ${char.name}` : `Unlock ${char.name} in Shop`}
+                  title={needsPayment ? `💰 ${char.name} — Requires VIP` : isUnlocked ? `Select ${char.name}` : `Unlock ${char.name} in Shop`}
+                  style={{ position: 'relative' }}
                 >
                   <span>{char.avatar}</span>
+                  {needsPayment && (
+                    <span style={{
+                      position: 'absolute', bottom: '-2px', right: '-2px', fontSize: '0.55rem',
+                      background: '#facc15', color: '#000', borderRadius: '999px', padding: '1px 3px', fontWeight: '900'
+                    }}>$</span>
+                  )}
                 </button>
               );
             })}
@@ -130,25 +148,33 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
 
             <button className="menu-secondary-btn" onClick={onOpenShop}>
               <ShoppingBag size={20} />
-              <span>SHOP & GEAR</span>
+              <span>SHOP</span>
             </button>
 
             <button className="menu-secondary-btn" onClick={onOpenLeaderboard}>
               <Trophy size={20} />
               <span>RANKS</span>
             </button>
+
+            <button className="menu-secondary-btn help-secondary-btn" onClick={() => setShowHelp(true)}>
+              <HelpCircle size={20} />
+              <span>HOW TO PLAY</span>
+            </button>
           </div>
         </div>
 
         {/* Controls Hint */}
         <div className="menu-controls-hint">
-          <span>🎮 CONTROLS: <strong>ARROW KEYS / WASD / SWIPE</strong> to Move, Jump & Slide • <strong>B</strong> for Plasma Board • <strong>ESC</strong> to Pause</span>
+          <span>🎮 CONTROLS: <strong>ARROW KEYS / WASD / SWIPE</strong> to Move, Jump &amp; Slide • <strong>B</strong> for Plasma Board • <strong>ESC</strong> to Pause • <strong>?</strong> for Help</span>
         </div>
       </div>
 
-      {/* Level Select Modal */}
       {showLevelSelect && (
         <LevelSelectModal onClose={() => setShowLevelSelect(false)} />
+      )}
+
+      {showHelp && (
+        <HelpModal onClose={() => setShowHelp(false)} />
       )}
     </>
   );

@@ -102,6 +102,9 @@ body, html {
 /* =========================================================
    HUD STYLES (Top Bar, 30-Level Bar, Top Powerups)
    ========================================================= */
+/* =========================================================
+   HUD STYLES (Responsive Top Bar, Action Buttons, Powerups)
+   ========================================================= */
 .hud-overlay {
   position: absolute;
   top: 0;
@@ -112,17 +115,27 @@ body, html {
   z-index: 10;
   display: flex;
   flex-direction: column;
-  padding: 16px 20px;
-  gap: 12px;
+  padding: 12px 16px;
+  gap: 10px;
+  box-sizing: border-box;
 }
 
 .hud-top-bar {
   width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: center;
+  gap: 10px;
   pointer-events: auto;
+  flex-wrap: nowrap;
+}
+
+/* --- Left Group: Score & Coins --- */
+.hud-left-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .hud-score-card {
@@ -130,43 +143,14 @@ body, html {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--border-glow);
-  padding: 8px 16px;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 16px rgba(56, 189, 248, 0.2);
-  min-width: 130px;
+  padding: 6px 14px;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 14px rgba(56, 189, 248, 0.15);
+  min-width: 100px;
 }
 
-.hud-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.hud-char-badge {
-  background: rgba(56, 189, 248, 0.18);
-  border: 1px solid var(--primary-neon);
-  color: #f8fafc;
-  font-size: 0.7rem;
-  font-weight: 800;
-  border-radius: 999px;
-  padding: 1px 7px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  pointer-events: auto;
-  transition: all 0.2s;
-}
-
-.hud-char-badge:hover {
-  background: var(--primary-neon);
-  color: #000000;
-  transform: scale(1.08);
-}
-
-.hud-label {
-  font-size: 0.7rem;
+.hud-score-label {
+  font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 1.5px;
   color: var(--text-muted);
@@ -174,157 +158,18 @@ body, html {
 
 .hud-score-number {
   font-family: var(--font-arcade);
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: 900;
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
   line-height: 1.1;
-}
-
-.hud-sub-stats {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.hud-distance {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #cbd5e1;
-}
-
-.hud-badge-2x {
-  background: linear-gradient(135deg, #f59e0b, #eab308);
-  color: #000000;
-  font-size: 0.7rem;
-  font-weight: 900;
-  padding: 2px 6px;
-  border-radius: 999px;
-  box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
-  animation: pulse-glow 1.5s infinite alternate;
-}
-
-.hud-badge-sky {
-  background: linear-gradient(135deg, #ec4899, #f43f5e);
-  color: #ffffff;
-  font-size: 0.7rem;
-  font-weight: 900;
-  padding: 2px 6px;
-  border-radius: 999px;
-  box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
-}
-
-/* Center 30-Level Status */
-.hud-level-center {
-  background: var(--bg-surface);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--border-glow);
-  padding: 8px 18px;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  max-width: 280px;
-  width: 100%;
-}
-
-.hud-level-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 8px;
-}
-
-.hud-level-switch-btn {
-  background: rgba(56, 189, 248, 0.15);
-  border: 1px solid var(--primary-neon);
-  color: var(--primary-neon);
-  font-family: var(--font-arcade);
-  font-size: 0.75rem;
-  font-weight: 900;
-  padding: 3px 8px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.hud-level-switch-btn:hover {
-  background: var(--primary-neon);
-  color: #000;
-  transform: scale(1.05);
-}
-
-.hud-level-name {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #f8fafc;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.hud-timer-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-.hud-timer-bar-bg {
-  flex: 1;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.hud-timer-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.2s linear;
-}
-
-.hud-timer-bar-fill.urgent {
-  background-color: #ef4444 !important;
-  box-shadow: 0 0 10px #ef4444;
-}
-
-.hud-timer-text {
-  font-family: var(--font-arcade);
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: #cbd5e1;
-  min-width: 44px;
-  text-align: right;
-}
-
-.hud-timer-text.urgent-pulse {
-  color: #f87171;
-  animation: pulse-glow 0.8s infinite alternate;
-}
-
-/* Right Panel: Coins, Top Quick-Buys, Controls */
-.hud-right-panel {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
 }
 
 .hud-coins-pill {
   background: var(--bg-surface);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(250, 204, 21, 0.4);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 999px;
   display: flex;
   align-items: center;
@@ -333,80 +178,205 @@ body, html {
   font-weight: 800;
   color: #fef08a;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
-.hud-coin-count {
-  font-size: 1.1rem;
+.hud-coins-pill:hover {
+  transform: scale(1.05);
+  border-color: #facc15;
 }
 
-.hud-total-coins-badge {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  border-left: 1px solid rgba(255, 255, 255, 0.2);
-  padding-left: 6px;
+.hud-coins-val {
+  font-size: 0.95rem;
 }
 
-/* Quick Buy Powerups on Top */
-.hud-top-quickbuy {
+/* --- Center Group: Stage & Timer & Speed --- */
+.hud-center-group {
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  max-width: 260px;
 }
 
-.top-quick-btn {
+.hud-level-center {
   background: var(--bg-surface);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border-glow);
+  padding: 4px 14px;
   border-radius: 12px;
-  padding: 4px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 1rem;
+  width: 100%;
 }
 
-.top-quick-btn:hover {
-  border-color: var(--primary-neon);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
+.hud-level-center:hover {
+  transform: scale(1.03);
 }
 
-.top-quick-btn.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.top-quick-cost {
+.hud-level-tag {
   font-family: var(--font-arcade);
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #fef08a;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
 }
 
-.hud-controls-group {
+.hud-level-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.hud-meta-row {
   display: flex;
+  align-items: center;
   gap: 6px;
 }
 
-.hud-icon-btn {
+.hud-timer-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-family: var(--font-arcade);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #cbd5e1;
+}
+
+.hud-timer-card.low-time {
+  border-color: #ef4444;
+  color: #f87171;
+  animation: pulse-glow 0.8s infinite alternate;
+}
+
+.hud-speed-pill {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-family: var(--font-arcade);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #c084fc;
+}
+
+/* --- Right Group: Action Controls --- */
+.hud-right-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.hud-action-btn {
   background: var(--bg-surface);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-glow);
-  color: var(--text-main);
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+  color: #f8fafc;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.hud-icon-btn:hover {
-  background: rgba(56, 189, 248, 0.2);
+.hud-action-btn:hover {
   transform: scale(1.08);
+  border-color: var(--primary-neon);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+.hud-action-btn:active {
+  transform: scale(0.92);
+}
+
+/* Highlighted Pause Button */
+.hud-pause-btn {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(220, 38, 38, 0.35));
+  border: 1.5px solid #ef4444;
+  color: #fca5a5;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+}
+
+.hud-pause-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+}
+
+/* Help Button */
+.hud-help-btn {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(139, 92, 246, 0.3));
+  border: 1.5px solid #a855f7;
+  color: #c084fc;
+}
+
+.hud-help-btn:hover {
+  background: #a855f7;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.6);
+}
+
+/* Mute Button */
+.hud-mute-btn {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+}
+
+.hud-mute-btn:hover {
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+/* Character Quick-Switch Pill */
+.hud-char-pill {
+  background: var(--bg-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glow);
+  padding: 4px 10px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+.hud-char-pill:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: var(--primary-neon);
+  transform: scale(1.05);
+}
+
+.hud-char-avatar {
+  font-size: 1.2rem;
+}
+
+.hud-char-name {
+  font-family: var(--font-arcade);
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #38bdf8;
 }
 
 /* ─── Top Sub-Bar Active Powerup Pills ─────────────────────────── */
@@ -636,14 +606,51 @@ body, html {
 }
 
 /* =========================================================
-   TOUCH / MOBILE CONTROLS
+   TOUCH / MOBILE CONTROLS & RESPONSIVE RULES
    ========================================================= */
-.touch-controls-container {
+.touch-controls-wrapper {
   position: absolute;
-  bottom: 24px;
-  right: 24px;
+  bottom: 20px;
+  right: 20px;
   z-index: 15;
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.touch-dpad-toggle-btn {
+  background: var(--bg-surface);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-glow);
+  color: #94a3b8;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.touch-dpad-toggle-btn.active, .touch-dpad-toggle-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: var(--primary-neon);
+  color: var(--primary-neon);
+  transform: scale(1.08);
+}
+
+.touch-controls-container {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 20px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: slide-in 0.2s ease-out;
 }
 
 .touch-dpad {
@@ -655,7 +662,7 @@ body, html {
 
 .touch-horizontal-row {
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .touch-btn {
@@ -663,7 +670,7 @@ body, html {
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-glow);
   color: white;
-  border-radius: 16px;
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -679,16 +686,131 @@ body, html {
 }
 
 .touch-up, .touch-down {
-  width: 110px;
-  height: 48px;
-  font-size: 0.7rem;
+  width: 96px;
+  height: 42px;
+  font-size: 0.68rem;
   font-weight: 800;
   gap: 2px;
 }
 
 .touch-left, .touch-right {
-  width: 58px;
-  height: 52px;
+  width: 48px;
+  height: 44px;
+}
+
+/* =========================================================
+   MOBILE RESPONSIVENESS (Screens <= 768px & Screens <= 480px)
+   ========================================================= */
+@media (max-width: 768px) {
+  .hud-overlay {
+    padding: 8px 10px;
+  }
+
+  .hud-top-bar {
+    gap: 6px;
+  }
+
+  .hud-score-card {
+    min-width: 80px;
+    padding: 4px 10px;
+  }
+
+  .hud-score-number {
+    font-size: 1.15rem;
+  }
+
+  .hud-score-label {
+    font-size: 0.55rem;
+  }
+
+  .hud-coins-pill {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  .hud-level-center {
+    padding: 3px 8px;
+    max-width: 140px;
+  }
+
+  .hud-level-tag {
+    font-size: 0.62rem;
+  }
+
+  .hud-level-name {
+    font-size: 0.68rem;
+    max-width: 120px;
+  }
+
+  .hud-action-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 10px;
+  }
+
+  .hud-char-pill {
+    padding: 2px 8px;
+    height: 36px;
+  }
+
+  .hud-char-avatar {
+    font-size: 1rem;
+  }
+
+  .hud-char-name {
+    display: none;
+  }
+
+  .menu-logo-sub {
+    font-size: 2.4rem;
+    letter-spacing: 4px;
+  }
+
+  .menu-logo-main {
+    font-size: 3.8rem;
+    letter-spacing: 4px;
+  }
+
+  .menu-sub-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .hud-overlay {
+    padding: 6px 8px;
+  }
+
+  .hud-meta-row {
+    display: none;
+  }
+
+  .hud-score-card {
+    min-width: 70px;
+    padding: 4px 8px;
+  }
+
+  .hud-score-number {
+    font-size: 1rem;
+  }
+
+  .hud-coins-pill {
+    display: none;
+  }
+
+  .hud-action-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .hud-pause-btn {
+    background: #ef4444;
+    color: #ffffff;
+  }
 }
 
 /* =========================================================
@@ -3757,3 +3879,15 @@ body, html {
 *::-webkit-scrollbar-thumb:hover {
   background: var(--primary-neon, #38bdf8);
 }
+
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
