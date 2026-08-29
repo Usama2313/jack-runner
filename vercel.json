@@ -11,6 +11,10 @@
   ],
   "routes": [
     {
+      "src": "/admin",
+      "dest": "/client/index.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/client/$1"
     }
