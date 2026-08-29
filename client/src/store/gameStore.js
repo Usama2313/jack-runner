@@ -539,6 +539,17 @@ export const useGameStore = create((set, get) => {
       set({ activeMysteryBox: null, isMysteryBoxPaused: false });
     },
 
+    addBonusCoins: (amount) => {
+      const added = Math.max(0, Number(amount) || 0);
+      const newTotal = (get().totalCoins || 0) + added;
+      setStorage('kinetic_total_coins', newTotal);
+      set((state) => ({
+        totalCoins: newTotal,
+        coinsCollected: state.coinsCollected + added
+      }));
+      return newTotal;
+    },
+
     incrementDistanceAndScore: (deltaDistance) => {
       const char = CHARACTERS.find((c) => c.id === get().selectedCharacter);
       const scoreBonus = char?.id === 'valkyrie' ? 1.25 : 1.0;

@@ -95,6 +95,27 @@ router.post('/unlock-levels', requireAdmin, (req, res) => {
   });
 });
 
+// Set stage count for a user (e.g. allow 15 stages => unlocks [1..15])
+router.post('/set-stage-count', requireAdmin, (req, res) => {
+  const { identifier, stageCount } = req.body;
+  if (!identifier || typeof stageCount === 'undefined') {
+    return res.status(400).json({ error: 'User Email/ID and stageCount are required' });
+  }
+  const count = Math.max(1, Math.min(30, Number(stageCount) || 1));
+  const stages = Array.from({ length: count }, (_, i) => i + 1);
+  const success = db.setUserUnlockedLevels(identifier, stages);
+  if (!success) {
+    return res.status(404).json({ error: `User '${identifier}' not found` });
+  }
+  res.json({
+    success: true,
+    message: `Successfully set ${count} stages allowed for '${identifier}' (Stages 1 to ${count})!`,
+    identifier,
+    unlocked_levels: stages,
+    count
+  });
+});
+
 // Activate or deactivate a user (premium / full game unlock)
 router.post('/activate', requireAdmin, (req, res) => {
   const { userId, identifier, activated } = req.body;

@@ -226,16 +226,50 @@ export const HUD = () => {
           </div>
         )}
 
+        {/* ─── Character Shouting Speech Bubble ("TERRIFIC GOO!!") ─── */}
+        {isStumbling && (
+          <div style={{
+            position: 'absolute',
+            top: '110px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'linear-gradient(135deg, #dc2626, #f97316)',
+            border: '2px solid #fde047',
+            borderRadius: '20px',
+            padding: '8px 20px',
+            boxShadow: '0 0 25px rgba(239, 68, 68, 0.8), 0 4px 15px rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            animation: 'bounce 0.6s infinite alternate',
+            zIndex: 100,
+            pointerEvents: 'none'
+          }}>
+            <span style={{ fontSize: '1.4rem' }}>💥</span>
+            <span style={{
+              fontFamily: "'Orbitron', sans-serif",
+              fontWeight: '900',
+              fontSize: 'clamp(1rem, 3.5vw, 1.35rem)',
+              color: '#ffffff',
+              letterSpacing: '1px',
+              textShadow: '0 2px 4px #000, 0 0 10px #fde047'
+            }}>
+              TERRIFIC GOO!!
+            </span>
+            <span style={{ fontSize: '1.2rem' }}>⚡</span>
+          </div>
+        )}
+
         {/* ─── Robot Destroyer / Chaser Alert ──────────────────────── */}
         {(isStumbling || isChaserClose) && (
           <div className={`chaser-alert-banner ${isStumbling ? 'stumbling' : 'close'}`} style={{ pointerEvents: 'none' }}>
             <AlertTriangle size={20} color="#ef4444" />
             <div className="chaser-alert-content">
               <span className="chaser-alert-title">
-                {isStumbling ? '⚠️ ROBOT DESTROYER INCOMING!' : '🔴 DESTROYER CLOSING IN!'}
+                {isStumbling ? '⚠️ HURDLE HIT — ROBOT DESTROYER INCOMING!' : '🔴 DESTROYER CLOSING IN!'}
               </span>
               <span className="chaser-alert-sub">
-                {isStumbling ? 'Stumble detected! Run faster or get captured!' : `Distance: ${chaserDistance.toFixed(1)}m — EVADE NOW!`}
+                {isStumbling ? '"TERRIFIC GOO!" — Armor absorbed hit! Evade 2nd collision!' : `Distance: ${chaserDistance.toFixed(1)}m — EVADE NOW!`}
               </span>
             </div>
           </div>

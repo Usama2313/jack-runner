@@ -240,8 +240,101 @@ export const Player = ({ playerZRef }) => {
       <group ref={innerModelRef}>
         {/* ─── HEAD RENDERING BASED ON CHARACTER TYPE ──────────────────────── */}
         <group ref={headRef} position={[0, 1.44, 0]}>
-          {/* Aero Bot (Picture 2): Sleek Aerodynamic Helmet with Black Visor & Glowing White Line */}
-          {charType === 'aerobot' ? (
+          {/* Human Brawler (Rex Steel — Matches user's provided picture) */}
+          {charType === 'human_brawler' ? (
+            <group>
+              {/* Sculpted Athletic Human Head & Face */}
+              <mesh castShadow>
+                <sphereGeometry args={[0.26, 22, 22]} />
+                <meshStandardMaterial color="#fcd34d" roughness={0.4} metalness={0.05} />
+              </mesh>
+              {/* Strong Athletic Jawline */}
+              <mesh position={[0, -0.1, 0.08]} castShadow>
+                <boxGeometry args={[0.22, 0.16, 0.18]} />
+                <meshStandardMaterial color="#fcd34d" roughness={0.4} metalness={0.05} />
+              </mesh>
+              {/* Stylish Dark Spiky Anime Hair (Picture 1) */}
+              <group position={[0, 0.14, -0.02]}>
+                <mesh castShadow>
+                  <sphereGeometry args={[0.28, 16, 16]} />
+                  <meshStandardMaterial color="#0f172a" roughness={0.2} metalness={0.2} />
+                </mesh>
+                {/* Spiky hair strands */}
+                <mesh position={[0, 0.16, 0.08]} rotation={[-0.3, 0, 0]}>
+                  <coneGeometry args={[0.12, 0.22, 6]} />
+                  <meshStandardMaterial color="#1e293b" />
+                </mesh>
+                <mesh position={[-0.1, 0.12, 0.06]} rotation={[-0.2, 0, 0.3]}>
+                  <coneGeometry args={[0.08, 0.18, 6]} />
+                  <meshStandardMaterial color="#1e293b" />
+                </mesh>
+                <mesh position={[0.1, 0.12, 0.06]} rotation={[-0.2, 0, -0.3]}>
+                  <coneGeometry args={[0.08, 0.18, 6]} />
+                  <meshStandardMaterial color="#1e293b" />
+                </mesh>
+              </group>
+              {/* Eyes & Intense Expression */}
+              <mesh position={[-0.08, 0.02, 0.23]}>
+                <boxGeometry args={[0.06, 0.025, 0.02]} />
+                <meshBasicMaterial color="#020617" />
+              </mesh>
+              <mesh position={[0.08, 0.02, 0.23]}>
+                <boxGeometry args={[0.06, 0.025, 0.02]} />
+                <meshBasicMaterial color="#020617" />
+              </mesh>
+              {/* Fierce Eyebrows */}
+              <mesh position={[-0.08, 0.06, 0.24]} rotation={[0, 0, 0.15]}>
+                <boxGeometry args={[0.08, 0.02, 0.01]} />
+                <meshBasicMaterial color="#0f172a" />
+              </mesh>
+              <mesh position={[0.08, 0.06, 0.24]} rotation={[0, 0, -0.15]}>
+                <boxGeometry args={[0.08, 0.02, 0.01]} />
+                <meshBasicMaterial color="#0f172a" />
+              </mesh>
+              {/* Mouth Shouting "TERRIFIC GOO!" */}
+              <mesh position={[0, -0.09, 0.23]} scale={isStumbling ? [1.4, 2.0, 1] : [1, 1, 1]}>
+                <boxGeometry args={[0.08, 0.03, 0.02]} />
+                <meshBasicMaterial color="#7f1d1d" />
+              </mesh>
+              {/* Muscular Neck */}
+              <mesh position={[0, -0.2, 0]} castShadow>
+                <cylinderGeometry args={[0.14, 0.18, 0.16, 16]} />
+                <meshStandardMaterial color="#fcd34d" roughness={0.4} metalness={0.05} />
+              </mesh>
+            </group>
+          ) : charType === 'human_female' ? (
+            <group>
+              {/* Female Athletic Head */}
+              <mesh castShadow>
+                <sphereGeometry args={[0.24, 20, 20]} />
+                <meshStandardMaterial color="#fed7aa" roughness={0.35} metalness={0.05} />
+              </mesh>
+              {/* Neon Streaked Hair */}
+              <mesh position={[0, 0.12, -0.04]} castShadow>
+                <sphereGeometry args={[0.26, 16, 16]} />
+                <meshStandardMaterial color="#ec4899" roughness={0.2} metalness={0.3} />
+              </mesh>
+              {/* Ponytail braid */}
+              <mesh position={[0, 0.06, -0.28]} rotation={[0.4, 0, 0]}>
+                <cylinderGeometry args={[0.06, 0.04, 0.4, 10]} />
+                <meshStandardMaterial color="#f472b6" emissive="#f472b6" emissiveIntensity={0.6} />
+              </mesh>
+              {/* Eyes */}
+              <mesh position={[-0.07, 0.03, 0.22]}>
+                <boxGeometry args={[0.05, 0.03, 0.02]} />
+                <meshBasicMaterial color="#06b6d4" />
+              </mesh>
+              <mesh position={[0.07, 0.03, 0.22]}>
+                <boxGeometry args={[0.05, 0.03, 0.02]} />
+                <meshBasicMaterial color="#06b6d4" />
+              </mesh>
+              {/* Neck */}
+              <mesh position={[0, -0.18, 0]}>
+                <cylinderGeometry args={[0.11, 0.14, 0.14, 16]} />
+                <meshStandardMaterial color="#fed7aa" />
+              </mesh>
+            </group>
+          ) : charType === 'aerobot' ? (
             <group>
               {/* Aerodynamic White Dome Helmet */}
               <mesh castShadow>
@@ -359,6 +452,27 @@ export const Player = ({ playerZRef }) => {
           )}
         </group>
 
+        {/* ─── 3D COMIC SPEECH BUBBLE OVER CHARACTER (Shouting "TERRIFIC GOO!!") ─── */}
+        {isStumbling && (
+          <group position={[0, 2.15, 0]}>
+            {/* Speech Bubble Background Plate */}
+            <mesh position={[0, 0, 0]}>
+              <boxGeometry args={[1.6, 0.42, 0.04]} />
+              <meshBasicMaterial color="#dc2626" />
+            </mesh>
+            {/* Inner Yellow Accent */}
+            <mesh position={[0, 0, 0.025]}>
+              <boxGeometry args={[1.5, 0.34, 0.02]} />
+              <meshBasicMaterial color="#fef08a" />
+            </mesh>
+            {/* Speech Pointer Tail pointing down towards mouth */}
+            <mesh position={[0, -0.28, 0]} rotation={[0, 0, Math.PI]}>
+              <coneGeometry args={[0.14, 0.22, 3]} />
+              <meshBasicMaterial color="#dc2626" />
+            </mesh>
+          </group>
+        )}
+
         {/* ─── DYNAMIC WIND SCARF (Jack only) ─────────────────────────────── */}
         {charType === 'jack' && (
           <group position={[0, 1.26, -0.18]}>
@@ -438,44 +552,50 @@ export const Player = ({ playerZRef }) => {
           </mesh>
         </group>
 
-        {/* ─── ARMS & CYBER GAUNTLETS ─────────────────────────────────────── */}
+        {/* ─── ARMS & CYBER GAUNTLETS (With Black Wristbands for Rex Brawler - Picture 1) ─── */}
         {/* Left Arm */}
         <group ref={leftArmRef} position={[-0.35, 1.12, 0]}>
+          {/* Upper Arm / Bicep */}
           <mesh position={[0, -0.24, 0]} castShadow>
-            <cylinderGeometry args={[0.085, 0.075, 0.48, 10]} />
+            <cylinderGeometry args={[0.095, 0.085, 0.48, 12]} />
             <meshStandardMaterial
-              color={character.shirtColor || '#2563eb'}
-              roughness={0.3}
-              metalness={charType === 'aerobot' ? 0.8 : 0.5}
+              color={charType === 'human_brawler' ? '#fcd34d' : (charType === 'human_female' ? '#fed7aa' : (character.shirtColor || '#2563eb'))}
+              roughness={charType === 'human_brawler' || charType === 'human_female' ? 0.4 : 0.3}
+              metalness={charType === 'aerobot' ? 0.8 : (charType === 'human_brawler' ? 0.05 : 0.5)}
             />
           </mesh>
+          {/* Forearm & Black Athletic Wristband (Picture 1) */}
           <mesh position={[0, -0.38, 0]}>
-            <cylinderGeometry args={[0.09, 0.08, 0.18, 10]} />
-            <meshStandardMaterial color="#0f172a" metalness={0.85} />
+            <cylinderGeometry args={[0.095, 0.088, 0.18, 12]} />
+            <meshStandardMaterial color={charType === 'human_brawler' ? '#0f172a' : '#0f172a'} metalness={0.6} roughness={0.4} />
           </mesh>
+          {/* Hand / Fist */}
           <mesh position={[0, -0.52, 0]}>
             <sphereGeometry args={[0.08, 10, 10]} />
-            <meshStandardMaterial color={charType === 'cybertitan' || charType === 'aerobot' ? '#334155' : '#fed7aa'} />
+            <meshStandardMaterial color={charType === 'human_brawler' ? '#fcd34d' : (charType === 'human_female' ? '#fed7aa' : (charType === 'cybertitan' || charType === 'aerobot' ? '#334155' : '#fed7aa'))} />
           </mesh>
         </group>
 
         {/* Right Arm */}
         <group ref={rightArmRef} position={[0.35, 1.12, 0]}>
+          {/* Upper Arm / Bicep */}
           <mesh position={[0, -0.24, 0]} castShadow>
-            <cylinderGeometry args={[0.085, 0.075, 0.48, 10]} />
+            <cylinderGeometry args={[0.095, 0.085, 0.48, 12]} />
             <meshStandardMaterial
-              color={character.shirtColor || '#2563eb'}
-              roughness={0.3}
-              metalness={charType === 'aerobot' ? 0.8 : 0.5}
+              color={charType === 'human_brawler' ? '#fcd34d' : (charType === 'human_female' ? '#fed7aa' : (character.shirtColor || '#2563eb'))}
+              roughness={charType === 'human_brawler' || charType === 'human_female' ? 0.4 : 0.3}
+              metalness={charType === 'aerobot' ? 0.8 : (charType === 'human_brawler' ? 0.05 : 0.5)}
             />
           </mesh>
+          {/* Forearm & Black Athletic Wristband (Picture 1) */}
           <mesh position={[0, -0.38, 0]}>
-            <cylinderGeometry args={[0.09, 0.08, 0.18, 10]} />
-            <meshStandardMaterial color="#0f172a" metalness={0.85} />
+            <cylinderGeometry args={[0.095, 0.088, 0.18, 12]} />
+            <meshStandardMaterial color={charType === 'human_brawler' ? '#0f172a' : '#0f172a'} metalness={0.6} roughness={0.4} />
           </mesh>
+          {/* Hand / Fist */}
           <mesh position={[0, -0.52, 0]}>
             <sphereGeometry args={[0.08, 10, 10]} />
-            <meshStandardMaterial color={charType === 'cybertitan' || charType === 'aerobot' ? '#334155' : '#fed7aa'} />
+            <meshStandardMaterial color={charType === 'human_brawler' ? '#fcd34d' : (charType === 'human_female' ? '#fed7aa' : (charType === 'cybertitan' || charType === 'aerobot' ? '#334155' : '#fed7aa'))} />
           </mesh>
         </group>
 

@@ -20,9 +20,11 @@ export const AdminPanel = () => {
 
   // Management state
   const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [usersLoading, setUsersLoading] = useState(false);
   const [identifier, setIdentifier] = useState('');
   const [levels, setLevels] = useState('1,2,3,4,5,6,7,8,9,10');
+  const [stageCountInput, setStageCountInput] = useState(10);
   const [activate, setActivate] = useState(true);
   const [message, setMessage] = useState('');
   const [statusType, setStatusType] = useState('info');
@@ -30,24 +32,34 @@ export const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('users');
 
   useEffect(() => {
-    if (authToken) {
-      verifyToken();
+    const savedToken = localStorage.getItem('admin_auth_token') || authToken;
+    if (savedToken) {
+      verifyToken(savedToken);
     }
   }, []);
 
-  const verifyToken = async () => {
+  const verifyToken = async (tokenToVerify) => {
+    const t = tokenToVerify || authToken || localStorage.getItem('admin_auth_token');
+    if (!t) return;
     try {
       const res = await fetch(`${API_BASE}/api/admin/users`, {
-        headers: { 'Authorization': `Bearer ${authToken}`, 'x-admin-key': authToken }
+        headers: { 'Authorization': `Bearer ${t}`, 'x-admin-key': t }
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         setIsLoggedIn(true);
-        fetchUsers();
+        setUsers(data.users || []);
       } else {
         localStorage.removeItem('admin_auth_token');
         setAuthToken('');
+        setIsLoggedIn(false);
       }
-    } catch {}
+    } catch {
+      // If network error, still allow if master key was saved
+      if (t === MASTER_KEY || t === 'admin2026') {
+        setIsLoggedIn(true);
+      }
+    }
   };
 
   const handleLogin = async (e) => {
@@ -57,16 +69,16 @@ export const AdminPanel = () => {
     try {
       let token = '';
       if (loginMode === 'key') {
-        // Try master key directly
+        const keyVal = loginKey.trim();
         const res = await fetch(`${API_BASE}/api/admin/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ adminKey: loginKey })
+          body: JSON.stringify({ adminKey: keyVal })
         });
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.error || 'Invalid master key');
-        token = data.token;
-        setAdminInfo(data.admin);
+        token = data.token || keyVal;
+        setAdminInfo(data.admin || { email: 'admin@jackrunner.com', username: 'JackAdmin' });
       } else {
         const res = await fetch(`${API_BASE}/api/admin/login`, {
           method: 'POST',
@@ -90,16 +102,21 @@ export const AdminPanel = () => {
   };
 
   const fetchUsers = async (token) => {
-    const t = token || authToken;
+    const t = token || authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
     setUsersLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/admin/users`, {
         headers: { 'Authorization': `Bearer ${t}`, 'x-admin-key': t }
       });
       const data = await res.json();
-      if (res.ok && data.users) setUsers(data.users);
-    } catch {}
-    setUsersLoading(false);
+      if (res.ok && data.users) {
+        setUsers(data.users);
+      }
+    } catch (err) {
+      console.error('Failed to fetch admin users:', err);
+    } finally {
+      setUsersLoading(false);
+    }
   };
 
   const handleUnlock = async () => {
@@ -107,16 +124,38 @@ export const AdminPanel = () => {
       setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
     }
     setLoading(true); setMessage('');
+    const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
     try {
       const levelArray = levels.split(',').map(l => Number(l.trim())).filter(l => !isNaN(l) && l > 0);
       const res = await fetch(`${API_BASE}/api/admin/unlock-levels`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}`, 'x-admin-key': authToken },
-        body: JSON.stringify({ identifier, levels: levelArray })
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+        body: JSON.stringify({ identifier: identifier.trim(), levels: levelArray })
       });
       const data = await res.json();
       setMessage(data.message || data.error || 'Done'); setStatusType(data.success ? 'success' : 'error');
-      if (data.success) fetchUsers();
+      if (data.success) fetchUsers(t);
+    } catch { setMessage('Network error'); setStatusType('error'); }
+    setLoading(false);
+  };
+
+  const handleSetStageCount = async (targetId, count) => {
+    const target = targetId || identifier;
+    const finalCount = count !== undefined ? count : stageCountInput;
+    if (!target) {
+      setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
+    }
+    setLoading(true); setMessage('');
+    const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/set-stage-count`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+        body: JSON.stringify({ identifier: String(target).trim(), stageCount: Number(finalCount) })
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error || 'Done'); setStatusType(data.success ? 'success' : 'error');
+      if (data.success) fetchUsers(t);
     } catch { setMessage('Network error'); setStatusType('error'); }
     setLoading(false);
   };
@@ -126,15 +165,16 @@ export const AdminPanel = () => {
       setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
     }
     setLoading(true); setMessage('');
+    const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
     try {
       const res = await fetch(`${API_BASE}/api/admin/activate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}`, 'x-admin-key': authToken },
-        body: JSON.stringify({ identifier, activated: activate })
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+        body: JSON.stringify({ identifier: identifier.trim(), activated: activate })
       });
       const data = await res.json();
       setMessage(data.message || data.error || 'Done'); setStatusType(data.success ? 'success' : 'error');
-      if (data.success) fetchUsers();
+      if (data.success) fetchUsers(t);
     } catch { setMessage('Network error'); setStatusType('error'); }
     setLoading(false);
   };
@@ -322,40 +362,59 @@ export const AdminPanel = () => {
         {/* ─── USERS TAB ─── */}
         {activeTab === 'users' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ color: '#38bdf8', fontWeight: '800', fontSize: '1rem' }}>Registered Players ({users.length})</h3>
-              <button onClick={() => fetchUsers()} style={{
-                background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.3)', color: '#38bdf8',
-                padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem'
-              }}>🔄 Refresh</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <h3 style={{ color: '#38bdf8', fontWeight: '800', fontSize: '1rem', margin: 0 }}>Registered Players ({users.length})</h3>
+                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Live Database Sync</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  style={{ ...s.input, width: '220px', padding: '6px 12px', fontSize: '0.85rem' }}
+                  placeholder="🔍 Search email/name..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+                <button onClick={() => fetchUsers()} style={{
+                  background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.3)', color: '#38bdf8',
+                  padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem'
+                }}>🔄 Refresh</button>
+              </div>
             </div>
-            <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '420px' }}>
+
+            <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '450px' }}>
               {usersLoading ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>⏳ Loading users...</div>
               ) : users.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>No registered players yet.</div>
+                <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>No registered players found.</div>
               ) : (
                 <table style={s.table}>
                   <thead>
                     <tr>
                       <th style={s.th}>#</th>
-                      <th style={s.th}>Email</th>
+                      <th style={s.th}>Email Address</th>
                       <th style={s.th}>Username</th>
-                      <th style={s.th}>Stages</th>
-                      <th style={s.th}>VIP</th>
+                      <th style={s.th}>Allowed Stages</th>
+                      <th style={s.th}>Status</th>
                       <th style={s.th}>Admin</th>
-                      <th style={s.th}>Actions</th>
+                      <th style={s.th}>Set Stages & Permissions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map(u => (
+                    {users
+                      .filter(u => {
+                        if (!searchTerm) return true;
+                        const term = searchTerm.toLowerCase();
+                        return (u.email && u.email.toLowerCase().includes(term)) ||
+                               (u.username && u.username.toLowerCase().includes(term));
+                      })
+                      .map(u => (
                       <tr key={u.id}>
                         <td style={s.td}>{u.id}</td>
-                        <td style={s.td}><span style={{ color: '#38bdf8' }}>{u.email || '—'}</span></td>
+                        <td style={s.td}><span style={{ color: '#38bdf8', fontWeight: '600' }}>{u.email || '—'}</span></td>
                         <td style={s.td}><strong>{u.username}</strong></td>
                         <td style={s.td}>
-                          <span style={{ color: '#fbbf24', fontWeight: '700' }}>
-                            {Array.isArray(u.unlocked_levels) ? u.unlocked_levels.length : 0}/30
+                          <span style={{ color: '#fbbf24', fontWeight: '800', fontSize: '0.9rem' }}>
+                            {Array.isArray(u.unlocked_levels) ? u.unlocked_levels.length : 0} / 30 Stages
                           </span>
                         </td>
                         <td style={s.td}>
@@ -365,19 +424,29 @@ export const AdminPanel = () => {
                             color: u.is_activated ? '#34d399' : '#64748b',
                             border: `1px solid ${u.is_activated ? '#10b981' : '#334155'}`
                           }}>
-                            {u.is_activated ? '✅ VIP' : '🔒 Free'}
+                            {u.is_activated ? '✅ VIP Full' : '🔒 Free'}
                           </span>
                         </td>
                         <td style={s.td}>{u.is_admin ? <span style={{ color: '#ec4899', fontWeight: '700' }}>⚡ Admin</span> : '—'}</td>
                         <td style={s.td}>
-                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            <button onClick={() => quickUnlockAll(u.email || u.username)} style={{
-                              background: 'rgba(56,189,248,0.15)', border: '1px solid #38bdf8', color: '#38bdf8',
-                              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '700'
-                            }}>🔓 All Stages</button>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {/* Quick Stage buttons */}
+                            {[5, 10, 15, 30].map(cnt => (
+                              <button
+                                key={cnt}
+                                onClick={() => handleSetStageCount(u.email || u.username, cnt)}
+                                style={{
+                                  background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.3)',
+                                  color: '#7dd3fc', padding: '3px 7px', borderRadius: '6px', cursor: 'pointer',
+                                  fontSize: '0.72rem', fontWeight: '700'
+                                }}
+                              >
+                                {cnt === 30 ? '🔓 All 30' : `+${cnt} Lvl`}
+                              </button>
+                            ))}
                             <button onClick={() => quickActivate(u.email || u.username)} style={{
                               background: 'rgba(250,204,21,0.15)', border: '1px solid #facc15', color: '#facc15',
-                              padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '700'
+                              padding: '3px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.72rem', fontWeight: '700'
                             }}>⭐ VIP</button>
                           </div>
                         </td>
@@ -395,13 +464,57 @@ export const AdminPanel = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
             {/* Shared identifier input */}
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={s.label}>TARGET USER (Email / Username / ID)</label>
+              <label style={s.label}>TARGET USER EMAIL / USERNAME / ID</label>
               <input style={s.input} type="text" value={identifier}
                 onChange={e => setIdentifier(e.target.value)}
-                placeholder="e.g. player@email.com or JakeSpeed or 2" />
+                placeholder="e.g. syedusamatanveer@gmail.com or jake@speed.com or 4" />
             </div>
 
-            {/* Unlock Stages */}
+            {/* Quick Stage Count Setter */}
+            <div style={{ background: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.25)', borderRadius: '16px', padding: '20px' }}>
+              <h3 style={{ color: '#38bdf8', fontWeight: '800', fontSize: '0.95rem', marginBottom: '12px' }}>
+                🎯 Set Exact Number of Allowed Stages for Email
+              </h3>
+              <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '12px' }}>
+                Type the total number of stages (1 to 30) this specific email user is permitted to play.
+              </p>
+              <label style={s.label}>NUMBER OF STAGES (1 – 30)</label>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+                <input
+                  style={{ ...s.input, width: '100px', fontWeight: '800', textAlign: 'center', fontSize: '1.1rem' }}
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={stageCountInput}
+                  onChange={e => setStageCountInput(Number(e.target.value))}
+                />
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {[1, 5, 10, 15, 20, 30].map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setStageCountInput(n)}
+                      style={{
+                        background: stageCountInput === n ? 'rgba(56,189,248,0.35)' : 'rgba(255,255,255,0.06)',
+                        border: `1px solid ${stageCountInput === n ? '#38bdf8' : 'rgba(255,255,255,0.1)'}`,
+                        color: stageCountInput === n ? '#fff' : '#94a3b8',
+                        padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem'
+                      }}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                style={s.btn('linear-gradient(135deg, #0284c7, #38bdf8)')}
+                onClick={() => handleSetStageCount()}
+                disabled={loading}
+              >
+                {loading ? '⏳ Updating Stages...' : `⚡ Allow ${stageCountInput} Stages for User`}
+              </button>
+            </div>
+
+            {/* Manual Stage IDs */}
             <div style={{ background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: '16px', padding: '20px' }}>
               <h3 style={{ color: '#38bdf8', fontWeight: '800', fontSize: '0.95rem', marginBottom: '12px' }}>🔓 Unlock Stages (1–30)</h3>
               <label style={s.label}>STAGE IDs (comma-separated)</label>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { useGameStore } from '../../store/gameStore';
-import { GAME_STATES, POWERUP_CONFIG } from '../../utils/constants';
-import { Sparkles, Gift, Check, Home, Brain, HelpCircle, ArrowRight } from 'lucide-react';
+import { GAME_STATES, POWERUP_CONFIG, YOUTUBE_REWARD_VIDEOS } from '../../utils/constants';
+import { Sparkles, Gift, Check, Home, Brain, HelpCircle, Play, Tv, Award, ExternalLink } from 'lucide-react';
 
 const AI_TRIVIA = [
   {
@@ -41,15 +41,25 @@ export const MysteryBoxModal = () => {
   const activeMysteryBox = useGameStore((s) => s.activeMysteryBox);
   const closeMysteryBox = useGameStore((s) => s.closeMysteryBox);
   const setGameState = useGameStore((s) => s.setGameState);
+  const addBonusCoins = useGameStore((s) => s.addBonusCoins);
 
   const [isOpened, setIsOpened] = useState(false);
   const [selectedTrivia, setSelectedTrivia] = useState(AI_TRIVIA[0]);
   const [showAnswer, setShowAnswer] = useState(false);
 
+  // YouTube Video Reward state
+  const [selectedVideoIdx, setSelectedVideoIdx] = useState(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [videoClaimed, setVideoClaimed] = useState(false);
+
   useEffect(() => {
     if (activeMysteryBox) {
       setIsOpened(false);
       setShowAnswer(false);
+      setIsVideoPlaying(false);
+      setVideoClaimed(false);
+      setSelectedVideoIdx(0);
+
       // Pick a random AI question for the gift
       const randomQ = AI_TRIVIA[Math.floor(Math.random() * AI_TRIVIA.length)];
       setSelectedTrivia(randomQ);
@@ -74,6 +84,8 @@ export const MysteryBoxModal = () => {
   const singlePowerup = activeMysteryBox.powerup;
   const totalCoins = activeMysteryBox.totalCoins || singleCoins;
 
+  const currentVideo = YOUTUBE_REWARD_VIDEOS[selectedVideoIdx] || YOUTUBE_REWARD_VIDEOS[0];
+
   const handleClaim = () => {
     closeMysteryBox();
   };
@@ -83,17 +95,31 @@ export const MysteryBoxModal = () => {
     setGameState(GAME_STATES.MENU);
   };
 
+  const handleClaimVideoReward = () => {
+    if (videoClaimed) return;
+    setVideoClaimed(true);
+    addBonusCoins(currentVideo.bonusCoins);
+    confetti({
+      particleCount: 160,
+      spread: 100,
+      origin: { y: 0.4 }
+    });
+  };
+
   return (
     <div className="mystery-box-backdrop" onClick={handleClaim}>
       <div
         className="mystery-box-modal batch-mystery-modal"
         onClick={(e) => e.stopPropagation()}
         style={{
-          maxHeight: '90vh',
+          maxHeight: '92vh',
+          width: '95%',
+          maxWidth: '560px',
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center'
+          alignItems: 'center',
+          padding: '24px 20px'
         }}
       >
         {/* Glowing Aura rays */}
@@ -118,9 +144,136 @@ export const MysteryBoxModal = () => {
             <div className="mystery-reward-card coins-card main-coins-reward">
               <span className="reward-icon">🪙</span>
               <div className="reward-details">
-                <span className="reward-label">TOTAL COINS ACQUIRED</span>
+                <span className="reward-label">BASE REWARD COINS</span>
                 <span className="reward-value">+{totalCoins.toLocaleString()} COINS</span>
               </div>
+            </div>
+
+            {/* ─── YOUTUBE VIDEO GIFT ANIMATION SECTION ─── */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(168, 85, 247, 0.18))',
+              border: '1px solid rgba(239, 68, 68, 0.45)',
+              borderRadius: '16px',
+              padding: '16px',
+              margin: '12px 0',
+              textAlign: 'left',
+              width: '100%',
+              boxShadow: '0 8px 24px rgba(239, 68, 68, 0.2)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f87171', fontSize: '0.85rem', fontWeight: '800' }}>
+                  <Tv size={18} />
+                  <span>🎬 EXCLUSIVE YOUTUBE VIDEO GIFT</span>
+                </div>
+                <div style={{
+                  padding: '3px 10px',
+                  borderRadius: '999px',
+                  background: 'rgba(250, 204, 21, 0.2)',
+                  border: '1px solid #facc15',
+                  color: '#facc15',
+                  fontSize: '0.75rem',
+                  fontWeight: '800'
+                }}>
+                  {currentVideo.rewardLabel}
+                </div>
+              </div>
+
+              {/* Video Title & Episode Selector */}
+              <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>
+                {currentVideo.title}
+              </div>
+
+              {/* Playlist Switcher Pills */}
+              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '10px' }}>
+                {YOUTUBE_REWARD_VIDEOS.map((vid, idx) => (
+                  <button
+                    key={vid.id}
+                    onClick={() => { setSelectedVideoIdx(idx); setIsVideoPlaying(true); setVideoClaimed(false); }}
+                    style={{
+                      background: selectedVideoIdx === idx ? 'linear-gradient(135deg, #ef4444, #ec4899)' : 'rgba(255,255,255,0.06)',
+                      border: `1px solid ${selectedVideoIdx === idx ? '#f43f5e' : 'rgba(255,255,255,0.15)'}`,
+                      color: '#fff',
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    Ep {idx + 1}
+                  </button>
+                ))}
+              </div>
+
+              {/* Video Embed Player or Watch Trigger */}
+              {isVideoPlaying ? (
+                <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', borderRadius: '12px', overflow: 'hidden', marginBottom: '12px', background: '#000' }}>
+                  <iframe
+                    src={currentVideo.embedUrl}
+                    title={currentVideo.title}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      border: 'none',
+                      borderRadius: '12px'
+                    }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsVideoPlaying(true)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #dc2626, #991b1b)',
+                    border: '1px solid #f87171',
+                    color: '#fff',
+                    fontWeight: '800',
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    marginBottom: '10px',
+                    boxShadow: '0 4px 15px rgba(220, 38, 38, 0.4)'
+                  }}
+                >
+                  <Play size={18} fill="#fff" />
+                  <span>▶️ PLAY REWARD VIDEO ANIMATION</span>
+                </button>
+              )}
+
+              {/* Bonus Coins Claim Action */}
+              <button
+                onClick={handleClaimVideoReward}
+                disabled={videoClaimed}
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  background: videoClaimed ? 'rgba(16, 185, 129, 0.2)' : 'linear-gradient(135deg, #a16207, #eab308)',
+                  border: `1px solid ${videoClaimed ? '#10b981' : '#fde047'}`,
+                  color: videoClaimed ? '#6ee7b7' : '#000',
+                  fontWeight: '900',
+                  fontSize: '0.85rem',
+                  cursor: videoClaimed ? 'default' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Award size={16} />
+                <span>{videoClaimed ? '✅ EXTRA COIN REWARD CLAIMED!' : `🎁 CLAIM +${(currentVideo.bonusCoins).toLocaleString()} EXTRA COINS`}</span>
+              </button>
             </div>
 
             {/* Hidden AI General Knowledge Gift Card */}
@@ -139,7 +292,7 @@ export const MysteryBoxModal = () => {
                   <Brain size={18} />
                   <span>HIDDEN AI KNOWLEDGE REWARD</span>
                 </div>
-                <p style={{ fontSize: '0.95rem', fontWeight: '700', color: '#ffffff', marginBottom: '10px' }}>
+                <p style={{ fontSize: '0.92rem', fontWeight: '700', color: '#ffffff', marginBottom: '10px' }}>
                   {selectedTrivia.q}
                 </p>
                 {showAnswer ? (
@@ -181,7 +334,7 @@ export const MysteryBoxModal = () => {
 
             {/* List of unboxed items */}
             {isBatch ? (
-              <div className="batch-rewards-scroll-list" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+              <div className="batch-rewards-scroll-list" style={{ maxHeight: '150px', overflowY: 'auto' }}>
                 {rewards.map((reward, idx) => {
                   const pInfo = reward.powerup ? POWERUP_CONFIG[reward.powerup] : null;
                   return (
@@ -238,7 +391,7 @@ export const MysteryBoxModal = () => {
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
             <Check size={20} />
-            <span>CLAIM REWARDS</span>
+            <span>CLAIM ALL REWARDS</span>
           </button>
 
           <button
@@ -265,3 +418,5 @@ export const MysteryBoxModal = () => {
     </div>
   );
 };
+
+export default MysteryBoxModal;

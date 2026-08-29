@@ -148,7 +148,7 @@ export const ShopModal = ({ onClose }) => {
                           }}
                           disabled={!canAfford}
                         >
-                          <Lock size={14} /> 🪙 {char.price.toLocaleString()}
+                          <Lock size={14} /> {char.priceLabel || `🪙 ${char.price.toLocaleString()}`}
                         </button>
                       )}
                     </div>
