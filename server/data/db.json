@@ -39,7 +39,39 @@
         29,
         30
       ],
-      "created_at": "2026-08-29T02:05:07.937Z"
+      "created_at": "2026-08-29T02:05:07.937Z",
+      "unlocked_songs": [
+        "song-1",
+        "song-2",
+        "song-3",
+        "song-4",
+        "song-5",
+        "song-6",
+        "song-7",
+        "song-8",
+        "song-9",
+        "song-10",
+        "song-11",
+        "song-12",
+        "song-13",
+        "song-14",
+        "song-15",
+        "song-16",
+        "song-17",
+        "song-18",
+        "song-19",
+        "song-20",
+        "song-21",
+        "song-22",
+        "song-23",
+        "song-24",
+        "song-25",
+        "song-26",
+        "song-27",
+        "song-28",
+        "song-29",
+        "song-30"
+      ]
     },
     {
       "id": 2,
@@ -51,7 +83,10 @@
       "unlocked_levels": [
         1
       ],
-      "created_at": "2026-08-29T02:05:07.939Z"
+      "created_at": "2026-08-29T02:05:07.939Z",
+      "unlocked_songs": [
+        "song-1"
+      ]
     },
     {
       "id": 3,
@@ -64,7 +99,10 @@
         1,
         2
       ],
-      "created_at": "2026-08-29T02:05:07.939Z"
+      "created_at": "2026-08-29T02:05:07.939Z",
+      "unlocked_songs": [
+        "song-1"
+      ]
     },
     {
       "id": 4,
@@ -76,7 +114,25 @@
       "unlocked_levels": [
         1
       ],
-      "created_at": "2026-08-29T02:25:48.624Z"
+      "created_at": "2026-08-29T02:25:48.624Z",
+      "unlocked_songs": [
+        "song-1"
+      ]
+    },
+    {
+      "id": 5,
+      "email": "player@gmail.com",
+      "username": "speedrunner",
+      "password_hash": "$2a$10$MYZMXffTQkvJK8kawbW04.AeBJ38./9SDxjeNih9lcfcNid2ShofO",
+      "is_admin": false,
+      "is_activated": false,
+      "unlocked_levels": [
+        1
+      ],
+      "unlocked_songs": [
+        "song-1"
+      ],
+      "created_at": "2026-08-30T09:46:51.939Z"
     }
   ],
   "scores": [
@@ -130,5 +186,249 @@
       "character": "blitz",
       "created_at": "2026-08-28T21:05:07.942Z"
     }
-  ]
+  ],
+  "songs": [
+    {
+      "id": "song-1",
+      "name": "Victory Horizon (Main Theme)",
+      "type": "instrumental",
+      "price": 0,
+      "level": 1,
+      "author": "Epic Synth",
+      "is_free": true
+    },
+    {
+      "id": "song-2",
+      "name": "Believe in Yourself",
+      "type": "vocal",
+      "price": 30,
+      "level": 2,
+      "author": "Chamber Grit"
+    },
+    {
+      "id": "song-3",
+      "name": "Eye of the Gladiator",
+      "type": "vocal",
+      "price": 30,
+      "level": 3,
+      "author": "Metal Storm"
+    },
+    {
+      "id": "song-4",
+      "name": "Rise Above the Grid",
+      "type": "instrumental",
+      "price": 30,
+      "level": 4,
+      "author": "Cyber Grid"
+    },
+    {
+      "id": "song-5",
+      "name": "Limitless Power",
+      "type": "vocal",
+      "price": 30,
+      "level": 5,
+      "author": "Future Blast"
+    },
+    {
+      "id": "song-6",
+      "name": "Autobahn Speed",
+      "type": "instrumental",
+      "price": 30,
+      "level": 6,
+      "author": "Kraft Drive"
+    },
+    {
+      "id": "song-7",
+      "name": "Neon Dreams",
+      "type": "vocal",
+      "price": 30,
+      "level": 7,
+      "author": "Retro Arc"
+    },
+    {
+      "id": "song-8",
+      "name": "Eiffel Summit",
+      "type": "instrumental",
+      "price": 30,
+      "level": 8,
+      "author": "Parisian Synth"
+    },
+    {
+      "id": "song-9",
+      "name": "Gangnam Run",
+      "type": "vocal",
+      "price": 30,
+      "level": 9,
+      "author": "Seoul K-Pop"
+    },
+    {
+      "id": "song-10",
+      "name": "Sunset Drive",
+      "type": "instrumental",
+      "price": 30,
+      "level": 10,
+      "author": "California Wave"
+    },
+    {
+      "id": "song-11",
+      "name": "Harbour Cyberway",
+      "type": "vocal",
+      "price": 30,
+      "level": 11,
+      "author": "Sydney Vox"
+    },
+    {
+      "id": "song-12",
+      "name": "Solar Flare Fissure",
+      "type": "instrumental",
+      "price": 30,
+      "level": 12,
+      "author": "Cairo Dunes"
+    },
+    {
+      "id": "song-13",
+      "name": "Frost Valley Echo",
+      "type": "vocal",
+      "price": 30,
+      "level": 13,
+      "author": "Toronto Blizzard"
+    },
+    {
+      "id": "song-14",
+      "name": "Coliseum Ascent",
+      "type": "instrumental",
+      "price": 30,
+      "level": 14,
+      "author": "Rome Gladiator"
+    },
+    {
+      "id": "song-15",
+      "name": "Valkyrie Special Run",
+      "type": "vocal",
+      "price": 30,
+      "level": 15,
+      "author": "Olympic Queen"
+    },
+    {
+      "id": "song-16",
+      "name": "Aurora Glade Whisper",
+      "type": "instrumental",
+      "price": 30,
+      "level": 16,
+      "author": "Reykjavik Ambient"
+    },
+    {
+      "id": "song-17",
+      "name": "Alps Thrill Chase",
+      "type": "vocal",
+      "price": 30,
+      "level": 17,
+      "author": "Swiss Peaks"
+    },
+    {
+      "id": "song-18",
+      "name": "Cyberpunk Redline",
+      "type": "instrumental",
+      "price": 30,
+      "level": 18,
+      "author": "Hong Kong Neon"
+    },
+    {
+      "id": "song-19",
+      "name": "Bazaar Run",
+      "type": "vocal",
+      "price": 30,
+      "level": 19,
+      "author": "Istanbul Sitar"
+    },
+    {
+      "id": "song-20",
+      "name": "Rainforest Sprinter",
+      "type": "instrumental",
+      "price": 30,
+      "level": 20,
+      "author": "Amazon Beat"
+    },
+    {
+      "id": "song-21",
+      "name": "Taj Mahal Echoes",
+      "type": "vocal",
+      "price": 30,
+      "level": 21,
+      "author": "Delhi Beats"
+    },
+    {
+      "id": "song-22",
+      "name": "Volcanic Core",
+      "type": "instrumental",
+      "price": 30,
+      "level": 22,
+      "author": "Magma Core"
+    },
+    {
+      "id": "song-23",
+      "name": "Sky High Chase",
+      "type": "vocal",
+      "price": 30,
+      "level": 23,
+      "author": "Chicago Skyscraper"
+    },
+    {
+      "id": "song-24",
+      "name": "Frozen Tundra",
+      "type": "instrumental",
+      "price": 30,
+      "level": 24,
+      "author": "Siberian Storm"
+    },
+    {
+      "id": "song-25",
+      "name": "Carnival Jump",
+      "type": "vocal",
+      "price": 30,
+      "level": 25,
+      "author": "Rio Samba"
+    },
+    {
+      "id": "song-26",
+      "name": "Sahara Heatwaves",
+      "type": "instrumental",
+      "price": 30,
+      "level": 26,
+      "author": "Desert Wind"
+    },
+    {
+      "id": "song-27",
+      "name": "Tower Bridge Chase",
+      "type": "vocal",
+      "price": 30,
+      "level": 27,
+      "author": "London Punk"
+    },
+    {
+      "id": "song-28",
+      "name": "Tokyo Overdrive",
+      "type": "instrumental",
+      "price": 30,
+      "level": 28,
+      "author": "Shibuya Crossing"
+    },
+    {
+      "id": "song-29",
+      "name": "Samba Horizon",
+      "type": "vocal",
+      "price": 30,
+      "level": 29,
+      "author": "Rio Sunset"
+    },
+    {
+      "id": "song-30",
+      "name": "Ultimate Apex Champion",
+      "type": "instrumental",
+      "price": 30,
+      "level": 30,
+      "author": "Valkyrie Theme"
+    }
+  ],
+  "payments": []
 }
