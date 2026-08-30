@@ -43,32 +43,35 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
           </div>
 
           <div className="menu-header-right">
-            {/* Activate VIP pill */}
             {!isActivated && (
               <div className="menu-unlock-pill animate-pulse-slow" onClick={() => useGameStore.getState().setShowPaymentModal(true)}>
-                <span>🔓 ACTIVATE VIP</span>
+                <span>🔓 VIP</span>
               </div>
             )}
-
-            {/* Stage pill */}
             <div className="menu-level-pill" onClick={() => setShowLevelSelect(true)}>
               <MapPin size={16} color="#38bdf8" />
               <span>STAGE {safeLevel}/30</span>
             </div>
-
             <div className="menu-coins-pill" onClick={onOpenShop}>
-              <span>🪙</span>
+              <span>💍</span>
               <span>{(totalCoins || 0).toLocaleString()}</span>
             </div>
-
             <button className="menu-icon-btn" onClick={toggleMute} title="Mute/Unmute Audio">
               {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
             </button>
-
             <button className="menu-icon-btn help-btn" onClick={() => setShowHelp(true)} title="How to Play">
               <HelpCircle size={20} />
             </button>
           </div>
+        </div>
+
+        {/* 💰 Pricing Banner */}
+        <div className="menu-stage-price-banner">
+          <span>🎮 STAGE 1 FREE!</span>
+          <span className="menu-stage-price-badge">🔓 Stage: Rs. 40</span>
+          <span className="menu-stage-price-badge">🤖 Robot: Rs. 40</span>
+          <span className="menu-stage-price-badge">🎵 Song: Rs. 30</span>
+          <span>JazzCash → Syed Usama · +923211808390</span>
         </div>
 
         {/* Hero Title */}
@@ -78,7 +81,6 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
             <h1 className="menu-logo-main">JACK</h1>
             <div className="menu-logo-tagline">3D CYBER ENDLESS RUNNER • 30 STAGES</div>
           </div>
-
           <div className="menu-highscore-badge">
             <Trophy size={18} color="#facc15" />
             <span>BEST SCORE: <strong>{(highscore || 0).toLocaleString()}</strong></span>
@@ -94,12 +96,11 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
             <div className="menu-char-bonus">{activeChar.bonus}</div>
             {activeChar.isFree && (
               <div style={{ marginTop: '6px', fontSize: '0.7rem', color: '#34d399', fontWeight: '700', background: 'rgba(16,185,129,0.15)', padding: '2px 8px', borderRadius: '999px', border: '1px solid #10b981', display: 'inline-block' }}>
-                🆓 FREE ROBOT
+                🆓 FREE CHARACTER
               </div>
             )}
           </div>
 
-          {/* Quick Character Selector */}
           <div className="menu-char-selector">
             {CHARACTERS.map((char) => {
               const isUnlocked = unlockedCharacters.includes(char.id) || char.isFree;
@@ -114,10 +115,10 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
                     if (isUnlocked && !needsPayment) {
                       selectCharacter(char.id);
                     } else {
-                      onOpenShop();
+                      useGameStore.getState().triggerPayment('character', char.id, 40);
                     }
                   }}
-                  title={needsPayment ? `💰 ${char.name} — Requires VIP` : isUnlocked ? `Select ${char.name}` : `Unlock ${char.name} in Shop`}
+                  title={needsPayment ? `💰 Rs. 40 via JazzCash to unlock ${char.name}` : isUnlocked ? `Select ${char.name}` : `Unlock ${char.name}`}
                   style={{ position: 'relative' }}
                 >
                   <span>{char.avatar}</span>
@@ -125,7 +126,7 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
                     <span style={{
                       position: 'absolute', bottom: '-2px', right: '-2px', fontSize: '0.55rem',
                       background: '#facc15', color: '#000', borderRadius: '999px', padding: '1px 3px', fontWeight: '900'
-                    }}>$</span>
+                    }}>₨</span>
                   )}
                 </button>
               );
@@ -139,23 +140,19 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
             <Play size={32} fill="currentColor" />
             <span>START RUN (STAGE {safeLevel})</span>
           </button>
-
           <div className="menu-sub-actions">
             <button className="menu-secondary-btn" onClick={() => setShowLevelSelect(true)}>
               <MapPin size={20} />
               <span>30 STAGES</span>
             </button>
-
             <button className="menu-secondary-btn" onClick={onOpenShop}>
               <ShoppingBag size={20} />
               <span>SHOP</span>
             </button>
-
             <button className="menu-secondary-btn" onClick={onOpenLeaderboard}>
               <Trophy size={20} />
               <span>RANKS</span>
             </button>
-
             <button className="menu-secondary-btn help-secondary-btn" onClick={() => setShowHelp(true)}>
               <HelpCircle size={20} />
               <span>HOW TO PLAY</span>
@@ -169,13 +166,8 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
         </div>
       </div>
 
-      {showLevelSelect && (
-        <LevelSelectModal onClose={() => setShowLevelSelect(false)} />
-      )}
-
-      {showHelp && (
-        <HelpModal onClose={() => setShowHelp(false)} />
-      )}
+      {showLevelSelect && <LevelSelectModal onClose={() => setShowLevelSelect(false)} />}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
     </>
   );
 };

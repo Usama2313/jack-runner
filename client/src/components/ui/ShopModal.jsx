@@ -34,29 +34,24 @@ export const ShopModal = ({ onClose }) => {
 
   const handleCharacterAction = (char) => {
     const isUnlocked = unlockedCharacters.includes(char.id);
-    const isPremiumRobot = char.id !== 'blitz' && !char.isHuman;
-    if (isPremiumRobot && !isActivated) {
-      showToast(`🔒 Premium Robot! Requires VIP Game Activation.`);
-      setTimeout(() => triggerPayment('vip', null, 1000), 1200);
-      return;
-    }
-
     if (isUnlocked) {
       const success = selectCharacter(char.id);
       if (success) {
         showToast(`⚡ Equipped ${char.name}!`);
       } else {
-        showToast(`🔒 Equip failed. Requires VIP Game Activation.`);
+        // Premium robot requires payment
+        showToast(`🔒 This Robot requires Rs. 40 via JazzCash!`);
+        setTimeout(() => triggerPayment('character', char.id, 40), 800);
       }
-    } else if (totalCoins >= char.price) {
-      const success = buyCharacter(char.id, char.price);
-      if (success) {
-        showToast(`🎉 Unlocked & Equipped ${char.name}!`);
-      } else {
-        showToast(`🔒 Unlock failed. Requires VIP Game Activation.`);
-      }
+      return;
+    }
+    // Not unlocked — require JazzCash payment for ALL non-free characters
+    if (char.isFree) {
+      selectCharacter(char.id);
+      showToast(`⚡ Equipped ${char.name}!`);
     } else {
-      showToast(`❌ Need ${(char.price - totalCoins).toLocaleString()} more coins!`);
+      showToast(`🔒 Unlock ${char.name} — Rs. 40 via JazzCash!`);
+      setTimeout(() => triggerPayment('character', char.id, 40), 600);
     }
   };
 
@@ -299,39 +294,42 @@ export const ShopModal = ({ onClose }) => {
           {/* SONGS TAB */}
           {activeTab === 'songs' && (
             <div className="shop-upgrades-list">
-              <div style={{ color: '#94a3b8', fontSize: '0.8rem', padding: '10px 15px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                <span>Motivational background songs that play during runs. Stage 1 is free!</span>
-                <strong style={{ color: '#38bdf8' }}>Price: Rs. 30 each</strong>
+              <div style={{ color: '#94a3b8', fontSize: '0.8rem', padding: '10px 15px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                <span>🎵 Background songs that play during your run. <strong style={{ color: '#34d399' }}>Stage 1 Song is FREE!</strong> All others require payment.</span>
+                <strong style={{ color: '#facc15' }}>Rs. 30 per Song via JazzCash</strong>
               </div>
               {MUSIC_PLAYLIST.map((song) => {
-                const isUnlocked = isActivated || unlockedSongs.includes(song.id) || song.isFree;
+                // Only song-1 is free; all others require payment
+                const isFreeForever = song.id === 'song-1';
+                const isUnlocked = isFreeForever || unlockedSongs.includes(song.id) || isActivated;
                 const isSelected = selectedSong === song.id;
                 
                 return (
                   <div key={song.id} className="upgrade-row" style={{ padding: '16px' }}>
-                    <div className="upgrade-icon-box" style={{ borderColor: isSelected ? '#10b981' : '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
+                    <div className="upgrade-icon-box" style={{ borderColor: isSelected ? '#10b981' : isFreeForever ? '#34d399' : '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
                       {song.type === 'vocal' ? '🎤' : '🎵'}
                     </div>
 
                     <div className="upgrade-details" style={{ flex: 1 }}>
-                      <div className="upgrade-name" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="upgrade-name" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <span>{song.name}</span>
+                        {isFreeForever && <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(16,185,129,0.2)', color: '#34d399', border: '1px solid #10b981' }}>🆓 FREE</span>}
                         <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', background: song.type === 'vocal' ? 'rgba(168,85,247,0.2)' : 'rgba(56,189,248,0.2)', color: song.type === 'vocal' ? '#c084fc' : '#38bdf8', border: '1px solid currentColor' }}>
                           {song.type === 'vocal' ? 'VOCAL' : 'INSTRUMENTAL'}
                         </span>
                       </div>
-                      <div className="upgrade-desc">Artist: {song.author} • Plays on Level: {song.level}</div>
+                      <div className="upgrade-desc">Artist: {song.author} • Stage {song.level}</div>
                     </div>
 
                     <div className="upgrade-action">
                       {isSelected ? (
-                        <div className="max-badge" style={{ color: '#10b981', border: '1px solid #10b981', background: 'rgba(16,185,129,0.1)' }}>PLAYING</div>
+                        <div className="max-badge" style={{ color: '#10b981', border: '1px solid #10b981', background: 'rgba(16,185,129,0.1)' }}>▶ PLAYING</div>
                       ) : isUnlocked ? (
                         <button
                           className="upgrade-btn"
                           onClick={() => {
                             selectSong(song.id);
-                            showToast(`🎵 Equipped Song: ${song.name}!`);
+                            showToast(`🎵 Now Playing: ${song.name}!`);
                           }}
                           style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none' }}
                         >
@@ -341,11 +339,12 @@ export const ShopModal = ({ onClose }) => {
                         <button
                           className="upgrade-btn"
                           onClick={() => {
-                            triggerPayment('song', song.id, 30);
+                            showToast(`🔒 Unlocking ${song.name}...`);
+                            setTimeout(() => triggerPayment('song', song.id, 30), 400);
                           }}
-                          style={{ background: 'linear-gradient(135deg, #a16207, #eab308)', color: '#000' }}
+                          style={{ background: 'linear-gradient(135deg, #a16207, #eab308)', color: '#000', fontWeight: '900' }}
                         >
-                          UNLOCK (Rs. 30)
+                          🔒 Rs. 30 JazzCash
                         </button>
                       )}
                     </div>

@@ -86,6 +86,12 @@ export const PaymentModal = () => {
       const newUnlocked = Array.from(new Set([...unlocked, String(paymentItemId)]));
       useGameStore.setState({ unlockedSongs: newUnlocked });
       localStorage.setItem('kinetic_unlocked_songs', JSON.stringify(newUnlocked));
+    } else if (paymentItemType === 'character') {
+      const unlocked = useGameStore.getState().unlockedCharacters || ['jack'];
+      const newUnlocked = Array.from(new Set([...unlocked, String(paymentItemId)]));
+      useGameStore.setState({ unlockedCharacters: newUnlocked, selectedCharacter: String(paymentItemId) });
+      localStorage.setItem('kinetic_unlocked_chars', JSON.stringify(newUnlocked));
+      localStorage.setItem('kinetic_selected_char', String(paymentItemId));
     }
     setShowPaymentModal(false);
     setStatus('');
@@ -94,8 +100,9 @@ export const PaymentModal = () => {
 
   // Get item display name
   const getItemName = () => {
-    if (paymentItemType === 'stage') return `Stage ${paymentItemId} Access`;
-    if (paymentItemType === 'song') return `Motivational Song (ID: ${paymentItemId}) Upgrade`;
+    if (paymentItemType === 'stage') return `Stage ${paymentItemId} Access — Rs. 40`;
+    if (paymentItemType === 'song') return `Background Song Unlock — Rs. 30`;
+    if (paymentItemType === 'character') return `Premium Robot Unlock — Rs. 40`;
     return 'Full VIP Game Activation';
   };
 
