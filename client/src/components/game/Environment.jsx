@@ -402,5 +402,3 @@ export const BackgroundCity = ({ playerZRef }) => {
     </group>
   );
 };
-  );
-};
