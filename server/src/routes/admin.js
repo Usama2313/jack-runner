@@ -143,11 +143,89 @@ router.get('/users', requireAdmin, (req, res) => {
     email: u.email || 'N/A',
     username: u.username,
     unlocked_levels: u.unlocked_levels || [1],
+    unlocked_songs: u.unlocked_songs || ['song-1'],
     is_activated: u.is_activated || false,
     is_admin: u.is_admin || false,
     created_at: u.created_at
   }));
   res.json({ success: true, users, count: users.length });
+});
+
+// GET /api/admin/payments
+router.get('/payments', requireAdmin, (req, res) => {
+  try {
+    const payments = db.getPayments();
+    res.json({ success: true, payments });
+  } catch (err) {
+    console.error('Fetch payments error:', err);
+    res.status(500).json({ error: 'Failed to fetch payments' });
+  }
+});
+
+// POST /api/admin/approve-payment
+router.post('/approve-payment', requireAdmin, (req, res) => {
+  try {
+    const { paymentId } = req.body;
+    if (!paymentId) return res.status(400).json({ error: 'paymentId is required' });
+    const result = db.approvePayment(paymentId);
+    if (!result.success) return res.status(404).json({ error: result.error });
+    res.json({ success: true, message: 'Payment approved successfully!', payment: result.payment });
+  } catch (err) {
+    console.error('Approve payment error:', err);
+    res.status(500).json({ error: 'Failed to approve payment' });
+  }
+});
+
+// POST /api/admin/reject-payment
+router.post('/reject-payment', requireAdmin, (req, res) => {
+  try {
+    const { paymentId } = req.body;
+    if (!paymentId) return res.status(400).json({ error: 'paymentId is required' });
+    const result = db.rejectPayment(paymentId);
+    if (!result.success) return res.status(404).json({ error: result.error });
+    res.json({ success: true, message: 'Payment rejected successfully!', payment: result.payment });
+  } catch (err) {
+    console.error('Reject payment error:', err);
+    res.status(500).json({ error: 'Failed to reject payment' });
+  }
+});
+
+// GET /api/admin/songs
+router.get('/songs', requireAdmin, (req, res) => {
+  try {
+    const songs = db.getSongs();
+    res.json({ success: true, songs });
+  } catch (err) {
+    console.error('Admin fetch songs error:', err);
+    res.status(500).json({ error: 'Failed to fetch songs list' });
+  }
+});
+
+// POST /api/admin/add-song
+router.post('/add-song', requireAdmin, (req, res) => {
+  try {
+    const { name, type, price, level, author } = req.body;
+    if (!name) return res.status(400).json({ error: 'Song name is required' });
+    const newSong = db.addSong({ name, type, price, level, author });
+    res.json({ success: true, message: 'Song added successfully!', song: newSong });
+  } catch (err) {
+    console.error('Add song error:', err);
+    res.status(500).json({ error: 'Failed to add song' });
+  }
+});
+
+// POST /api/admin/delete-song
+router.post('/delete-song', requireAdmin, (req, res) => {
+  try {
+    const { songId } = req.body;
+    if (!songId) return res.status(400).json({ error: 'songId is required' });
+    const success = db.deleteSong(songId);
+    if (!success) return res.status(404).json({ error: 'Song not found' });
+    res.json({ success: true, message: 'Song deleted successfully!' });
+  } catch (err) {
+    console.error('Delete song error:', err);
+    res.status(500).json({ error: 'Failed to delete song' });
+  }
 });
 
 module.exports = router;

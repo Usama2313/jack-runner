@@ -58,6 +58,7 @@ export const Player = ({ playerZRef }) => {
   const runCycleRef = useRef(0);
 
   const gameState = useGameStore((s) => s.gameState);
+  const isStumbling = useGameStore((s) => s.isStumbling);
 
   React.useEffect(() => {
     if (gameState === 'PLAYING') {

@@ -50,6 +50,15 @@ app.use('/api/scores', scoresRoutes);
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
 
+const dbInstance = require('./db/database');
+app.get('/api/songs', (req, res) => {
+  try {
+    res.json({ success: true, songs: dbInstance.getSongs() });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch songs' });
+  }
+});
+
 
 // Global Error Handler
 app.use((err, req, res, next) => {

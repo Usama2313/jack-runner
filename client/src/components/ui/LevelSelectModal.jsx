@@ -41,9 +41,23 @@ export const LevelSelectModal = ({ onClose }) => {
           </button>
         </div>
 
-        {/* Subtitle */}
-        <div className="level-select-subtitle">
-          Select any unlocked level to test your kinetic reflex and conquer all 30 stages!
+        {/* Subtitle & Pricing Banner */}
+        <div className="level-select-subtitle" style={{
+          background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(220, 38, 38, 0.15))',
+          border: '1px solid #facc15',
+          borderRadius: '12px',
+          padding: '12px 16px',
+          margin: '10px 0 20px',
+          textAlign: 'center',
+          color: '#fff',
+          fontSize: '0.9rem',
+          lineHeight: '1.4'
+        }}>
+          <strong style={{ color: '#facc15', fontSize: '1rem', display: 'block', marginBottom: '4px' }}>
+            💳 JAZZ CASH PREMIUM ACCESS
+          </strong>
+          Unlock next stage for <span style={{ color: '#38bdf8', fontWeight: '800' }}>Rs 40</span> OR 
+          get <span style={{ color: '#10b981', fontWeight: '800' }}>VIP FULL ACCESS</span> (All 30 Stages + Free Robots) for <span style={{ color: '#f43f5e', fontWeight: '800' }}>Rs 1,000</span>!
         </div>
 
         {/* 30-Level Grid */}

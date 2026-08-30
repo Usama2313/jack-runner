@@ -797,7 +797,13 @@ body, html {
   }
 
   .hud-coins-pill {
-    display: none;
+    padding: 4px 6px;
+    font-size: 0.65rem;
+  }
+
+  .hud-total-coins {
+    padding: 4px 6px;
+    font-size: 0.65rem;
   }
 
   .hud-action-btn {
@@ -810,6 +816,11 @@ body, html {
   .hud-pause-btn {
     background: #ef4444;
     color: #ffffff;
+  }
+
+  .hud-left-group {
+    flex-wrap: wrap;
+    gap: 4px;
   }
 }
 

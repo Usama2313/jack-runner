@@ -58,7 +58,7 @@ export const MysteryBoxModal = () => {
       setShowAnswer(false);
       setIsVideoPlaying(false);
       setVideoClaimed(false);
-      setSelectedVideoIdx(0);
+      setSelectedVideoIdx(Math.floor(Math.random() * YOUTUBE_REWARD_VIDEOS.length));
 
       // Pick a random AI question for the gift
       const randomQ = AI_TRIVIA[Math.floor(Math.random() * AI_TRIVIA.length)];
@@ -150,131 +150,112 @@ export const MysteryBoxModal = () => {
             </div>
 
             {/* ─── YOUTUBE VIDEO GIFT ANIMATION SECTION ─── */}
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(168, 85, 247, 0.18))',
-              border: '1px solid rgba(239, 68, 68, 0.45)',
-              borderRadius: '16px',
-              padding: '16px',
-              margin: '12px 0',
-              textAlign: 'left',
-              width: '100%',
-              boxShadow: '0 8px 24px rgba(239, 68, 68, 0.2)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f87171', fontSize: '0.85rem', fontWeight: '800' }}>
-                  <Tv size={18} />
-                  <span>🎬 EXCLUSIVE YOUTUBE VIDEO GIFT</span>
+            {rewards.some(r => r.isVideo) && (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(168, 85, 247, 0.18))',
+                border: '1px solid rgba(239, 68, 68, 0.45)',
+                borderRadius: '16px',
+                padding: '16px',
+                margin: '12px 0',
+                textAlign: 'left',
+                width: '100%',
+                boxShadow: '0 8px 24px rgba(239, 68, 68, 0.2)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f87171', fontSize: '0.85rem', fontWeight: '800' }}>
+                    <Tv size={18} />
+                    <span>🎬 EXCLUSIVE YOUTUBE VIDEO GIFT</span>
+                  </div>
+                  <div style={{
+                    padding: '3px 10px',
+                    borderRadius: '999px',
+                    background: 'rgba(250, 204, 21, 0.2)',
+                    border: '1px solid #facc15',
+                    color: '#facc15',
+                    fontSize: '0.75rem',
+                    fontWeight: '800'
+                  }}>
+                    {currentVideo.rewardLabel}
+                  </div>
                 </div>
-                <div style={{
-                  padding: '3px 10px',
-                  borderRadius: '999px',
-                  background: 'rgba(250, 204, 21, 0.2)',
-                  border: '1px solid #facc15',
-                  color: '#facc15',
-                  fontSize: '0.75rem',
-                  fontWeight: '800'
-                }}>
-                  {currentVideo.rewardLabel}
+
+                {/* Video Title & Episode Selector */}
+                <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>
+                  {currentVideo.title}
                 </div>
-              </div>
 
-              {/* Video Title & Episode Selector */}
-              <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>
-                {currentVideo.title}
-              </div>
 
-              {/* Playlist Switcher Pills */}
-              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '10px' }}>
-                {YOUTUBE_REWARD_VIDEOS.map((vid, idx) => (
+
+                {/* Video Embed Player or Watch Trigger */}
+                {isVideoPlaying ? (
+                  <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', borderRadius: '12px', overflow: 'hidden', marginBottom: '12px', background: '#000' }}>
+                    <iframe
+                      src={currentVideo.embedUrl}
+                      title={currentVideo.title}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        borderRadius: '12px'
+                      }}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : (
                   <button
-                    key={vid.id}
-                    onClick={() => { setSelectedVideoIdx(idx); setIsVideoPlaying(true); setVideoClaimed(false); }}
+                    onClick={() => setIsVideoPlaying(true)}
                     style={{
-                      background: selectedVideoIdx === idx ? 'linear-gradient(135deg, #ef4444, #ec4899)' : 'rgba(255,255,255,0.06)',
-                      border: `1px solid ${selectedVideoIdx === idx ? '#f43f5e' : 'rgba(255,255,255,0.15)'}`,
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #dc2626, #991b1b)',
+                      border: '1px solid #f87171',
                       color: '#fff',
-                      padding: '4px 10px',
-                      borderRadius: '8px',
+                      fontWeight: '800',
+                      fontSize: '0.9rem',
                       cursor: 'pointer',
-                      fontSize: '0.75rem',
-                      fontWeight: '700',
-                      whiteSpace: 'nowrap'
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      marginBottom: '10px',
+                      boxShadow: '0 4px 15px rgba(220, 38, 38, 0.4)'
                     }}
                   >
-                    Ep {idx + 1}
+                    <Play size={18} fill="#fff" />
+                    <span>▶️ PLAY REWARD VIDEO ANIMATION</span>
                   </button>
-                ))}
-              </div>
+                )}
 
-              {/* Video Embed Player or Watch Trigger */}
-              {isVideoPlaying ? (
-                <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', borderRadius: '12px', overflow: 'hidden', marginBottom: '12px', background: '#000' }}>
-                  <iframe
-                    src={currentVideo.embedUrl}
-                    title={currentVideo.title}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      border: 'none',
-                      borderRadius: '12px'
-                    }}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
-              ) : (
+                {/* Bonus Coins Claim Action */}
                 <button
-                  onClick={() => setIsVideoPlaying(true)}
+                  onClick={handleClaimVideoReward}
+                  disabled={videoClaimed}
                   style={{
                     width: '100%',
-                    padding: '12px',
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #dc2626, #991b1b)',
-                    border: '1px solid #f87171',
-                    color: '#fff',
-                    fontWeight: '800',
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    background: videoClaimed ? 'rgba(16, 185, 129, 0.2)' : 'linear-gradient(135deg, #a16207, #eab308)',
+                    border: `1px solid ${videoClaimed ? '#10b981' : '#fde047'}`,
+                    color: videoClaimed ? '#6ee7b7' : '#000',
+                    fontWeight: '900',
+                    fontSize: '0.85rem',
+                    cursor: videoClaimed ? 'default' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px',
-                    marginBottom: '10px',
-                    boxShadow: '0 4px 15px rgba(220, 38, 38, 0.4)'
+                    gap: '8px'
                   }}
                 >
-                  <Play size={18} fill="#fff" />
-                  <span>▶️ PLAY REWARD VIDEO ANIMATION</span>
+                  <Award size={16} />
+                  <span>{videoClaimed ? '✅ EXTRA COIN REWARD CLAIMED!' : `🎁 CLAIM +${(currentVideo.bonusCoins).toLocaleString()} EXTRA COINS`}</span>
                 </button>
-              )}
-
-              {/* Bonus Coins Claim Action */}
-              <button
-                onClick={handleClaimVideoReward}
-                disabled={videoClaimed}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  background: videoClaimed ? 'rgba(16, 185, 129, 0.2)' : 'linear-gradient(135deg, #a16207, #eab308)',
-                  border: `1px solid ${videoClaimed ? '#10b981' : '#fde047'}`,
-                  color: videoClaimed ? '#6ee7b7' : '#000',
-                  fontWeight: '900',
-                  fontSize: '0.85rem',
-                  cursor: videoClaimed ? 'default' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                <Award size={16} />
-                <span>{videoClaimed ? '✅ EXTRA COIN REWARD CLAIMED!' : `🎁 CLAIM +${(currentVideo.bonusCoins).toLocaleString()} EXTRA COINS`}</span>
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* Hidden AI General Knowledge Gift Card */}
             {selectedTrivia && (
@@ -345,22 +326,18 @@ export const MysteryBoxModal = () => {
                       </div>
 
                       <div className="batch-row-items">
+                        {reward.isVideo && (
+                          <div className="batch-row-item-badge bonus" style={{ borderColor: '#ef4444' }}>
+                            <span>🎬</span>
+                            <span>YOUTUBE REWARD</span>
+                          </div>
+                        )}
                         {pInfo && (
                           <div className="batch-row-item-badge" style={{ borderColor: pInfo.color }}>
                             <span>{pInfo.icon}</span>
                             <span>{pInfo.name}</span>
                           </div>
                         )}
-                        {(reward.bonusItems || []).map((bonus, bidx) => {
-                          const bpInfo = POWERUP_CONFIG[bonus];
-                          if (!bpInfo) return null;
-                          return (
-                            <div key={bidx} className="batch-row-item-badge bonus" style={{ borderColor: bpInfo.color }}>
-                              <span>🎁</span>
-                              <span>{bpInfo.name}</span>
-                            </div>
-                          );
-                        })}
                       </div>
                     </div>
                   );

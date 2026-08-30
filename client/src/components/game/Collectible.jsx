@@ -9,13 +9,25 @@ import { POWERUP_TYPES } from '../../utils/constants';
  * - Embossed golden star symbol in the center
  * - Realistic metallic gold material settings
  */
+import { useGameStore } from '../../store/gameStore';
+
+/**
+ * High-Fidelity 3D Jewelry Ring (Replaces standard flat coin)
+ * - Changes model and colors per stage based on level theme
+ * - Employs luxury metals (Gold, Platinum, Rose Gold) and gemstones (Diamonds, Emeralds, Snowglobes)
+ */
 export const Coin = ({ x, y = 0.85, z, collected }) => {
   const coinRef = useRef();
+  const currentLevel = useGameStore((state) => state.currentLevel) || 1;
 
-  // Spin the coin dynamically
+  // Dynamic Ring designs based on level index (0-3 cycling)
+  const ringStyle = (currentLevel - 1) % 4;
+
+  // Spin the ring dynamically
   useFrame((state, delta) => {
     if (coinRef.current) {
       coinRef.current.rotation.y += delta * 2.8;
+      coinRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 2) * 0.15; // Menacing wiggle
     }
   });
 
@@ -23,58 +35,196 @@ export const Coin = ({ x, y = 0.85, z, collected }) => {
 
   return (
     <group ref={coinRef} position={[x, y, z]} rotation={[0, 0, 0]}>
-      {/* Main Gold Disc Cylinder */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.34, 0.34, 0.07, 16]} />
-        <meshStandardMaterial
-          color="#d97706"
-          roughness={0.15}
-          metalness={0.98}
-          emissive="#78350f"
-          emissiveIntensity={0.25}
-        />
-      </mesh>
+      {/* ─── STYLE 0: Elegant Three-Stone Diamond Ring (Gold band + white diamonds) ─── */}
+      {ringStyle === 0 && (
+        <group>
+          {/* Main Gold Band */}
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.3, 0.055, 12, 32]} />
+            <meshStandardMaterial
+              color="#eab308"
+              roughness={0.08}
+              metalness={0.99}
+              emissive="#78350f"
+              emissiveIntensity={0.25}
+            />
+          </mesh>
 
-      {/* Raised Gold Outer Border Edge */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.31, 0.03, 10, 24]} />
-        <meshStandardMaterial
-          color="#fbbf24"
-          roughness={0.1}
-          metalness={0.99}
-          emissive="#b45309"
-          emissiveIntensity={0.35}
-        />
-      </mesh>
+          {/* Large Center Emerald-Cut Diamond */}
+          <mesh position={[0, 0.32, 0]}>
+            <boxGeometry args={[0.18, 0.25, 0.18]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive="#cbd5e1"
+              emissiveIntensity={0.8}
+              roughness={0.02}
+              metalness={0.95}
+            />
+          </mesh>
 
-      {/* Embossed Star Center Symbol (Front side) */}
-      <mesh position={[0, 0, 0.04]}>
-        <coneGeometry args={[0.11, 0.05, 5]} rotation={[0, 0, 0]} />
-        <meshStandardMaterial
-          color="#fef08a"
-          roughness={0.12}
-          metalness={0.98}
-          emissive="#fbbf24"
-          emissiveIntensity={0.5}
-        />
-      </mesh>
+          {/* Left Side Small Diamond */}
+          <mesh position={[-0.15, 0.28, 0]} rotation={[0, 0, 0.45]}>
+            <boxGeometry args={[0.1, 0.14, 0.1]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive="#93c5fd"
+              emissiveIntensity={0.6}
+              roughness={0.02}
+              metalness={0.95}
+            />
+          </mesh>
 
-      {/* Embossed Star Center Symbol (Back side) */}
-      <mesh position={[0, 0, -0.04]} rotation={[0, Math.PI, 0]}>
-        <coneGeometry args={[0.11, 0.05, 5]} />
-        <meshStandardMaterial
-          color="#fef08a"
-          roughness={0.12}
-          metalness={0.98}
-          emissive="#fbbf24"
-          emissiveIntensity={0.5}
-        />
-      </mesh>
+          {/* Right Side Small Diamond */}
+          <mesh position={[0.15, 0.28, 0]} rotation={[0, 0, -0.45]}>
+            <boxGeometry args={[0.1, 0.14, 0.1]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive="#93c5fd"
+              emissiveIntensity={0.6}
+              roughness={0.02}
+              metalness={0.95}
+            />
+          </mesh>
+        </group>
+      )}
 
-      {/* Glowing Star Sparkle Orb */}
+      {/* ─── STYLE 1: Fantasy Castle Snowglobe Ring (Rose Gold + glowing orb + blue gems) ─── */}
+      {ringStyle === 1 && (
+        <group>
+          {/* Rose Gold Band */}
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.3, 0.055, 12, 32]} />
+            <meshStandardMaterial
+              color="#f43f5e"
+              roughness={0.12}
+              metalness={0.9}
+              emissive="#881337"
+              emissiveIntensity={0.3}
+            />
+          </mesh>
+
+          {/* Glowing Snowglobe Sphere */}
+          <mesh position={[0, 0.34, 0]}>
+            <sphereGeometry args={[0.22, 16, 16]} />
+            <meshStandardMaterial
+              color="#67e8f9"
+              emissive="#06b6d4"
+              emissiveIntensity={1.8}
+              transparent
+              opacity={0.7}
+              roughness={0.01}
+            />
+          </mesh>
+
+          {/* Mini Castle Core Inside Globe */}
+          <mesh position={[0, 0.34, 0]}>
+            <octahedronGeometry args={[0.1]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive="#ffffff"
+              emissiveIntensity={2.5}
+            />
+          </mesh>
+
+          {/* Blue Gems Studded Around Band */}
+          {[-0.2, 0.2].map((bx, idx) => (
+            <mesh key={idx} position={[bx, 0.2, 0]}>
+              <sphereGeometry args={[0.07, 8, 8]} />
+              <meshStandardMaterial
+                color="#0284c7"
+                emissive="#0284c7"
+                emissiveIntensity={1.5}
+                roughness={0.05}
+              />
+            </mesh>
+          ))}
+        </group>
+      )}
+
+      {/* ─── STYLE 2: Brilliant Round Platinum Ring (Platinum band + shiny round cut) ─── */}
+      {ringStyle === 2 && (
+        <group>
+          {/* Platinum / Silver Band */}
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.3, 0.055, 12, 32]} />
+            <meshStandardMaterial
+              color="#cbd5e1"
+              roughness={0.03}
+              metalness={0.99}
+              emissive="#334155"
+              emissiveIntensity={0.2}
+            />
+          </mesh>
+
+          {/* Large Round brilliant cut Diamond (upside cone) */}
+          <mesh position={[0, 0.34, 0]} rotation={[Math.PI, 0, 0]}>
+            <coneGeometry args={[0.18, 0.22, 8]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              emissive="#cbd5e1"
+              emissiveIntensity={1.2}
+              roughness={0.01}
+              metalness={0.98}
+            />
+          </mesh>
+
+          {/* Pave diamonds around top half of the band */}
+          {[-0.22, -0.11, 0.11, 0.22].map((bx, idx) => (
+            <mesh key={idx} position={[bx, 0.22, 0.08]}>
+              <sphereGeometry args={[0.045, 8, 8]} />
+              <meshStandardMaterial
+                color="#ffffff"
+                emissive="#ffffff"
+                emissiveIntensity={1.0}
+              />
+            </mesh>
+          ))}
+        </group>
+      )}
+
+      {/* ─── STYLE 3: Emerald Green Gemstone Ring (Gold band + green emerald) ─── */}
+      {ringStyle === 3 && (
+        <group>
+          {/* Gold Band */}
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.3, 0.055, 12, 32]} />
+            <meshStandardMaterial
+              color="#eab308"
+              roughness={0.08}
+              metalness={0.99}
+              emissive="#78350f"
+              emissiveIntensity={0.2}
+            />
+          </mesh>
+
+          {/* Center Octahedral Green Emerald */}
+          <mesh position={[0, 0.34, 0]} scale={[1, 1.3, 1]}>
+            <octahedronGeometry args={[0.16]} />
+            <meshStandardMaterial
+              color="#059669"
+              emissive="#10b981"
+              emissiveIntensity={1.5}
+              roughness={0.05}
+              metalness={0.8}
+            />
+          </mesh>
+
+          {/* Tiny side diamonds */}
+          <mesh position={[-0.14, 0.3, 0]} rotation={[0, 0, 0.5]}>
+            <coneGeometry args={[0.06, 0.1, 5]} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.8} />
+          </mesh>
+          <mesh position={[0.14, 0.3, 0]} rotation={[0, 0, -0.5]}>
+            <coneGeometry args={[0.06, 0.1, 5]} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.8} />
+          </mesh>
+        </group>
+      )}
+
+      {/* Sparkling particle ring glow */}
       <mesh>
-        <sphereGeometry args={[0.08, 8, 8]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.3} />
+        <sphereGeometry args={[0.1, 8, 8]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.25} />
       </mesh>
     </group>
   );

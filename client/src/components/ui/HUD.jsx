@@ -82,12 +82,26 @@ export const HUD = () => {
               </animated.div>
             </div>
 
-            {/* Coins Collected */}
-            <div className="hud-coins-pill" onClick={() => setShowShop(true)} title="Coins collected this run">
-              <span>🪙</span>
+            {/* Rings Collected This Run */}
+            <div className="hud-coins-pill" onClick={() => setShowShop(true)} title="Rings collected this run" style={{ gap: '6px', cursor: 'pointer' }}>
+              <span>💍</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: '800', color: '#60a5fa' }}>RINGS:</span>
               <animated.span className="hud-coins-val">
                 {animatedCoins.to((n) => Math.floor(n))}
               </animated.span>
+            </div>
+
+            {/* Total Rings (Always Visible) */}
+            <div className="hud-coins-pill hud-total-coins" title="Total rings balance" style={{
+              borderColor: 'rgba(16, 185, 129, 0.5)',
+              background: 'rgba(16, 185, 129, 0.12)',
+              gap: '6px'
+            }}>
+              <span>👑</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: '800', color: '#34d399' }}>TOTAL RINGS:</span>
+              <span className="hud-coins-val" style={{ color: '#6ee7b7' }}>
+                {(totalCoins || 0).toLocaleString()}
+              </span>
             </div>
           </div>
 
@@ -170,7 +184,7 @@ export const HUD = () => {
             <div className="hud-char-dropdown-title">⚡ SWITCH RUNNER</div>
             <div className="hud-char-dropdown-list">
               {CHARACTERS.map((char) => {
-                const isUnlocked = unlockedCharacters.includes(char.id) || char.isFree;
+                const isUnlocked = isActivated || unlockedCharacters.includes(char.id) || char.isFree;
                 const isActive = selectedCharacter === char.id;
                 return (
                   <div
@@ -190,7 +204,9 @@ export const HUD = () => {
                     <span className="hud-char-option-avatar">{char.avatar}</span>
                     <div className="hud-char-option-info">
                       <span className="hud-char-option-name">{char.name}</span>
-                      <span className="hud-char-option-bonus">{isUnlocked ? char.bonus : `🔒 ${char.price} coins`}</span>
+                      <span className="hud-char-option-bonus">
+                        {isActivated ? '✅ VIP UNLOCKED' : isUnlocked ? char.bonus : `🔒 ${char.price} coins`}
+                      </span>
                     </div>
                   </div>
                 );

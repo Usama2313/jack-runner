@@ -50,7 +50,8 @@ router.post('/register', async (req, res) => {
         email: user.email,
         username: user.username,
         is_activated: user.is_activated || false,
-        unlocked_levels: user.unlocked_levels || [1]
+        unlocked_levels: user.unlocked_levels || [1],
+        unlocked_songs: user.unlocked_songs || ['song-1']
       }
     });
   } catch (err) {
@@ -93,7 +94,8 @@ router.post('/login', async (req, res) => {
         email: user.email,
         username: user.username,
         is_activated: user.is_activated || false,
-        unlocked_levels: user.unlocked_levels || [1]
+        unlocked_levels: user.unlocked_levels || [1],
+        unlocked_songs: user.unlocked_songs || ['song-1']
       }
     });
   } catch (err) {
@@ -119,11 +121,31 @@ router.get('/me', (req, res) => {
         email: user.email,
         username: user.username,
         is_activated: user.is_activated || false,
-        unlocked_levels: user.unlocked_levels || [1]
+        unlocked_levels: user.unlocked_levels || [1],
+        unlocked_songs: user.unlocked_songs || ['song-1']
       }
     });
   } catch {
     return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+});
+
+// POST /api/auth/submit-payment
+router.post('/submit-payment', (req, res) => {
+  try {
+    const { email, itemType, itemId, amount, tid } = req.body;
+    if (!email || !itemType || !tid) {
+      return res.status(400).json({ error: 'Email, itemType, and Transaction ID (TID) are required' });
+    }
+    const payment = db.createPayment({ email, itemType, itemId, amount, tid });
+    res.json({
+      success: true,
+      message: 'Transaction submitted successfully for verification!',
+      payment
+    });
+  } catch (err) {
+    console.error('Submit payment error:', err);
+    res.status(500).json({ error: 'Failed to submit transaction verification' });
   }
 });
 

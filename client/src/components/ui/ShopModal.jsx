@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
-import { CHARACTERS, HOVERBOARD_SKINS, POWERUP_CONFIG, POWERUP_TYPES } from '../../utils/constants';
+import { CHARACTERS, HOVERBOARD_SKINS, POWERUP_CONFIG, POWERUP_TYPES, MUSIC_PLAYLIST } from '../../utils/constants';
 import { ShoppingBag, X, Check, Lock, ArrowUpCircle, Sparkles } from 'lucide-react';
 
 export const ShopModal = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState('characters'); // 'characters' | 'boards' | 'upgrades'
+  const [activeTab, setActiveTab] = useState('characters'); // 'characters' | 'boards' | 'upgrades' | 'songs'
   const [feedbackMsg, setFeedbackMsg] = useState(null);
 
   const totalCoins = useGameStore((s) => s.totalCoins) || 0;
@@ -21,6 +21,12 @@ export const ShopModal = ({ onClose }) => {
   const upgrades = useGameStore((s) => s.upgrades) || {};
   const upgradePowerup = useGameStore((s) => s.upgradePowerup);
 
+  const isActivated = useGameStore((s) => s.isActivated);
+  const selectedSong = useGameStore((s) => s.selectedSong) || 'song-1';
+  const unlockedSongs = useGameStore((s) => s.unlockedSongs) || ['song-1'];
+  const selectSong = useGameStore((s) => s.selectSong);
+  const triggerPayment = useGameStore((s) => s.triggerPayment);
+
   const showToast = (msg) => {
     setFeedbackMsg(msg);
     setTimeout(() => setFeedbackMsg(null), 2500);
@@ -28,12 +34,27 @@ export const ShopModal = ({ onClose }) => {
 
   const handleCharacterAction = (char) => {
     const isUnlocked = unlockedCharacters.includes(char.id);
+    const isPremiumRobot = char.id !== 'blitz' && !char.isHuman;
+    if (isPremiumRobot && !isActivated) {
+      showToast(`🔒 Premium Robot! Requires VIP Game Activation.`);
+      setTimeout(() => triggerPayment('vip', null, 1000), 1200);
+      return;
+    }
+
     if (isUnlocked) {
-      selectCharacter(char.id);
-      showToast(`⚡ Equipped ${char.name}!`);
+      const success = selectCharacter(char.id);
+      if (success) {
+        showToast(`⚡ Equipped ${char.name}!`);
+      } else {
+        showToast(`🔒 Equip failed. Requires VIP Game Activation.`);
+      }
     } else if (totalCoins >= char.price) {
-      buyCharacter(char.id, char.price);
-      showToast(`🎉 Unlocked & Equipped ${char.name}!`);
+      const success = buyCharacter(char.id, char.price);
+      if (success) {
+        showToast(`🎉 Unlocked & Equipped ${char.name}!`);
+      } else {
+        showToast(`🔒 Unlock failed. Requires VIP Game Activation.`);
+      }
     } else {
       showToast(`❌ Need ${(char.price - totalCoins).toLocaleString()} more coins!`);
     }
@@ -97,6 +118,12 @@ export const ShopModal = ({ onClose }) => {
             onClick={() => setActiveTab('upgrades')}
           >
             POWERUP UPGRADES
+          </button>
+          <button
+            className={`shop-tab ${activeTab === 'songs' ? 'active' : ''}`}
+            onClick={() => setActiveTab('songs')}
+          >
+            🎵 SONGS PLAYLIST
           </button>
         </div>
 
@@ -260,6 +287,65 @@ export const ShopModal = ({ onClose }) => {
                         >
                           <ArrowUpCircle size={16} />
                           <span>UPGRADE (🪙 {cost})</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* SONGS TAB */}
+          {activeTab === 'songs' && (
+            <div className="shop-upgrades-list">
+              <div style={{ color: '#94a3b8', fontSize: '0.8rem', padding: '10px 15px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                <span>Motivational background songs that play during runs. Stage 1 is free!</span>
+                <strong style={{ color: '#38bdf8' }}>Price: Rs. 30 each</strong>
+              </div>
+              {MUSIC_PLAYLIST.map((song) => {
+                const isUnlocked = isActivated || unlockedSongs.includes(song.id) || song.isFree;
+                const isSelected = selectedSong === song.id;
+                
+                return (
+                  <div key={song.id} className="upgrade-row" style={{ padding: '16px' }}>
+                    <div className="upgrade-icon-box" style={{ borderColor: isSelected ? '#10b981' : '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
+                      {song.type === 'vocal' ? '🎤' : '🎵'}
+                    </div>
+
+                    <div className="upgrade-details" style={{ flex: 1 }}>
+                      <div className="upgrade-name" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{song.name}</span>
+                        <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', background: song.type === 'vocal' ? 'rgba(168,85,247,0.2)' : 'rgba(56,189,248,0.2)', color: song.type === 'vocal' ? '#c084fc' : '#38bdf8', border: '1px solid currentColor' }}>
+                          {song.type === 'vocal' ? 'VOCAL' : 'INSTRUMENTAL'}
+                        </span>
+                      </div>
+                      <div className="upgrade-desc">Artist: {song.author} • Plays on Level: {song.level}</div>
+                    </div>
+
+                    <div className="upgrade-action">
+                      {isSelected ? (
+                        <div className="max-badge" style={{ color: '#10b981', border: '1px solid #10b981', background: 'rgba(16,185,129,0.1)' }}>PLAYING</div>
+                      ) : isUnlocked ? (
+                        <button
+                          className="upgrade-btn"
+                          onClick={() => {
+                            selectSong(song.id);
+                            showToast(`🎵 Equipped Song: ${song.name}!`);
+                          }}
+                          style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none' }}
+                        >
+                          EQUIP SONG
+                        </button>
+                      ) : (
+                        <button
+                          className="upgrade-btn"
+                          onClick={() => {
+                            triggerPayment('song', song.id, 30);
+                          }}
+                          style={{ background: 'linear-gradient(135deg, #a16207, #eab308)', color: '#000' }}
+                        >
+                          UNLOCK (Rs. 30)
                         </button>
                       )}
                     </div>

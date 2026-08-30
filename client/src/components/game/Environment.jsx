@@ -149,67 +149,72 @@ export const SubwayArch = ({ z }) => {
   );
 };
 
-/* ─── Background City Buildings ─────────────────────────────── */
+/* ─── Background City Buildings & Biomes ─────────────────────────── */
+const getBiomeTheme = (levelId, name = "") => {
+  const nm = name.toLowerCase();
+  if (nm.includes("frost") || nm.includes("aurora") || nm.includes("ice") || levelId === 13 || levelId === 16) {
+    return "snowy";
+  }
+  if (nm.includes("pyramids") || nm.includes("desert") || nm.includes("dubai") || levelId === 3 || levelId === 12) {
+    return "desert";
+  }
+  if (nm.includes("valley") || nm.includes("nature") || nm.includes("green") || nm.includes("park") || nm.includes("coliseum") || nm.includes("carnival") || levelId === 14 || levelId === 15) {
+    return "nature";
+  }
+  
+  // Modulo fallback
+  const index = (levelId - 1) % 4;
+  if (index === 0) return "city";
+  if (index === 1) return "nature";
+  if (index === 2) return "desert";
+  return "snowy";
+};
+
 export const BackgroundCity = ({ playerZRef }) => {
   const currentLevel = useGameStore((s) => s.currentLevel);
   const levelInfo = LEVELS[Math.min(LEVELS.length - 1, currentLevel - 1)] || LEVELS[0];
-  const skyColor = levelInfo.skyColor || '#87CEEB';
+  const theme = getBiomeTheme(levelInfo.id, levelInfo.name);
 
-  const count = 14;
-  const spacing = 20;
+  // Get matching sky & fog color overrides for real world feel
+  let skyColor = levelInfo.skyColor || '#87CEEB';
+  let fogColor = levelInfo.fogColor || '#b0d9f0';
+
+  if (theme === 'snowy') {
+    skyColor = '#bae6fd'; // Freezing icy blue sky
+    fogColor = '#f8fafc'; // Snowy white horizon
+  } else if (theme === 'desert') {
+    skyColor = '#fed7aa'; // Sunset desert sky
+    fogColor = '#f59e0b'; // Warm yellow sand dust
+  } else if (theme === 'nature') {
+    skyColor = '#38bdf8'; // Clear sky blue
+    fogColor = '#bbf7d0'; // Grassy green horizon
+  }
+
+  const count = 16;
+  const spacing = 22;
   const range = count * spacing;
 
-  const buildings = useMemo(() => {
+  const assets = useMemo(() => {
     const arr = [];
-    // Realistic building palettes
-    const buildingColors = [
-      '#94a3b8', '#64748b', '#78716c', '#a8a29e',
-      '#cbd5e1', '#9ca3af', '#d1d5db', '#6b7280',
-      '#c8bfba', '#b0a898', '#e2e8e0', '#8d9fa8',
-    ];
-    const glassColors = [
-      '#bfdbfe', '#dbeafe', '#e0f2fe', '#cffafe',
-      '#a7f3d0', '#d1fae5', '#fef9c3', '#fde68a'
-    ];
-    const neonColors = ['#38bdf8', '#ec4899', '#a855f7', '#06b6d4', '#f59e0b', '#10b981', '#f43f5e'];
-
     for (let i = 0; i < count; i++) {
       const initialZ = -i * spacing;
-
-      // Left side
-      const hLeft = 25 + (i * 3.7) % 22;
-      const wLeft = 8 + (i * 1.3) % 6;
+      // Left side asset
       arr.push({
-        id: `b-l-${i}`,
-        x: -20 - (i % 3) * 2.5,
-        y: hLeft / 2 - 1,
+        id: `left-${i}`,
+        isLeft: true,
+        x: -9 - (i % 3) * 3,
         initialZ,
-        width: wLeft,
-        height: hLeft,
-        depth: 14,
-        color: buildingColors[i % buildingColors.length],
-        glassColor: glassColors[i % glassColors.length],
-        neonColor: neonColors[i % neonColors.length],
-        hasBillboard: i % 3 === 0,
-        hasAntenna: i % 4 === 1,
+        scale: 0.8 + (i * 0.17) % 0.6,
+        type: i % 2 === 0 ? 'tree' : 'house'
       });
-
-      // Right side
-      const hRight = 22 + (i * 4.1) % 26;
-      const wRight = 7 + (i * 1.7) % 7;
+      // Right side asset
       arr.push({
-        id: `b-r-${i}`,
-        x: 20 + (i % 3) * 2.5,
-        y: hRight / 2 - 1,
+        id: `right-${i}`,
+        isLeft: false,
+        x: 9 + (i % 3) * 3,
         initialZ,
-        width: wRight,
-        height: hRight,
-        depth: 14,
-        color: buildingColors[(i + 4) % buildingColors.length],
-        glassColor: glassColors[(i + 2) % glassColors.length],
-        neonColor: neonColors[(i + 3) % neonColors.length],
-        hasBillboard: i % 3 === 1,
-        hasAntenna: i % 4 === 2,
+        scale: 0.8 + (i * 0.13) % 0.6,
+        type: (i + 1) % 2 === 0 ? 'tree' : 'house'
       });
     }
     return arr;
@@ -220,113 +225,182 @@ export const BackgroundCity = ({ playerZRef }) => {
   useFrame(() => {
     if (!playerZRef || playerZRef.current === undefined) return;
     const pz = playerZRef.current;
-    buildings.forEach((b, idx) => {
+    assets.forEach((asset, idx) => {
       const el = groupRefs.current[idx];
       if (el) {
         const minZ = pz - 280;
-        const worldZ = minZ + (((b.initialZ - minZ) % range + range) % range);
+        const worldZ = minZ + (((asset.initialZ - minZ) % range + range) % range);
         el.position.z = worldZ;
       }
     });
   });
 
-  // Determine daytime from skyColor
-  const isDaytime = skyColor.startsWith('#8') || skyColor.startsWith('#5') || skyColor.startsWith('#4A') || skyColor.startsWith('#6') || skyColor.startsWith('#3A') || skyColor.startsWith('#C4') || skyColor.startsWith('#FF');
+  const isDaytime = theme !== 'city' || skyColor.startsWith('#8') || skyColor.startsWith('#5') || skyColor.startsWith('#4A') || skyColor.startsWith('#6') || skyColor.startsWith('#3A') || skyColor.startsWith('#C4') || skyColor.startsWith('#FF');
 
   return (
     <group>
       {/* Sky Dome */}
-      <SkyDome skyColor={skyColor} fogColor={levelInfo.fogColor || '#b0d9f0'} />
+      <SkyDome skyColor={skyColor} fogColor={fogColor} />
 
-      {/* Road sidewalks (pavement strips outside the lanes) */}
-      <mesh position={[-5.2, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[4, 5000]} />
-        <meshStandardMaterial color="#9ca3af" roughness={0.9} />
-      </mesh>
-      <mesh position={[5.2, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[4, 5000]} />
-        <meshStandardMaterial color="#9ca3af" roughness={0.9} />
-      </mesh>
+      {/* Sidewalks / Nature embankments outside tracks */}
+      {theme === 'city' ? (
+        <>
+          <mesh position={[-5.2, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[4, 5000]} />
+            <meshStandardMaterial color="#9ca3af" roughness={0.9} />
+          </mesh>
+          <mesh position={[5.2, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[4, 5000]} />
+            <meshStandardMaterial color="#9ca3af" roughness={0.9} />
+          </mesh>
+        </>
+      ) : theme === 'snowy' ? (
+        <>
+          <mesh position={[-5.2, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[12, 5000]} />
+            <meshStandardMaterial color="#ffffff" roughness={0.95} />
+          </mesh>
+          <mesh position={[5.2, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[12, 5000]} />
+            <meshStandardMaterial color="#ffffff" roughness={0.95} />
+          </mesh>
+        </>
+      ) : theme === 'desert' ? (
+        <>
+          <mesh position={[-5.2, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[12, 5000]} />
+            <meshStandardMaterial color="#fef08a" roughness={0.95} />
+          </mesh>
+          <mesh position={[5.2, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[12, 5000]} />
+            <meshStandardMaterial color="#fef08a" roughness={0.95} />
+          </mesh>
+        </>
+      ) : (
+        /* Nature Theme */
+        <>
+          <mesh position={[-5.2, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[12, 5000]} />
+            <meshStandardMaterial color="#16a34a" roughness={0.9} />
+          </mesh>
+          <mesh position={[5.2, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[12, 5000]} />
+            <meshStandardMaterial color="#16a34a" roughness={0.9} />
+          </mesh>
+        </>
+      )}
 
-      {/* Buildings */}
-      {buildings.map((b, idx) => (
+      {/* Render environment assets */}
+      {assets.map((asset, idx) => (
         <group
-          key={b.id}
+          key={asset.id}
           ref={(el) => (groupRefs.current[idx] = el)}
-          position={[b.x, b.y, b.initialZ]}
+          position={[asset.x, 0, asset.initialZ]}
+          scale={[asset.scale, asset.scale, asset.scale]}
         >
-          {/* Main Building Body */}
-          <mesh>
-            <boxGeometry args={[b.width, b.height, b.depth]} />
-            <meshStandardMaterial color={b.color} roughness={0.55} metalness={0.15} />
-          </mesh>
-
-          {/* Glass Window Facade — faces the road */}
-          <mesh position={[b.x > 0 ? -b.width / 2 - 0.02 : b.width / 2 + 0.02, 0, 0]}>
-            <planeGeometry args={[b.depth * 0.85, b.height * 0.9]} />
-            <meshStandardMaterial
-              color={b.glassColor}
-              emissive={isDaytime ? '#000000' : b.glassColor}
-              emissiveIntensity={isDaytime ? 0 : 0.4}
-              roughness={0.05}
-              metalness={0.7}
-              transparent
-              opacity={0.65}
-            />
-          </mesh>
-
-          {/* Window rows (horizontal bands) */}
-          {Array.from({ length: Math.floor(b.height / 4) }).map((_, wi) => (
-            <mesh key={`wrow-${wi}`} position={[b.x > 0 ? -b.width / 2 - 0.03 : b.width / 2 + 0.03, -b.height * 0.4 + wi * 4, 0]}>
-              <planeGeometry args={[b.depth * 0.75, 0.6]} />
-              <meshStandardMaterial
-                color={wi % 3 === 0 ? '#fef08a' : b.glassColor}
-                emissive={wi % 3 === 0 ? '#fde047' : b.neonColor}
-                emissiveIntensity={isDaytime ? 0 : 0.7}
-              />
-            </mesh>
-          ))}
-
-          {/* Rooftop Neon Parapet */}
-          <mesh position={[0, b.height / 2 + 0.2, 0]}>
-            <boxGeometry args={[b.width, 0.4, b.depth]} />
-            <meshStandardMaterial color={b.neonColor} emissive={b.neonColor} emissiveIntensity={1.6} />
-          </mesh>
-
-          {/* Billboard or Antenna */}
-          {b.hasBillboard ? (
-            <group position={[0, b.height / 2 + 2.5, 0]}>
-              {/* Billboard Frame */}
-              <mesh>
-                <boxGeometry args={[b.width * 0.75, 3.2, 0.3]} />
-                <meshStandardMaterial color="#1f2937" roughness={0.4} metalness={0.6} />
+          {theme === 'city' ? (
+            /* City Skyscrapers */
+            <group position={[0, (asset.scale * 15) / 2 - 1, 0]}>
+              <mesh castShadow>
+                <boxGeometry args={[4.5, asset.scale * 15, 4.5]} />
+                <meshStandardMaterial color={idx % 2 === 0 ? '#475569' : '#64748b'} roughness={0.6} metalness={0.2} />
               </mesh>
-              {/* Billboard Screen */}
-              <mesh position={[0, 0, 0.18]}>
-                <planeGeometry args={[b.width * 0.7, 2.9]} />
+              {/* Windows */}
+              <mesh position={[asset.isLeft ? 2.27 : -2.27, 0, 0]}>
+                <planeGeometry args={[3, asset.scale * 13]} />
                 <meshStandardMaterial
-                  color={b.neonColor}
-                  emissive={b.neonColor}
-                  emissiveIntensity={1.8}
+                  color="#fef08a"
+                  emissive={isDaytime ? '#000000' : '#eab308'}
+                  emissiveIntensity={1.0}
+                  transparent
+                  opacity={0.8}
                 />
               </mesh>
             </group>
-          ) : b.hasAntenna ? (
-            <group position={[0, b.height / 2 + 1, 0]}>
-              {/* Antenna Tower */}
-              <mesh>
-                <cylinderGeometry args={[0.06, 0.12, 5, 8]} />
-                <meshStandardMaterial color="#9ca3af" metalness={0.9} roughness={0.1} />
+          ) : theme === 'snowy' ? (
+            /* Snowy forest elements */
+            asset.type === 'tree' ? (
+              <group position={[0, 0, 0]}>
+                {/* Trunk */}
+                <mesh position={[0, 0.5, 0]}>
+                  <cylinderGeometry args={[0.08, 0.12, 1.0, 8]} />
+                  <meshStandardMaterial color="#5c3f15" />
+                </mesh>
+                {/* Snowy pine foliage */}
+                <mesh position={[0, 1.2, 0]}>
+                  <coneGeometry args={[0.55, 1.2, 8]} />
+                  <meshStandardMaterial color="#ffffff" roughness={0.9} />
+                </mesh>
+                <mesh position={[0, 1.8, 0]}>
+                  <coneGeometry args={[0.4, 0.9, 8]} />
+                  <meshStandardMaterial color="#e2e8f0" roughness={0.9} />
+                </mesh>
+              </group>
+            ) : (
+              /* Snow cottage */
+              <group position={[0, 0.6, 0]}>
+                <mesh castShadow>
+                  <boxGeometry args={[1.8, 1.2, 1.8]} />
+                  <meshStandardMaterial color="#f1f5f9" roughness={0.7} />
+                </mesh>
+                <mesh position={[0, 0.9, 0]} rotation={[0, Math.PI / 4, 0]}>
+                  <coneGeometry args={[1.5, 0.8, 4]} />
+                  <meshStandardMaterial color="#ffffff" roughness={0.8} />
+                </mesh>
+              </group>
+            )
+          ) : theme === 'desert' ? (
+            /* Egyptian Desert Elements */
+            asset.type === 'tree' ? (
+              /* A Sand Dune shape */
+              <mesh position={[0, 0.2, 0]} scale={[2.5, 0.5, 2.5]}>
+                <sphereGeometry args={[1.5, 8, 8]} />
+                <meshStandardMaterial color="#f59e0b" roughness={0.9} />
               </mesh>
-              {/* Antenna Beacon Light */}
-              <mesh position={[0, 2.8, 0]}>
-                <sphereGeometry args={[0.12, 8, 8]} />
-                <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={3.0} />
+            ) : (
+              /* Pyramids in the background */
+              <mesh position={[asset.isLeft ? -10 : 10, 4.0, -8]} rotation={[0, Math.PI / 4, 0]}>
+                <coneGeometry args={[9, 10, 4]} />
+                <meshStandardMaterial color="#d97706" roughness={0.95} />
               </mesh>
-            </group>
-          ) : null}
+            )
+          ) : (
+            /* Nature Valley Elements */
+            asset.type === 'tree' ? (
+              <group position={[0, 0, 0]}>
+                {/* Trunk */}
+                <mesh position={[0, 0.5, 0]}>
+                  <cylinderGeometry args={[0.08, 0.12, 1.0, 8]} />
+                  <meshStandardMaterial color="#78350f" />
+                </mesh>
+                {/* Green pine foliage */}
+                <mesh position={[0, 1.2, 0]}>
+                  <coneGeometry args={[0.6, 1.2, 8]} />
+                  <meshStandardMaterial color="#166534" roughness={0.9} />
+                </mesh>
+                <mesh position={[0, 1.8, 0]}>
+                  <coneGeometry args={[0.42, 0.9, 8]} />
+                  <meshStandardMaterial color="#15803d" roughness={0.9} />
+                </mesh>
+              </group>
+            ) : (
+              /* Alpine cottage */
+              <group position={[0, 0.6, 0]}>
+                <mesh castShadow>
+                  <boxGeometry args={[1.8, 1.2, 1.8]} />
+                  <meshStandardMaterial color="#78350f" roughness={0.8} />
+                </mesh>
+                <mesh position={[0, 0.9, 0]} rotation={[0, Math.PI / 4, 0]}>
+                  <coneGeometry args={[1.5, 0.8, 4]} />
+                  <meshStandardMaterial color="#b91c1c" roughness={0.6} />
+                </mesh>
+              </group>
+            )
+          )}
         </group>
       ))}
     </group>
+  );
+};
   );
 };

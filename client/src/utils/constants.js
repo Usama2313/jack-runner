@@ -614,48 +614,48 @@ export const YOUTUBE_REWARD_VIDEOS = [
     title: 'Cyber Kinetic Surge — Episode 1',
     url: 'https://www.youtube.com/shorts/Grz_jFLw8pY',
     embedUrl: 'https://www.youtube.com/embed/Grz_jFLw8pY?autoplay=1&enablejsapi=1',
-    bonusCoins: 100000,
-    rewardLabel: '🎁 +100,000 COINS (1 LAC BONUS!)'
+    bonusCoins: 100,
+    rewardLabel: '🎁 +100 COINS BONUS'
   },
   {
     id: 'iN4KfmwatCk',
     title: 'Kinetic Parkour Blitz — Episode 2',
     url: 'https://www.youtube.com/shorts/iN4KfmwatCk',
     embedUrl: 'https://www.youtube.com/embed/iN4KfmwatCk?autoplay=1&enablejsapi=1',
-    bonusCoins: 150000,
-    rewardLabel: '🎁 +150,000 COINS (1.5 LAC BONUS!)'
+    bonusCoins: 200,
+    rewardLabel: '🎁 +200 COINS BONUS'
   },
   {
     id: 'IqGi185af2k',
     title: 'World-Class Runner Epic Quest — Episode 3',
     url: 'https://www.youtube.com/watch?v=IqGi185af2k',
     embedUrl: 'https://www.youtube.com/embed/IqGi185af2k?autoplay=1&enablejsapi=1',
-    bonusCoins: 200000,
-    rewardLabel: '🎁 +200,000 COINS (2 LAC BONUS!)'
+    bonusCoins: 300,
+    rewardLabel: '🎁 +300 COINS BONUS'
   },
   {
     id: '1khij1WgrSE',
     title: 'Neon Horizon Championship — Episode 4',
     url: 'https://www.youtube.com/watch?v=1khij1WgrSE',
     embedUrl: 'https://www.youtube.com/embed/1khij1WgrSE?autoplay=1&enablejsapi=1',
-    bonusCoins: 250000,
-    rewardLabel: '🎁 +250,000 COINS (2.5 LAC BONUS!)'
+    bonusCoins: 400,
+    rewardLabel: '🎁 +400 COINS BONUS'
   },
   {
     id: 'wymQ4S1KRTc',
     title: 'Singularity Overdrive — Episode 5',
     url: 'https://www.youtube.com/watch?v=wymQ4S1KRTc',
     embedUrl: 'https://www.youtube.com/embed/wymQ4S1KRTc?autoplay=1&enablejsapi=1',
-    bonusCoins: 300000,
-    rewardLabel: '🎁 +300,000 COINS (3 LAC BONUS!)'
+    bonusCoins: 500,
+    rewardLabel: '🎁 +500 COINS BONUS'
   },
   {
     id: 'zQjyMIrVj44',
     title: 'Grandmaster Kinetic Apex — Episode 6',
     url: 'https://www.youtube.com/watch?v=zQjyMIrVj44',
     embedUrl: 'https://www.youtube.com/embed/zQjyMIrVj44?autoplay=1&enablejsapi=1',
-    bonusCoins: 500000,
-    rewardLabel: '🎁 +500,000 COINS (5 LAC ULTRA BONUS!)'
+    bonusCoins: 600,
+    rewardLabel: '🎁 +600 ULTRA COINS BONUS'
   }
 ];
 
@@ -918,4 +918,37 @@ export const HOVERBOARD_SKINS = [
   { id: 'fire', name: 'Inferno Wave', color: '#ef4444', price: 300, unlocked: false },
   { id: 'cyber', name: 'Cyan Vortex', color: '#06b6d4', price: 750, unlocked: false },
   { id: 'gold', name: 'Celestial Gold', color: '#eab308', price: 1500, unlocked: false }
+];
+
+export const MUSIC_PLAYLIST = [
+  { id: 'song-1', name: 'Victory Horizon (Main Theme)', type: 'instrumental', price: 0, level: 1, author: 'Epic Synth', isFree: true },
+  { id: 'song-2', name: 'Believe in Yourself', type: 'vocal', price: 30, level: 2, author: 'Chamber Grit' },
+  { id: 'song-3', name: 'Eye of the Gladiator', type: 'vocal', price: 30, level: 3, author: 'Metal Storm' },
+  { id: 'song-4', name: 'Rise Above the Grid', type: 'instrumental', price: 30, level: 4, author: 'Cyber Grid' },
+  { id: 'song-5', name: 'Limitless Power', type: 'vocal', price: 30, level: 5, author: 'Future Blast' },
+  { id: 'song-6', name: 'Autobahn Speed', type: 'instrumental', price: 30, level: 6, author: 'Kraft Drive' },
+  { id: 'song-7', name: 'Neon Dreams', type: 'vocal', price: 30, level: 7, author: 'Retro Arc' },
+  { id: 'song-8', name: 'Eiffel Summit', type: 'instrumental', price: 30, level: 8, author: 'Parisian Synth' },
+  { id: 'song-9', name: 'Gangnam Run', type: 'vocal', price: 30, level: 9, author: 'Seoul K-Pop' },
+  { id: 'song-10', name: 'Sunset Drive', type: 'instrumental', price: 30, level: 10, author: 'California Wave' },
+  { id: 'song-11', name: 'Harbour Cyberway', type: 'vocal', price: 30, level: 11, author: 'Sydney Vox' },
+  { id: 'song-12', name: 'Solar Flare Fissure', type: 'instrumental', price: 30, level: 12, author: 'Cairo Dunes' },
+  { id: 'song-13', name: 'Frost Valley Echo', type: 'vocal', price: 30, level: 13, author: 'Toronto Blizzard' },
+  { id: 'song-14', name: 'Coliseum Ascent', type: 'instrumental', price: 30, level: 14, author: 'Rome Gladiator' },
+  { id: 'song-15', name: 'Valkyrie Special Run', type: 'vocal', price: 30, level: 15, author: 'Olympic Queen' },
+  { id: 'song-16', name: 'Aurora Glade Whisper', type: 'instrumental', price: 30, level: 16, author: 'Reykjavik Ambient' },
+  { id: 'song-17', name: 'Alps Thrill Chase', type: 'vocal', price: 30, level: 17, author: 'Swiss Peaks' },
+  { id: 'song-18', name: 'Cyberpunk Redline', type: 'instrumental', price: 30, level: 18, author: 'Hong Kong Neon' },
+  { id: 'song-19', name: 'Bazaar Run', type: 'vocal', price: 30, level: 19, author: 'Istanbul Sitar' },
+  { id: 'song-20', name: 'Rainforest Sprinter', type: 'instrumental', price: 30, level: 20, author: 'Amazon Beat' },
+  { id: 'song-21', name: 'Taj Mahal Echoes', type: 'vocal', price: 30, level: 21, author: 'Delhi Beats' },
+  { id: 'song-22', name: 'Volcanic Core', type: 'instrumental', price: 30, level: 22, author: 'Magma Core' },
+  { id: 'song-23', name: 'Sky High Chase', type: 'vocal', price: 30, level: 23, author: 'Chicago Skyscraper' },
+  { id: 'song-24', name: 'Frozen Tundra', type: 'instrumental', price: 30, level: 24, author: 'Siberian Storm' },
+  { id: 'song-25', name: 'Carnival Jump', type: 'vocal', price: 30, level: 25, author: 'Rio Samba' },
+  { id: 'song-26', name: 'Sahara Heatwaves', type: 'instrumental', price: 30, level: 26, author: 'Desert Wind' },
+  { id: 'song-27', name: 'Tower Bridge Chase', type: 'vocal', price: 30, level: 27, author: 'London Punk' },
+  { id: 'song-28', name: 'Tokyo Overdrive', type: 'instrumental', price: 30, level: 28, author: 'Shibuya Crossing' },
+  { id: 'song-29', name: 'Samba Horizon', type: 'vocal', price: 30, level: 29, author: 'Rio Sunset' },
+  { id: 'song-30', name: 'Ultimate Apex Champion', type: 'instrumental', price: 30, level: 30, author: 'Valkyrie Theme' }
 ];

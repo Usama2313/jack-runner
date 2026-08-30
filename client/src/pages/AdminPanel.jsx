@@ -31,12 +31,38 @@ export const AdminPanel = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('users');
 
+  // Payments & Songs Management State
+  const [payments, setPayments] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [songs, setSongs] = useState([]);
+  const [songsLoading, setSongsLoading] = useState(false);
+
+  // Add Song Form state
+  const [songName, setSongName] = useState('');
+  const [songAuthor, setSongAuthor] = useState('');
+  const [songType, setSongType] = useState('vocal'); // 'vocal' | 'instrumental'
+  const [songPrice, setSongPrice] = useState(30);
+  const [songLevel, setSongLevel] = useState(1);
+
   useEffect(() => {
     const savedToken = localStorage.getItem('admin_auth_token') || authToken;
     if (savedToken) {
       verifyToken(savedToken);
     }
   }, []);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+      if (activeTab === 'users') {
+        fetchUsers(t);
+      } else if (activeTab === 'payments') {
+        fetchPayments(t);
+      } else if (activeTab === 'songs') {
+        fetchSongs(t);
+      }
+    }
+  }, [activeTab, isLoggedIn]);
 
   const verifyToken = async (tokenToVerify) => {
     const t = tokenToVerify || authToken || localStorage.getItem('admin_auth_token');
@@ -55,7 +81,6 @@ export const AdminPanel = () => {
         setIsLoggedIn(false);
       }
     } catch {
-      // If network error, still allow if master key was saved
       if (t === MASTER_KEY || t === 'admin2026') {
         setIsLoggedIn(true);
       }
@@ -117,6 +142,127 @@ export const AdminPanel = () => {
     } finally {
       setUsersLoading(false);
     }
+  };
+
+  const fetchPayments = async (token) => {
+    const t = token || authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+    setPaymentsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/payments`, {
+        headers: { 'Authorization': `Bearer ${t}`, 'x-admin-key': t }
+      });
+      const data = await res.json();
+      if (res.ok && data.payments) {
+        setPayments(data.payments);
+      }
+    } catch (err) {
+      console.error('Failed to fetch payments:', err);
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
+  const handleApprovePayment = async (paymentId) => {
+    setLoading(true); setMessage('');
+    const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/approve-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+        body: JSON.stringify({ paymentId })
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error || 'Done'); setStatusType(data.success ? 'success' : 'error');
+      if (data.success) {
+        fetchPayments(t);
+      }
+    } catch { setMessage('Network error'); setStatusType('error'); }
+    setLoading(false);
+  };
+
+  const handleRejectPayment = async (paymentId) => {
+    setLoading(true); setMessage('');
+    const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/reject-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+        body: JSON.stringify({ paymentId })
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error || 'Done'); setStatusType(data.success ? 'success' : 'error');
+      if (data.success) {
+        fetchPayments(t);
+      }
+    } catch { setMessage('Network error'); setStatusType('error'); }
+    setLoading(false);
+  };
+
+  const fetchSongs = async (token) => {
+    const t = token || authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+    setSongsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/songs`, {
+        headers: { 'Authorization': `Bearer ${t}`, 'x-admin-key': t }
+      });
+      const data = await res.json();
+      if (res.ok && data.songs) {
+        setSongs(data.songs);
+      }
+    } catch (err) {
+      console.error('Failed to fetch songs:', err);
+    } finally {
+      setSongsLoading(false);
+    }
+  };
+
+  const handleAddSong = async (e) => {
+    e.preventDefault();
+    if (!songName.trim()) {
+      setMessage('Song name is required'); setStatusType('error'); return;
+    }
+    setLoading(true); setMessage('');
+    const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/add-song`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+        body: JSON.stringify({
+          name: songName.trim(),
+          type: songType,
+          price: Number(songPrice),
+          level: Number(songLevel),
+          author: songAuthor.trim() || 'Unknown'
+        })
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error || 'Done'); setStatusType(data.success ? 'success' : 'error');
+      if (data.success) {
+        setSongName('');
+        setSongAuthor('');
+        fetchSongs(t);
+      }
+    } catch { setMessage('Network error'); setStatusType('error'); }
+    setLoading(false);
+  };
+
+  const handleDeleteSong = async (songId) => {
+    if (!window.confirm('Are you sure you want to delete this song?')) return;
+    setLoading(true); setMessage('');
+    const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/delete-song`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+        body: JSON.stringify({ songId })
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error || 'Done'); setStatusType(data.success ? 'success' : 'error');
+      if (data.success) {
+        fetchSongs(t);
+      }
+    } catch { setMessage('Network error'); setStatusType('error'); }
+    setLoading(false);
   };
 
   const handleUnlock = async () => {
@@ -204,7 +350,7 @@ export const AdminPanel = () => {
       padding: '20px 16px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center'
     },
     card: {
-      width: '100%', maxWidth: '900px', background: 'rgba(10, 18, 35, 0.95)', backdropFilter: 'blur(24px)',
+      width: '100%', maxWidth: '950px', background: 'rgba(10, 18, 35, 0.95)', backdropFilter: 'blur(24px)',
       border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '24px', padding: '32px 28px',
       boxShadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 40px rgba(56,189,248,0.08)'
     },
@@ -239,7 +385,8 @@ export const AdminPanel = () => {
       fontSize: '0.9rem', border: 'none', transition: 'all 0.2s',
       background: active ? 'rgba(56,189,248,0.2)' : 'transparent',
       color: active ? '#38bdf8' : '#64748b',
-      borderBottom: active ? '2px solid #38bdf8' : '2px solid transparent'
+      borderBottom: active ? '2px solid #38bdf8' : '2px solid transparent',
+      whiteSpace: 'nowrap'
     }),
     alert: (type) => ({
       display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px',
@@ -347,8 +494,14 @@ export const AdminPanel = () => {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: '4px' }}>
-          {[['users', '👥 Users'], ['manage', '⚙️ Manage'], ['info', '📊 Info']].map(([key, label]) => (
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: '4px', overflowX: 'auto' }}>
+          {[
+            ['users', '👥 Users'],
+            ['payments', '💰 Payments Verified'],
+            ['songs', '🎵 Manage Songs'],
+            ['manage', '⚙️ Actions'],
+            ['info', '📊 Stats']
+          ].map(([key, label]) => (
             <button key={key} style={s.tab(activeTab === key)} onClick={() => setActiveTab(key)}>{label}</button>
           ))}
         </div>
@@ -381,7 +534,7 @@ export const AdminPanel = () => {
               </div>
             </div>
 
-            <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '450px' }}>
+            <div style={{ overflowX: 'auto', maxHeight: '450px' }}>
               {usersLoading ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>⏳ Loading users...</div>
               ) : users.length === 0 ? (
@@ -430,7 +583,6 @@ export const AdminPanel = () => {
                         <td style={s.td}>{u.is_admin ? <span style={{ color: '#ec4899', fontWeight: '700' }}>⚡ Admin</span> : '—'}</td>
                         <td style={s.td}>
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                            {/* Quick Stage buttons */}
                             {[5, 10, 15, 30].map(cnt => (
                               <button
                                 key={cnt}
@@ -459,10 +611,162 @@ export const AdminPanel = () => {
           </div>
         )}
 
+        {/* ─── PAYMENTS TAB ─── */}
+        {activeTab === 'payments' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ color: '#38bdf8', fontWeight: '800', fontSize: '1rem', margin: 0 }}>Transaction Verifications</h3>
+              <button onClick={() => fetchPayments()} style={{
+                background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.3)', color: '#38bdf8',
+                padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem'
+              }}>🔄 Refresh</button>
+            </div>
+            
+            <div style={{ overflowX: 'auto' }}>
+              {paymentsLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>⏳ Loading payments...</div>
+              ) : payments.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>No submitted transaction verifications found.</div>
+              ) : (
+                <table style={s.table}>
+                  <thead>
+                    <tr>
+                      <th style={s.th}>ID</th>
+                      <th style={s.th}>User Email</th>
+                      <th style={s.th}>Item Unlocked</th>
+                      <th style={s.th}>Amount</th>
+                      <th style={s.th}>Transaction ID (TID)</th>
+                      <th style={s.th}>Date</th>
+                      <th style={s.th}>Status</th>
+                      <th style={s.th}>Approve / Reject Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((p) => (
+                      <tr key={p.id}>
+                        <td style={s.td}>{p.id}</td>
+                        <td style={s.td}><strong style={{ color: '#38bdf8' }}>{p.email}</strong></td>
+                        <td style={s.td}>
+                          <span style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', color: '#cbd5e1' }}>
+                            {p.itemType.toUpperCase()} {p.itemId ? `(ID: ${p.itemId})` : ''}
+                          </span>
+                        </td>
+                        <td style={s.td}>Rs. {p.amount}</td>
+                        <td style={s.td}><code style={{ color: '#fbbf24', fontWeight: '700' }}>{p.tid}</code></td>
+                        <td style={s.td}>{new Date(p.created_at).toLocaleDateString()}</td>
+                        <td style={s.td}>
+                          <span style={{
+                            padding: '3px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold',
+                            color: p.status === 'approved' ? '#10b981' : p.status === 'rejected' ? '#ef4444' : '#fbbf24',
+                            border: `1px solid ${p.status === 'approved' ? '#10b981' : p.status === 'rejected' ? '#ef4444' : '#fbbf24'}`
+                          }}>
+                            {p.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td style={s.td}>
+                          {p.status === 'pending' && (
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                onClick={() => handleApprovePayment(p.id)}
+                                style={{ background: '#10b981', color: '#000', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
+                              >
+                                APPROVE
+                              </button>
+                              <button
+                                onClick={() => handleRejectPayment(p.id)}
+                                style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
+                              >
+                                REJECT
+                              </button>
+                            </div>
+                          )}
+                          {p.status !== 'pending' && <span style={{ color: '#64748b' }}>Settled</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── SONGS TAB ─── */}
+        {activeTab === 'songs' && (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+              {/* Add Song form */}
+              <div style={{ background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.25)', borderRadius: '16px', padding: '20px' }}>
+                <h3 style={{ color: '#38bdf8', fontWeight: '800', fontSize: '0.95rem', marginBottom: '14px' }}>🎵 Add Motivational Song to Game</h3>
+                <form onSubmit={handleAddSong} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div>
+                    <label style={s.label}>SONG TITLE</label>
+                    <input style={s.input} type="text" value={songName} onChange={e => setSongName(e.target.value)} placeholder="Victory Horizon" required />
+                  </div>
+                  <div>
+                    <label style={s.label}>ARTIST / AUTHOR</label>
+                    <input style={s.input} type="text" value={songAuthor} onChange={e => setSongAuthor(e.target.value)} placeholder="Epic Synth Band" />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                    <div>
+                      <label style={s.label}>TYPE</label>
+                      <select style={{ ...s.input, padding: '10px' }} value={songType} onChange={e => setSongType(e.target.value)}>
+                        <option value="vocal">Vocal</option>
+                        <option value="instrumental">Instrumental</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={s.label}>PRICE (Rs.)</label>
+                      <input style={s.input} type="number" value={songPrice} onChange={e => setSongPrice(Number(e.target.value))} required />
+                    </div>
+                    <div>
+                      <label style={s.label}>PLAY LEVEL</label>
+                      <input style={s.input} type="number" value={songLevel} onChange={e => setSongLevel(Number(e.target.value))} required />
+                    </div>
+                  </div>
+                  <button type="submit" style={{ ...s.btn('linear-gradient(135deg, #0284c7, #38bdf8)'), marginTop: '8px' }} disabled={loading}>
+                    Add Song Track
+                  </button>
+                </form>
+              </div>
+
+              {/* Total Songs List */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '20px', maxHeight: '420px', overflowY: 'auto' }}>
+                <h3 style={{ color: '#cbd5e1', fontWeight: '800', fontSize: '0.95rem', marginBottom: '14px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Tracks Playlist ({songs.length})</span>
+                  <span style={{ color: '#38bdf8' }}>Rs. 30 Stage Songs</span>
+                </h3>
+                {songsLoading ? (
+                  <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>Loading playlist...</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {songs.map((song) => (
+                      <div key={song.id} style={{ display: 'flex', justify: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div>
+                          <strong style={{ color: '#fff', fontSize: '0.85rem' }}>{song.name}</strong>
+                          <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                            {song.author} • Lvl {song.level} • {song.type.toUpperCase()}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSong(song.id)}
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
+                        >
+                          DELETE
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ─── MANAGE TAB ─── */}
         {activeTab === 'manage' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-            {/* Shared identifier input */}
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={s.label}>TARGET USER EMAIL / USERNAME / ID</label>
               <input style={s.input} type="text" value={identifier}
@@ -515,7 +819,7 @@ export const AdminPanel = () => {
             </div>
 
             {/* Manual Stage IDs */}
-            <div style={{ background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: '16px', padding: '20px' }}>
+            <div style={{ background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.25)', borderRadius: '16px', padding: '20px' }}>
               <h3 style={{ color: '#38bdf8', fontWeight: '800', fontSize: '0.95rem', marginBottom: '12px' }}>🔓 Unlock Stages (1–30)</h3>
               <label style={s.label}>STAGE IDs (comma-separated)</label>
               <input style={{ ...s.input, marginBottom: '12px' }} type="text" value={levels}
@@ -542,7 +846,7 @@ export const AdminPanel = () => {
             </div>
 
             {/* VIP Activation */}
-            <div style={{ background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.2)', borderRadius: '16px', padding: '20px' }}>
+            <div style={{ background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.25)', borderRadius: '16px', padding: '20px' }}>
               <h3 style={{ color: '#facc15', fontWeight: '800', fontSize: '0.95rem', marginBottom: '12px' }}>⭐ VIP Premium Access</h3>
               <p style={{ color: '#94a3b8', fontSize: '0.82rem', marginBottom: '16px' }}>
                 VIP activates full game access: all robots, unlimited gifts, all 30 stages.
@@ -567,7 +871,7 @@ export const AdminPanel = () => {
             {[
               { label: 'Total Players', value: users.length, icon: '👥', color: '#38bdf8' },
               { label: 'VIP Users', value: users.filter(u => u.is_activated).length, icon: '⭐', color: '#facc15' },
-              { label: 'Free Players', value: users.filter(u => !u.is_activated).length, icon: '🎮', color: '#94a3b8' },
+              { label: 'Free Players', value: users.filter(u => !u.is_activated).length, icon: 'PLAYERS', color: '#cbd5e1' },
               { label: 'Admin Accounts', value: users.filter(u => u.is_admin).length, icon: '🛡️', color: '#ec4899' }
             ].map(stat => (
               <div key={stat.label} style={{

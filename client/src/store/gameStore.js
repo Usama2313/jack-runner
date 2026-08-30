@@ -66,6 +66,9 @@ export const useGameStore = create((set, get) => {
     targetSpeed: INITIAL_SPEED * initialLevelCfg.speedMult,
     isActivated: getInitialStorage('kinetic_is_activated', false),
     showPaymentModal: false,
+    paymentItemType: 'vip',
+    paymentItemId: null,
+    paymentAmount: 1000,
 
     // Player Run State
     lane: 0, // -1: Left, 0: Center, 1: Right
@@ -117,6 +120,8 @@ export const useGameStore = create((set, get) => {
     selectedCharacter: getInitialStorage('kinetic_selected_char', 'jack'),
     unlockedBoards: getInitialStorage('kinetic_unlocked_boards', ['classic']),
     selectedBoard: getInitialStorage('kinetic_selected_board', 'classic'),
+    unlockedSongs: getInitialStorage('kinetic_unlocked_songs', ['song-1']),
+    selectedSong: getInitialStorage('kinetic_selected_song', 'song-1'),
     upgrades: getInitialStorage('kinetic_upgrades', {
       [POWERUP_TYPES.MAGNET]: 1,
       [POWERUP_TYPES.JETPACK]: 1,
@@ -146,14 +151,24 @@ export const useGameStore = create((set, get) => {
       set({ gameState: state });
     },
 
+    triggerPayment: (itemType, itemId, amount) => {
+      set({
+        paymentItemType: itemType,
+        paymentItemId: itemId,
+        paymentAmount: amount,
+        showPaymentModal: true
+      });
+    },
+
     startGame: (levelOverride = null) => {
       soundEngine.init();
       const isActivated = get().isActivated;
+      const unlockedLevels = get().unlockedLevels || [1];
       const targetLvl = levelOverride !== null && levelOverride !== undefined ? levelOverride : get().currentLevel;
       const clampedLevel = parseValidLevel(targetLvl);
 
-      if (clampedLevel > 1 && !isActivated) {
-        set({ showPaymentModal: true });
+      if (clampedLevel > 1 && !isActivated && !unlockedLevels.includes(clampedLevel)) {
+        get().triggerPayment('stage', clampedLevel, 40);
         return;
       }
 
@@ -202,9 +217,10 @@ export const useGameStore = create((set, get) => {
 
     selectLevel: (levelId) => {
       const isActivated = get().isActivated;
+      const unlockedLevels = get().unlockedLevels || [1];
       const clamped = parseValidLevel(levelId);
-      if (clamped > 1 && !isActivated) {
-        set({ showPaymentModal: true });
+      if (clamped > 1 && !isActivated && !unlockedLevels.includes(clamped)) {
+        get().triggerPayment('stage', clamped, 40);
         return;
       }
       const levelCfg = LEVELS[clamped - 1] || LEVELS[0];
@@ -437,13 +453,15 @@ export const useGameStore = create((set, get) => {
     // Advance to next level safely
     advanceLevel: () => {
       const isActivated = get().isActivated;
+      const unlockedLevels = get().unlockedLevels || [1];
       const current = parseValidLevel(get().currentLevel);
-      if (!isActivated && current >= 1) {
-        set({ showPaymentModal: true, gameState: GAME_STATES.MENU });
+      const next = Math.min(LEVELS.length, current + 1);
+
+      if (next > 1 && !isActivated && !unlockedLevels.includes(next)) {
+        get().triggerPayment('stage', next, 40);
+        set({ gameState: GAME_STATES.MENU });
         return;
       }
-
-      const next = Math.min(LEVELS.length, current + 1);
       const levelCfg = LEVELS[next - 1] || LEVELS[LEVELS.length - 1];
       const newUnlocked = Array.from(new Set([...(get().unlockedLevels || [1]), next]));
       setStorage('kinetic_unlocked_levels', newUnlocked);
@@ -498,9 +516,10 @@ export const useGameStore = create((set, get) => {
     // Mystery Box collected: Just track count during run — open all at end
     collectMysteryBox: () => {
       soundEngine.playPowerup();
-      // Generate the reward NOW but don't reveal it yet
-      const coinAmounts = [500, 800, 1200, 1500, 2000, 3000, 5000];
+      // Random coin reward in hundreds
+      const coinAmounts = [100, 200, 300, 400, 500];
       const coinsWon = coinAmounts[Math.floor(Math.random() * coinAmounts.length)];
+      
       const types = [
         POWERUP_TYPES.MAGNET,
         POWERUP_TYPES.JETPACK,
@@ -508,18 +527,21 @@ export const useGameStore = create((set, get) => {
         POWERUP_TYPES.SUPER_SNEAKERS,
         POWERUP_TYPES.HOVERBOARD
       ];
-      const powerupWon = types[Math.floor(Math.random() * types.length)];
-      const bonusItems = [];
-      // Extra random bonus items in each box
-      const numBonus = 2 + Math.floor(Math.random() * 4);
-      for (let i = 0; i < numBonus; i++) {
-        bonusItems.push(types[Math.floor(Math.random() * types.length)]);
+      
+      const isVideoReward = Math.random() > 0.5;
+      const rewardPayload = { coins: coinsWon };
+      
+      if (isVideoReward) {
+        rewardPayload.isVideo = true;
+      } else {
+        rewardPayload.powerup = types[Math.floor(Math.random() * types.length)];
       }
+
       set((state) => ({
         mysteryBoxCount: state.mysteryBoxCount + 1,
         pendingBoxRewards: [
           ...state.pendingBoxRewards,
-          { coins: coinsWon, powerup: powerupWon, bonusItems }
+          rewardPayload
         ]
       }));
     },
@@ -614,8 +636,15 @@ export const useGameStore = create((set, get) => {
 
     // Shop & Customization - Instant Character / Robot Switching with Coins
     selectCharacter: (charId) => {
+      const isActivated = get().isActivated;
+      const char = CHARACTERS.find((c) => c.id === charId);
+      const isPremiumRobot = charId !== 'blitz' && !char?.isHuman;
+      if (isPremiumRobot && !isActivated) {
+        return false;
+      }
+
       const unlocked = get().unlockedCharacters || ['jack'];
-      if (unlocked.includes(charId)) {
+      if (isActivated || unlocked.includes(charId)) {
         set({ selectedCharacter: charId });
         setStorage('kinetic_selected_char', charId);
         soundEngine.playPowerup();
@@ -625,6 +654,13 @@ export const useGameStore = create((set, get) => {
     },
 
     buyCharacter: (charId, price) => {
+      const isActivated = get().isActivated;
+      const char = CHARACTERS.find((c) => c.id === charId);
+      const isPremiumRobot = charId !== 'blitz' && !char?.isHuman;
+      if (isPremiumRobot && !isActivated) {
+        return false;
+      }
+
       const coins = parseValidNumber(get().totalCoins, 0);
       const unlocked = get().unlockedCharacters || ['jack'];
       if (coins >= price && !unlocked.includes(charId)) {
@@ -639,6 +675,31 @@ export const useGameStore = create((set, get) => {
         setStorage('kinetic_unlocked_chars', newUnlocked);
         setStorage('kinetic_selected_char', charId);
         soundEngine.playPowerup();
+        return true;
+      }
+      return false;
+    },
+
+    selectSong: (songId) => {
+      const unlocked = get().unlockedSongs || ['song-1'];
+      if (unlocked.includes(songId)) {
+        set({ selectedSong: songId });
+        setStorage('kinetic_selected_song', songId);
+        return true;
+      }
+      return false;
+    },
+
+    buySong: (songId, price) => {
+      const unlocked = get().unlockedSongs || ['song-1'];
+      if (!unlocked.includes(songId)) {
+        const newUnlocked = [...unlocked, songId];
+        set({
+          unlockedSongs: newUnlocked,
+          selectedSong: songId
+        });
+        setStorage('kinetic_unlocked_songs', newUnlocked);
+        setStorage('kinetic_selected_song', songId);
         return true;
       }
       return false;
@@ -717,7 +778,19 @@ export const useGameStore = create((set, get) => {
     setAuth: (user, token) => {
       set({ authUser: user, authToken: token, username: user?.username || get().username });
       if (token) setStorage('kinetic_auth_token', token);
-      if (user) setStorage('kinetic_auth_user', user);
+      if (user) {
+        setStorage('kinetic_auth_user', user);
+        set({ isActivated: !!user.is_activated });
+        setStorage('kinetic_is_activated', !!user.is_activated);
+        if (user.unlocked_levels) {
+          set({ unlockedLevels: user.unlocked_levels });
+          setStorage('kinetic_unlocked_levels', user.unlocked_levels);
+        }
+        if (user.unlocked_songs) {
+          set({ unlockedSongs: user.unlocked_songs });
+          setStorage('kinetic_unlocked_songs', user.unlocked_songs);
+        }
+      }
     },
 
     setLeaderboard: (leaderboard) => set({ leaderboard }),

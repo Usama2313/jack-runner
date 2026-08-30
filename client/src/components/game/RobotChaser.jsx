@@ -73,17 +73,37 @@ export const RobotChaser = ({ playerZRef }) => {
       {/* ─── MAIN CHASSIS / MECH TORSO ────────────────────────────────────── */}
       <mesh castShadow>
         <boxGeometry args={[0.95, 0.75, 0.85]} />
-        <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.2} />
+        <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.15} />
       </mesh>
 
       {/* Armored Heavy Shoulder Guards */}
       <mesh position={[-0.55, 0.22, 0]}>
         <boxGeometry args={[0.26, 0.4, 0.65]} />
-        <meshStandardMaterial color="#dc2626" metalness={0.85} roughness={0.25} />
+        <meshStandardMaterial color="#b91c1c" metalness={0.85} roughness={0.2} />
       </mesh>
       <mesh position={[0.55, 0.22, 0]}>
         <boxGeometry args={[0.26, 0.4, 0.65]} />
-        <meshStandardMaterial color="#dc2626" metalness={0.85} roughness={0.25} />
+        <meshStandardMaterial color="#b91c1c" metalness={0.85} roughness={0.2} />
+      </mesh>
+
+      {/* Sci-Fi Antenna Spikes on Shoulders */}
+      <mesh position={[-0.55, 0.5, 0]}>
+        <cylinderGeometry args={[0.02, 0.04, 0.3, 8]} />
+        <meshStandardMaterial color="#cbd5e1" metalness={0.9} />
+      </mesh>
+      <mesh position={[0.55, 0.5, 0]}>
+        <cylinderGeometry args={[0.02, 0.04, 0.3, 8]} />
+        <meshStandardMaterial color="#cbd5e1" metalness={0.9} />
+      </mesh>
+
+      {/* Glowing Chest Plasma Power Core */}
+      <mesh position={[0, -0.15, -0.44]}>
+        <sphereGeometry args={[0.16, 16, 16]} />
+        <meshStandardMaterial
+          color="#06b6d4"
+          emissive="#38bdf8"
+          emissiveIntensity={2.5}
+        />
       </mesh>
 
       {/* ─── VISOR / RED SCANNER OPTIC (Menacing Robot Eye) ──────────────── */}
