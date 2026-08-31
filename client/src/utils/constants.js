@@ -63,82 +63,127 @@ export const POWERUP_TYPES = {
 
 export const POWERUP_CONFIG = {
   [POWERUP_TYPES.MAGNET]: {
-    name: 'Ring Magnet',
+    name: 'Ring Magnet (+Auto-Collects All 3 Lanes)',
+    shortName: 'Ring Magnet',
+    benefit: '(+Auto-Collects All 3 Lanes)',
     duration: 10,
     color: '#38bdf8',
     icon: '🧲',
-    description: 'Pulls in all celestial rings from all lanes & sky'
+    description: 'Pulls in all celestial rings from all 3 lanes (+Instant Magnetic Field)'
   },
   [POWERUP_TYPES.JETPACK]: {
-    name: 'Kinetic Jetpack',
+    name: 'Kinetic Jetpack (+45% Speed Flight Above Hurdles)',
+    shortName: 'Kinetic Jetpack',
+    benefit: '(+45% Speed Flight Above Hurdles)',
     duration: 8,
     color: '#ec4899',
     icon: '🚀',
-    description: 'Supersonic flight (+45% Speed) soaring high above ground hazards'
+    description: 'Supersonic flight soaring high above all ground hazards (+45% Speed Boost)'
   },
   [POWERUP_TYPES.MULTIPLIER_2X]: {
-    name: '2X Score Boost',
+    name: '2X Score Boost (+Double Score & Ring Value)',
+    shortName: '2X Score Boost',
+    benefit: '(+Double Score & Ring Value)',
     duration: 14,
     color: '#eab308',
     icon: '⚡',
-    description: 'Doubles all score and celestial ring points'
+    description: 'Doubles all score and celestial ring points (+100% Extra Points)'
   },
   [POWERUP_TYPES.SUPER_SNEAKERS]: {
-    name: 'Kinetic Thrusters',
+    name: 'Kinetic Thrusters (+50% High-Jump Booster)',
+    shortName: 'Kinetic Thrusters',
+    benefit: '(+50% High-Jump Booster)',
     duration: 12,
     color: '#10b981',
     icon: '👟',
-    description: 'High-jump booster to leap easily over tall obstacles'
+    description: 'High-jump booster to leap easily over tall obstacles (+Leap Over Buses & Barriers)'
   },
   [POWERUP_TYPES.HOVERBOARD]: {
-    name: 'Plasma Board',
+    name: 'Plasma Board (+Shields 1 Collision Crash)',
+    shortName: 'Plasma Board',
+    benefit: '(+Shields 1 Collision Crash)',
     duration: 25,
     color: '#8b5cf6',
     icon: '🛹',
-    description: 'Absorbs 1 collision crash and prevents robot capture'
+    description: 'Absorbs 1 collision crash and prevents robot capture (+Safety Crash Armor)'
   },
   [POWERUP_TYPES.ROBOT_REPAIR]: {
-    name: 'Nano Repair Kit',
+    name: 'Nano Repair Kit (+Repairs Armor & 6s Invulnerability)',
+    shortName: 'Nano Repair Kit',
+    benefit: '(+Repairs Armor & 6s Invulnerability)',
     duration: 6,
     color: '#34d399',
     icon: '🔧',
-    description: 'Instantly repairs robot armor damage — grants 6s invulnerability shield'
+    description: 'Instantly repairs robot armor damage (+6s Invulnerability Shield)'
   },
   [POWERUP_TYPES.PLASMA_SHIELD]: {
-    name: 'Plasma Shield',
+    name: 'Plasma Shield (+Destroys Elemental Hurdles on Contact)',
+    shortName: 'Plasma Shield',
+    benefit: '(+Destroys Elemental Hurdles on Contact)',
     duration: 8,
     color: '#06b6d4',
     icon: '🛡️',
-    description: 'Activates protective force field — destroy elemental hurdles on contact!'
+    description: 'Protective force field — destroys Fire, Water, Tornado & Thunder hurdles on contact (+Hazard Obliterator)'
   },
   [POWERUP_TYPES.KINETIC_BLASTER]: {
-    name: 'Kinetic Blaster',
+    name: 'Kinetic Blaster (+Smashes Fire/Water/Thunder Hazards)',
+    shortName: 'Kinetic Blaster',
+    benefit: '(+Smashes Fire/Water/Thunder Hazards)',
     duration: 6,
     color: '#f97316',
     icon: '💥',
-    description: 'Fires energy blasts — smash through Fire, Water, Sand, Tornado & Thunder obstacles!'
+    description: 'Fires energy blasts (+Smashes Through Fire, Water, Sand, Tornado & Thunder)'
   },
   [POWERUP_TYPES.SPEED_BOOST]: {
-    name: 'Turbo Overdrive',
+    name: 'Turbo Overdrive (+Top Supersonic Speed Sprint)',
+    shortName: 'Turbo Overdrive',
+    benefit: '(+Top Supersonic Speed Sprint)',
     duration: 5,
     color: '#fbbf24',
     icon: '⚡',
-    description: 'Maximum speed burst — rocket forward at top velocity for 5 seconds!'
+    description: 'Maximum speed burst (+Rocket Forward at Top Velocity for 5s)'
   },
   [POWERUP_TYPES.COIN_RAIN]: {
-    name: 'Coin Rain',
+    name: 'Coin Rain (+50 Instant Celestial Rings)',
+    shortName: 'Coin Rain',
+    benefit: '(+50 Instant Celestial Rings)',
     duration: 3,
     color: '#facc15',
     icon: '💰',
-    description: 'Instantly rains 50 celestial rings onto the player!'
+    description: 'Instantly rains 50 celestial rings directly onto the runner (+50 Free Rings)'
   },
   [POWERUP_TYPES.INVINCIBILITY]: {
-    name: 'Invincibility Star',
+    name: 'Invincibility Star (+Immune to ALL Obstacles)',
+    shortName: 'Invincibility Star',
+    benefit: '(+Immune to ALL Obstacles)',
     duration: 5,
     color: '#ffffff',
     icon: '⭐',
-    description: 'Full star power — completely immune to ALL obstacles for 5 seconds!'
+    description: 'Full star power (+Completely Immune to ALL Hazards for 5s)'
   }
+};
+
+/* ─── Hurdle Warning, Action & Audio Instructions ────────────── */
+export const HURDLE_INSTRUCTIONS = {
+  TRAIN: { label: 'SWITCH LANES!', icon: '⬅️➡️', action: 'Dodge Oncoming Bullet Train', sound: 'TRAIN' },
+  BUS: { label: 'SWITCH LANES OR JUMP!', icon: '⬅️➡️', action: 'Evade City Transit Bus', sound: 'BUS' },
+  AMBULANCE: { label: 'SWITCH LANES FAST!', icon: '⬅️➡️', action: 'Emergency Ambulance Approaching', sound: 'AMBULANCE' },
+  POLICE_CAR: { label: 'SWITCH LANES!', icon: '⬅️➡️', action: 'Police Patrol Interceptor', sound: 'POLICE_CAR' },
+  TRUCK: { label: 'SWITCH LANES!', icon: '⬅️➡️', action: 'Heavy Cargo Truck (Too Tall to Jump)', sound: 'TRUCK' },
+  TAXI: { label: 'JUMP OR SWITCH!', icon: '⬆️', action: 'Jump Over Yellow City Cab', sound: 'TAXI' },
+  SPORTS_CAR: { label: 'JUMP OVER!', icon: '⬆️', action: 'Low Sports Car — Leap Over', sound: 'SPORTS_CAR' },
+  HELICOPTER: { label: 'FLY UNDER / DODGE!', icon: '🚁', action: 'Aerial Chopper in Flight Path', sound: 'HELICOPTER' },
+  BARRIER_LOW: { label: 'JUMP OVER!', icon: '⬆️', action: 'Low Roadblock (Press UP Arrow / W)', sound: 'BARRIER_LOW' },
+  BARRIER_HIGH: { label: 'SLIDE / ROLL UNDER!', icon: '⬇️', action: 'Overhead Arch (Press DOWN Arrow / S)', sound: 'BARRIER_HIGH' },
+  CONCRETE_BARRIER: { label: 'SWITCH LANES!', icon: '⬅️➡️', action: 'Concrete K-Rail Barricade', sound: 'CONCRETE_BARRIER' },
+  CONSTRUCTION: { label: 'JUMP OR DODGE!', icon: '⬆️', action: 'Caution Road Hazard', sound: 'CONSTRUCTION' },
+  FIRE_PILLAR: { label: 'JUMP OR BLAST WITH SHIELD!', icon: '🔥', action: 'Molten Fire Pillar (2-Hit Danger)', sound: 'FIRE_PILLAR' },
+  WATER_SURGE: { label: 'JUMP HIGH OVER WAVE!', icon: '💧', action: 'Tsunami Surge Wave (2-Hit Danger)', sound: 'WATER_SURGE' },
+  SAND_STORM: { label: 'SLIDE / ROLL UNDER!', icon: '🏜️', action: 'Desert Sand Cyclone (Slide Under)', sound: 'SAND_STORM' },
+  TORNADO: { label: 'SWITCH LANES AWAY!', icon: '🌪️', action: 'Spinning Twister (Escape Lane)', sound: 'TORNADO' },
+  THUNDER_STRIKE: { label: 'PLASMA SHIELD / BLASTER ONLY!', icon: '⚡', action: 'Lightning Arc (Shield or Evade)', sound: 'THUNDER_STRIKE' },
+  TESLA_COIL: { label: 'SWITCH LANES!', icon: '⚡', action: 'High-Voltage Tesla Arc', sound: 'TESLA_COIL' },
+  MAGMA_PYLON: { label: 'JUMP OR BLAST!', icon: '🌋', action: 'Volcanic Fissure Vent', sound: 'MAGMA_PYLON' }
 };
 
 // Realistic Vehicles, City Obstacles & Biome Hurdles

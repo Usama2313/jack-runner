@@ -304,6 +304,305 @@ class SoundEffectsEngine {
     } catch (e) {}
   }
 
+  /* ─── Approaching Hurdle Warning Sounds ───────────────────────── */
+
+  playTrainHorn() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      // Dual-tone authentic train horn (311Hz D#4 + 370Hz F#4)
+      [311.13, 369.99, 466.16].forEach((freq) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.linearRampToValueAtTime(freq * 0.98, now + 0.45);
+
+        gain.gain.setValueAtTime(0.16 * this.sfxVolume, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.45);
+      });
+    } catch (e) {}
+  }
+
+  playBusHorn() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      [220, 277.18].forEach((freq) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.15 * this.sfxVolume, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      });
+    } catch (e) {}
+  }
+
+  playAmbulanceSiren() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(960, now);
+      osc.frequency.linearRampToValueAtTime(720, now + 0.18);
+      osc.frequency.linearRampToValueAtTime(960, now + 0.36);
+      gain.gain.setValueAtTime(0.2 * this.sfxVolume, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } catch (e) {}
+  }
+
+  playPoliceSiren() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(1100, now);
+      osc.frequency.exponentialRampToValueAtTime(550, now + 0.15);
+      osc.frequency.exponentialRampToValueAtTime(1100, now + 0.3);
+      gain.gain.setValueAtTime(0.18 * this.sfxVolume, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } catch (e) {}
+  }
+
+  playFireRoar() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      // White noise buffer filtered for fire whoosh
+      const bufferSize = this.ctx.sampleRate * 0.4;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(400, now);
+      filter.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+      filter.frequency.exponentialRampToValueAtTime(300, now + 0.4);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.3 * this.sfxVolume, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      noise.start(now);
+    } catch (e) {}
+  }
+
+  playWaterSurge() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const bufferSize = this.ctx.sampleRate * 0.35;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(600, now);
+      filter.frequency.exponentialRampToValueAtTime(1800, now + 0.18);
+      filter.frequency.exponentialRampToValueAtTime(400, now + 0.35);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.28 * this.sfxVolume, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      noise.start(now);
+    } catch (e) {}
+  }
+
+  playThunderCrack() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      // High snap
+      const snapOsc = this.ctx.createOscillator();
+      const snapGain = this.ctx.createGain();
+      snapOsc.type = 'sawtooth';
+      snapOsc.frequency.setValueAtTime(1200, now);
+      snapOsc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+      snapGain.gain.setValueAtTime(0.35 * this.sfxVolume, now);
+      snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      snapOsc.connect(snapGain);
+      snapGain.connect(this.ctx.destination);
+      snapOsc.start(now);
+      snapOsc.stop(now + 0.15);
+
+      // Low rumble
+      const rumbleOsc = this.ctx.createOscillator();
+      const rumbleGain = this.ctx.createGain();
+      rumbleOsc.type = 'triangle';
+      rumbleOsc.frequency.setValueAtTime(90, now + 0.05);
+      rumbleOsc.frequency.exponentialRampToValueAtTime(30, now + 0.45);
+      rumbleGain.gain.setValueAtTime(0.3 * this.sfxVolume, now + 0.05);
+      rumbleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+      rumbleOsc.connect(rumbleGain);
+      rumbleGain.connect(this.ctx.destination);
+      rumbleOsc.start(now + 0.05);
+      rumbleOsc.stop(now + 0.45);
+    } catch (e) {}
+  }
+
+  playTornadoWind() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.linearRampToValueAtTime(340, now + 0.2);
+      osc.frequency.linearRampToValueAtTime(120, now + 0.4);
+      gain.gain.setValueAtTime(0.22 * this.sfxVolume, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } catch (e) {}
+  }
+
+  playHelicopterRotor() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      // 4 rapid rhythmic rotor thumps
+      for (let i = 0; i < 4; i++) {
+        const start = now + i * 0.08;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(110, start);
+        osc.frequency.exponentialRampToValueAtTime(35, start + 0.06);
+        gain.gain.setValueAtTime(0.25 * this.sfxVolume, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.06);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.06);
+      }
+    } catch (e) {}
+  }
+
+  playCarEngine() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(160, now);
+      osc.frequency.exponentialRampToValueAtTime(380, now + 0.3);
+      gain.gain.setValueAtTime(0.18 * this.sfxVolume, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.32);
+    } catch (e) {}
+  }
+
+  playHurdleWarning(type) {
+    if (this.muted) return;
+    switch (type) {
+      case 'TRAIN':
+        this.playTrainHorn();
+        break;
+      case 'BUS':
+      case 'TRUCK':
+        this.playBusHorn();
+        break;
+      case 'AMBULANCE':
+        this.playAmbulanceSiren();
+        break;
+      case 'POLICE_CAR':
+        this.playPoliceSiren();
+        break;
+      case 'HELICOPTER':
+        this.playHelicopterRotor();
+        break;
+      case 'FIRE_PILLAR':
+      case 'MAGMA_PYLON':
+        this.playFireRoar();
+        break;
+      case 'WATER_SURGE':
+        this.playWaterSurge();
+        break;
+      case 'THUNDER_STRIKE':
+      case 'TESLA_COIL':
+      case 'PLASMA_WALL':
+        this.playThunderCrack();
+        break;
+      case 'TORNADO':
+      case 'SAND_STORM':
+        this.playTornadoWind();
+        break;
+      case 'MOTORBIKE':
+      case 'SPORTS_CAR':
+      case 'TAXI':
+        this.playCarEngine();
+        break;
+      default:
+        break;
+    }
+  }
+
 
   // Dynamic Synthwave Running Soundtrack
   startMusic() {

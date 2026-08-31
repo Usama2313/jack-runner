@@ -32,6 +32,7 @@ export const HUD = () => {
   const chaserDistance = useGameStore((s) => s.chaserDistance);
   const mysteryBoxCount = useGameStore((s) => s.mysteryBoxCount);
   const isActivated = useGameStore((s) => s.isActivated);
+  const approachingHurdle = useGameStore((s) => s.approachingHurdle);
 
   const [showLevelSelect, setShowLevelSelect] = useState(false);
   const [showShop, setShowShop] = useState(false);
@@ -223,6 +224,17 @@ export const HUD = () => {
           </div>
         )}
 
+        {/* ─── Approaching Hurdle Action Prompt Banner ─────────────── */}
+        {approachingHurdle && (
+          <div className="hurdle-action-warning-banner" style={{ pointerEvents: 'none' }}>
+            <span className="hurdle-action-icon">{approachingHurdle.icon}</span>
+            <div className="hurdle-action-text-box">
+              <span className="hurdle-action-label">{approachingHurdle.label}</span>
+              <span className="hurdle-action-desc">{approachingHurdle.action} ({approachingHurdle.dist}m Ahead)</span>
+            </div>
+          </div>
+        )}
+
         {/* ─── Active Powerups Bar ─────────────────────────────────── */}
         {activePowerupList.length > 0 && (
           <div className="hud-powerups-bar" style={{ pointerEvents: 'none' }}>
@@ -233,7 +245,10 @@ export const HUD = () => {
                 style={{ borderColor: config.color, boxShadow: `0 0 10px ${config.color}50` }}
               >
                 <span className="hud-powerup-icon">{config.icon}</span>
-                <span className="hud-powerup-name">{config.name}</span>
+                <span className="hud-powerup-name">{config.shortName || config.name}</span>
+                <span className="hud-powerup-benefit" style={{ color: '#facc15', fontSize: '0.65rem', fontWeight: '800' }}>
+                  {config.benefit || ''}
+                </span>
                 <span className="hud-powerup-timer" style={{ color: config.color }}>
                   {Math.ceil(time)}s
                 </span>

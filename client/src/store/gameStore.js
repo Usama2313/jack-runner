@@ -443,24 +443,22 @@ export const useGameStore = create((set, get) => {
       }
     },
 
+    // Approaching Hurdle Proximity Warning & Action Hint
+    approachingHurdle: null,
+    setApproachingHurdle: (hurdle) => set({ approachingHurdle: hurdle }),
+
     // Level timer tick with safe bounds
     tickLevelTimer: (delta) => {
-      const { levelTimeLeft, levelComplete, gameState, isDead, currentLevel, unlockedLevels } = get();
+      const { levelTimeLeft, levelComplete, gameState, isDead } = get();
       if (gameState !== GAME_STATES.PLAYING || isDead || levelComplete) return;
 
-      const safeLevel = parseValidLevel(currentLevel);
       const newTime = Math.max(0, levelTimeLeft - delta);
       if (newTime <= 0) {
-        // Unlock next level
-        const nextLevel = Math.min(LEVELS.length, safeLevel + 1);
-        const newUnlocked = Array.from(new Set([...(unlockedLevels || [1]), nextLevel]));
-        setStorage('kinetic_unlocked_levels', newUnlocked);
-
+        // Stage completed! Do NOT auto-unlock stage 2+ for free (must be purchased!)
         soundEngine.stopMusic();
         set({
           levelTimeLeft: 0,
           levelComplete: true,
-          unlockedLevels: newUnlocked,
           gameState: GAME_STATES.LEVEL_COMPLETE
         });
       } else {
@@ -468,26 +466,24 @@ export const useGameStore = create((set, get) => {
       }
     },
 
-    // Advance to next level safely
+    // Advance to next level safely — Strictly enforces Stage 2+ Payment Gate
     advanceLevel: () => {
       const isActivated = get().isActivated;
       const unlockedLevels = get().unlockedLevels || [1];
       const current = parseValidLevel(get().currentLevel);
       const next = Math.min(LEVELS.length, current + 1);
 
+      // Strict Payment Check: Stage 2+ requires VIP or individual Rs. 40 purchase
       if (next > 1 && !isActivated && !unlockedLevels.includes(next)) {
         get().triggerPayment('stage', next, 40);
-        set({ gameState: GAME_STATES.MENU });
         return;
       }
+
       const levelCfg = LEVELS[next - 1] || LEVELS[LEVELS.length - 1];
-      const newUnlocked = Array.from(new Set([...(get().unlockedLevels || [1]), next]));
-      setStorage('kinetic_unlocked_levels', newUnlocked);
       setStorage('kinetic_current_level', next);
 
       set({
         currentLevel: next,
-        unlockedLevels: newUnlocked,
         levelTimeLeft: levelCfg.timeLimit,
         levelComplete: false,
         gameState: GAME_STATES.PLAYING,
@@ -508,6 +504,7 @@ export const useGameStore = create((set, get) => {
         chaserDistance: CHASER_CONFIG.NORMAL_DISTANCE,
         activeMysteryBox: null,
         isMysteryBoxPaused: false,
+        approachingHurdle: null,
         activePowerups: {
           [POWERUP_TYPES.MAGNET]: 0,
           [POWERUP_TYPES.JETPACK]: 0,

@@ -17,10 +17,12 @@ import {
   LANE_WIDTH,
   PLAYER_Y_BASE,
   POWERUP_TYPES,
-  LEVELS
+  LEVELS,
+  HURDLE_INSTRUCTIONS
 } from '../../utils/constants';
 import { generateTrackChunk } from '../../utils/generator';
 import { checkObstacleCollision, checkCoinCollision, checkPowerupCollision } from '../../utils/collision';
+import { soundEngine } from '../../utils/soundEffects';
 
 const parseValidLevel = (val) => {
   const num = typeof val === 'number' ? val : Number(val);
@@ -197,13 +199,42 @@ const GameScene = () => {
       });
     }
 
-    // Process collisions on active chunks
+    let nearestApproachingHurdle = null;
+    let minApproachDist = 999;
+
+    // Process collisions and proximity warnings on active chunks
     chunks.forEach((chunk) => {
-      // 1. Obstacle collisions
+      // 1. Obstacle collisions & Audio Warnings
       chunk.obstacles.forEach((obs) => {
         if (obs.speed > 0) {
           obs.z += obs.speed * delta;
         }
+
+        // Proximity audio warning & action label detection (ahead of player)
+        const distAhead = pz - obs.z; // since player moves towards negative Z, obs.z is smaller, so pz - obs.z is positive distance ahead
+        if (distAhead > 0 && distAhead < 32) {
+          // Play warning sound once when hurdle enters 28m proximity
+          if (!obs.soundWarned && distAhead < 28) {
+            obs.soundWarned = true;
+            soundEngine.playHurdleWarning(obs.type);
+          }
+
+          // Track nearest approaching hurdle for action prompt
+          if (distAhead < minApproachDist) {
+            minApproachDist = distAhead;
+            const instruction = HURDLE_INSTRUCTIONS[obs.type] || {
+              label: 'DODGE OBSTACLE!',
+              icon: '⚠️',
+              action: 'Evade Hazard'
+            };
+            nearestApproachingHurdle = {
+              type: obs.type,
+              dist: Math.round(distAhead),
+              ...instruction
+            };
+          }
+        }
+
         const { collided, isStumble } = checkObstacleCollision(playerCollider, obs);
         if (collided) {
           if (isStumble) {
@@ -254,6 +285,11 @@ const GameScene = () => {
         });
       }
     });
+
+    // Update store state with approaching hurdle for HUD action banner
+    if (store.approachingHurdle?.type !== nearestApproachingHurdle?.type || store.approachingHurdle?.dist !== nearestApproachingHurdle?.dist) {
+      store.setApproachingHurdle(nearestApproachingHurdle);
+    }
   });
 
   return (

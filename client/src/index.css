@@ -4228,11 +4228,59 @@ body, html {
   box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
 }
 
-.touch-board-label {
-  font-size: 0.55rem;
+/* =========================================================
+   APPROACHING HURDLE ACTION PROMPT BANNER
+   ========================================================= */
+.hurdle-action-warning-banner {
+  position: absolute;
+  top: 95px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 27, 75, 0.95));
+  border: 2px solid #38bdf8;
+  border-radius: 16px;
+  padding: 8px 20px;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.6), 0 8px 30px rgba(0, 0, 0, 0.7);
+  z-index: 90;
+  pointer-events: none;
+  animation: pulseGlow 1s infinite alternate;
+  backdrop-filter: blur(8px);
+}
+
+.hurdle-action-icon {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 0 8px #38bdf8);
+}
+
+.hurdle-action-text-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hurdle-action-label {
+  font-family: var(--font-arcade, 'Orbitron', sans-serif);
+  font-size: clamp(0.95rem, 3.2vw, 1.25rem);
   font-weight: 900;
-  letter-spacing: 0.5px;
+  color: #fde047;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.7), 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.hurdle-action-desc {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.hud-powerup-benefit {
+  display: block;
+  line-height: 1.1;
   margin-top: 1px;
 }
+
 
 
