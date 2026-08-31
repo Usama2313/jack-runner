@@ -101,40 +101,39 @@ export const AdminPanel = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ adminKey: keyVal })
         });
-        const rawText = await res.text();
+        // Attempt to parse JSON regardless of status
+        let rawData = null;
+        try {
+          rawData = await res.json();
+        } catch {}
         if (!res.ok) {
-          throw new Error(`Login failed: ${rawText || 'No details'}`);
+          const errMsg = rawData?.error || `Login failed (status ${res.status})`;
+          throw new Error(errMsg);
         }
-        if (rawText && rawText.trim()) {
-          try {
-            data = JSON.parse(rawText);
-          } catch {
-            throw new Error('Malformed JSON from login');
-          }
+        if (!rawData?.success) {
+          throw new Error(rawData?.error || 'Invalid master key');
         }
-        if (!data.success) throw new Error(data.error || 'Invalid master key');
-        token = data.token || keyVal;
-        setAdminInfo(data.admin || { email: 'admin@jackrunner.com', username: 'JackAdmin' });
+        token = rawData.token || keyVal;
+        setAdminInfo(rawData.admin || { email: 'admin@jackrunner.com', username: 'JackAdmin' });
       } else {
         const res = await fetch(`${API_BASE}/api/admin/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: loginEmail, password: loginPassword })
         });
-        const rawText = await res.text();
+        let rawData = null;
+        try {
+          rawData = await res.json();
+        } catch {}
         if (!res.ok) {
-          throw new Error(`Login failed: ${rawText || 'No details'}`);
+          const errMsg = rawData?.error || `Login failed (status ${res.status})`;
+          throw new Error(errMsg);
         }
-        if (rawText && rawText.trim()) {
-          try {
-            data = JSON.parse(rawText);
-          } catch {
-            throw new Error('Malformed JSON from login');
-          }
+        if (!rawData?.success) {
+          throw new Error(rawData?.error || 'Invalid credentials');
         }
-        if (!data.success) throw new Error(data.error || 'Invalid credentials');
-        token = data.token;
-        setAdminInfo(data.admin);
+        token = rawData.token;
+        setAdminInfo(rawData.admin);
       }
       setAuthToken(token);
       localStorage.setItem('admin_auth_token', token);
