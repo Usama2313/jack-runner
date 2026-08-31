@@ -56,12 +56,12 @@ export const GameOver = ({ onOpenLeaderboard }) => {
     if (submitting || submitted) return;
     setSubmitting(true);
     try {
-      const headers = { 'Content-Type': 'application/json' };
-      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-
-      const res = await fetch(`${API_BASE}/api/scores`, {
+      const response = await fetch(`${API_BASE}/api/scores`, {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+        },
         body: JSON.stringify({
           score,
           coins: coinsCollected,
@@ -70,21 +70,30 @@ export const GameOver = ({ onOpenLeaderboard }) => {
           username
         })
       });
-      const rawText = await res.text();
-      let data = null;
-      try {
-        data = rawText ? JSON.parse(rawText) : null;
-      } catch {
-        data = null;
+
+      // Read response body once as raw text
+      const rawText = await response.text();
+
+      // If the response is not OK, surface the raw text (or generic message) as the error
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${rawText || 'No details'}`);
       }
-      if (data && data.success) {
-        setSubmitted(true);
-        if (data.rank) setPlayerRank(data.rank);
-      } else {
-        setSubmitted(true);
+
+      // Parse JSON only when there is content; otherwise treat as empty object
+      let data = {};
+      if (rawText && rawText.trim()) {
+        try {
+          data = JSON.parse(rawText);
+        } catch (e) {
+          throw new Error('Malformed JSON received from server');
+        }
       }
+
+      setSubmitted(true);
+      if (data?.rank) setPlayerRank(data.rank);
     } catch (err) {
-      console.warn('Could not submit score to online server, saved locally:', err);
+      console.error('Score submission failed:', err);
+      // Prevent UI lock‑up – mark as submitted even on error
       setSubmitted(true);
     } finally {
       setSubmitting(false);
