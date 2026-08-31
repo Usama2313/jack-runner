@@ -18,6 +18,7 @@ export const GameOver = ({ onOpenLeaderboard }) => {
   const username = useGameStore((s) => s.username);
   const authToken = useGameStore((s) => s.authToken);
   const startGame = useGameStore((s) => s.startGame);
+  const resetGame = useGameStore((s) => s.resetGame);
   const setGameState = useGameStore((s) => s.setGameState);
   const pendingBoxRewards = useGameStore((s) => s.pendingBoxRewards) || [];
   const openAllMysteryBoxes = useGameStore((s) => s.openAllMysteryBoxes);
@@ -167,7 +168,7 @@ export const GameOver = ({ onOpenLeaderboard }) => {
 
         {/* Navigation Action Buttons */}
         <div className="game-over-actions">
-          <button className="play-again-btn" onClick={startGame}>
+          <button className="play-again-btn" onClick={resetGame}>
             <RotateCcw size={24} />
             <span>PLAY AGAIN</span>
           </button>

@@ -156,6 +156,24 @@ export const useGameStore = create((set, get) => {
       }
       set({ gameState: state });
     },
+    // Reset the game state for a fresh start after Game Over
+    resetGame: () => {
+      const current = get().currentLevel;
+      // Clear run-specific transient states
+      set({
+        isDead: false,
+        isCaptured: false,
+        deathReason: null,
+        levelComplete: false,
+        pendingBoxRewards: [],
+        activeMysteryBox: null,
+        mysteryBoxCount: 0,
+        isMysteryBoxPaused: false,
+        approachingHurdle: null
+      });
+      // Start the game for the current level
+      get().startGame(current);
+    },
 
     triggerPayment: (itemType, itemId, amount) => {
       set({
