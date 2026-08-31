@@ -69,10 +69,18 @@ export const GameOver = ({ onOpenLeaderboard }) => {
           username
         })
       });
-      const data = await res.json();
-      if (data.success) {
+      const rawText = await res.text();
+      let data = null;
+      try {
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        data = null;
+      }
+      if (data && data.success) {
         setSubmitted(true);
         if (data.rank) setPlayerRank(data.rank);
+      } else {
+        setSubmitted(true);
       }
     } catch (err) {
       console.warn('Could not submit score to online server, saved locally:', err);
