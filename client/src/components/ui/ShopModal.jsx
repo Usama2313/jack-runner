@@ -296,7 +296,7 @@ export const ShopModal = ({ onClose }) => {
             <div className="shop-upgrades-list">
               <div style={{ color: '#94a3b8', fontSize: '0.8rem', padding: '10px 15px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                 <span>🎵 Background songs that play during your run. <strong style={{ color: '#34d399' }}>Stage 1 Song is FREE!</strong> All others require payment.</span>
-                <strong style={{ color: '#facc15' }}>Rs. 30 per Song via JazzCash</strong>
+                <strong style={{ color: '#facc15' }}>Rs. 40 per Song via JazzCash</strong>
               </div>
               {MUSIC_PLAYLIST.map((song) => {
                 // Only song-1 is free; all others require payment
@@ -340,11 +340,11 @@ export const ShopModal = ({ onClose }) => {
                           className="upgrade-btn"
                           onClick={() => {
                             showToast(`🔒 Unlocking ${song.name}...`);
-                            setTimeout(() => triggerPayment('song', song.id, 30), 400);
+                            setTimeout(() => triggerPayment('song', song.id, 40), 400);
                           }}
                           style={{ background: 'linear-gradient(135deg, #a16207, #eab308)', color: '#000', fontWeight: '900' }}
                         >
-                          🔒 Rs. 30 JazzCash
+                          🔒 Rs. 40 JazzCash
                         </button>
                       )}
                     </div>

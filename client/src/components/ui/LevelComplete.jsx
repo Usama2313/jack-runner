@@ -17,6 +17,8 @@ export const LevelComplete = () => {
   const coinsCollected = useGameStore((s) => s.coinsCollected);
   const advanceLevel = useGameStore((s) => s.advanceLevel);
   const setGameState = useGameStore((s) => s.setGameState);
+  const isActivated = useGameStore((s) => s.isActivated);
+  const unlockedLevels = useGameStore((s) => s.unlockedLevels) || [1];
 
   const [showLevelSelect, setShowLevelSelect] = useState(false);
 
@@ -77,12 +79,22 @@ export const LevelComplete = () => {
             <div className="next-level-preview">
               <div className="next-level-header">
                 <CheckCircle2 size={18} color="#10b981" />
-                <span>UNLOCKED: {nextLevelInfo.label || nextLevelInfo.name}</span>
+                <span>NEXT: {nextLevelInfo.label || nextLevelInfo.name}</span>
               </div>
               <div className="next-level-specs">
                 <span>⏱️ {nextLevelInfo.timeLimit}s Time Limit</span>
                 <span>⚡ {nextLevelInfo.speedMult}x Speed Multiplier</span>
               </div>
+              {!isActivated && !unlockedLevels.includes(safeLevel + 1) && (
+                <div style={{ 
+                  marginTop: '8px', padding: '6px 12px', 
+                  background: 'rgba(250,204,21,0.15)', border: '1px solid #facc15',
+                  borderRadius: '8px', color: '#facc15', fontSize: '0.8rem', fontWeight: '700',
+                  textAlign: 'center'
+                }}>
+                  🔒 Requires Rs. 40 payment via JazzCash to unlock
+                </div>
+              )}
             </div>
           )}
 
@@ -95,9 +107,22 @@ export const LevelComplete = () => {
           {/* Action Buttons */}
           <div className="level-complete-actions">
             {!isFinalLevel ? (
-              <button className="level-next-btn" onClick={advanceLevel}>
+              <button className="level-next-btn" onClick={() => {
+                const nextId = safeLevel + 1;
+                const isNextUnlocked = isActivated || (unlockedLevels || []).includes(nextId);
+                if (isNextUnlocked) {
+                  advanceLevel();
+                } else {
+                  // Must pay to proceed
+                  useGameStore.getState().triggerPayment('stage', nextId, 40);
+                }
+              }}>
                 <Play size={24} />
-                <span>NEXT STAGE (STAGE {safeLevel + 1})</span>
+                <span>
+                  {isActivated || (unlockedLevels || []).includes(safeLevel + 1) 
+                    ? `NEXT STAGE (STAGE ${safeLevel + 1})` 
+                    : `UNLOCK STAGE ${safeLevel + 1} — Rs. 40`}
+                </span>
               </button>
             ) : (
               <button className="level-next-btn" onClick={advanceLevel}>

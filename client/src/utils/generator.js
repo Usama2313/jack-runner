@@ -12,6 +12,18 @@ const getObstacleBounds = (type) => {
       return { width: 2.2, height: 3.6, depth: 8.0, yOffset: 0 };
     case OBSTACLE_TYPES.MOTORBIKE:
       return { width: 0.8, height: 1.2, depth: 2.2, yOffset: 0 };
+    case OBSTACLE_TYPES.AMBULANCE:
+      return { width: 2.0, height: 2.4, depth: 5.5, yOffset: 0 };
+    case OBSTACLE_TYPES.POLICE_CAR:
+      return { width: 2.0, height: 1.8, depth: 4.5, yOffset: 0 };
+    case OBSTACLE_TYPES.TRUCK:
+      return { width: 2.3, height: 3.5, depth: 10.0, yOffset: 0 };
+    case OBSTACLE_TYPES.TAXI:
+      return { width: 2.0, height: 1.7, depth: 4.5, yOffset: 0 };
+    case OBSTACLE_TYPES.SPORTS_CAR:
+      return { width: 2.0, height: 1.3, depth: 4.0, yOffset: 0 };
+    case OBSTACLE_TYPES.HELICOPTER:
+      return { width: 3.0, height: 1.5, depth: 5.0, yOffset: 4.2 };
     case OBSTACLE_TYPES.BARRIER_LOW:
       return { width: 2.2, height: 1.1, depth: 0.6, yOffset: 0 };
     case OBSTACLE_TYPES.BARRIER_HIGH:
@@ -34,6 +46,16 @@ const getObstacleBounds = (type) => {
       return { width: 2.2, height: 2.8, depth: 1.0, yOffset: 0 };
     case OBSTACLE_TYPES.ROBOT_BARRIER:
       return { width: 2.3, height: 2.3, depth: 0.6, yOffset: 0.75 };
+    case OBSTACLE_TYPES.FIRE_PILLAR:
+      return { width: 1.8, height: 2.5, depth: 0.8, yOffset: 0 };
+    case OBSTACLE_TYPES.WATER_SURGE:
+      return { width: 2.5, height: 2.2, depth: 1.0, yOffset: 0 };
+    case OBSTACLE_TYPES.SAND_STORM:
+      return { width: 2.8, height: 3.0, depth: 1.2, yOffset: 0 };
+    case OBSTACLE_TYPES.TORNADO:
+      return { width: 2.5, height: 3.5, depth: 1.0, yOffset: 0 };
+    case OBSTACLE_TYPES.THUNDER_STRIKE:
+      return { width: 1.5, height: 4.0, depth: 0.6, yOffset: 0 };
     default:
       return { width: 2.2, height: 1.1, depth: 0.6, yOffset: 0 };
   }
@@ -44,7 +66,8 @@ const isSlideUnder = (type) => {
   return [
     OBSTACLE_TYPES.BARRIER_HIGH,
     OBSTACLE_TYPES.PLASMA_WALL,
-    OBSTACLE_TYPES.ROBOT_BARRIER
+    OBSTACLE_TYPES.ROBOT_BARRIER,
+    OBSTACLE_TYPES.SAND_STORM
   ].includes(type);
 };
 
@@ -57,8 +80,16 @@ const isJumpOver = (type) => {
     OBSTACLE_TYPES.TESLA_COIL,
     OBSTACLE_TYPES.MAGMA_PYLON,
     OBSTACLE_TYPES.ICE_SPIKE,
-    OBSTACLE_TYPES.MOTORBIKE
+    OBSTACLE_TYPES.MOTORBIKE,
+    OBSTACLE_TYPES.WATER_SURGE,
+    OBSTACLE_TYPES.TAXI,
+    OBSTACLE_TYPES.SPORTS_CAR
   ].includes(type);
+};
+
+/* Aerial obstacle — only collides when jetpack is active */
+const isAerialOnly = (type) => {
+  return type === OBSTACLE_TYPES.HELICOPTER;
 };
 
 export const generateTrackChunk = (chunkIndex, currentLevel = 1) => {
@@ -73,6 +104,10 @@ export const generateTrackChunk = (chunkIndex, currentLevel = 1) => {
 
   const levelCfg = LEVELS[Math.min(LEVELS.length - 1, Math.max(0, currentLevel - 1))] || LEVELS[0];
   const hurdleSet = levelCfg.hurdleSet || ['BARRIER_LOW', 'BARRIER_HIGH', 'TRAIN'];
+
+  // Separate ground and aerial hurdles
+  const groundHurdles = hurdleSet.filter(h => h !== 'HELICOPTER');
+  const hasHelicopter = hurdleSet.includes('HELICOPTER');
 
   // Spawn subway arches every 35m
   for (let z = startZ; z > endZ; z -= 35) {
@@ -200,20 +235,32 @@ export const generateTrackChunk = (chunkIndex, currentLevel = 1) => {
       }
 
       // ─── Non-safe lane: spawn level-specific hurdle ─────────────
-      const randomHurdle = hurdleSet[Math.floor(Math.random() * hurdleSet.length)] || 'BARRIER_LOW';
+      const availableGroundHurdles = groundHurdles.length > 0 ? groundHurdles : ['BARRIER_LOW'];
+      const randomHurdle = availableGroundHurdles[Math.floor(Math.random() * availableGroundHurdles.length)] || 'BARRIER_LOW';
       const obstType = OBSTACLE_TYPES[randomHurdle] || OBSTACLE_TYPES.BARRIER_LOW;
       const bounds = getObstacleBounds(obstType);
 
       // Vehicles can optionally move towards the player
-      const isVehicle = [OBSTACLE_TYPES.TRAIN, OBSTACLE_TYPES.BUS, OBSTACLE_TYPES.MOTORBIKE].includes(obstType);
+      const isVehicle = [
+        OBSTACLE_TYPES.TRAIN, OBSTACLE_TYPES.BUS, OBSTACLE_TYPES.MOTORBIKE,
+        OBSTACLE_TYPES.AMBULANCE, OBSTACLE_TYPES.POLICE_CAR, OBSTACLE_TYPES.TRUCK,
+        OBSTACLE_TYPES.TAXI, OBSTACLE_TYPES.SPORTS_CAR
+      ].includes(obstType);
       const isMoving = isVehicle && chunkIndex > 1 && Math.random() < 0.4;
+
+      let vehicleSpeed = 0;
+      if (isMoving) {
+        if (obstType === OBSTACLE_TYPES.MOTORBIKE || obstType === OBSTACLE_TYPES.SPORTS_CAR) vehicleSpeed = 20;
+        else if (obstType === OBSTACLE_TYPES.TRAIN) vehicleSpeed = 14;
+        else vehicleSpeed = 10;
+      }
 
       obstacles.push({
         id: `obs-${nextEntityId++}`,
         type: obstType,
         x: laneX,
         z: sectionZ,
-        speed: isMoving ? (obstType === OBSTACLE_TYPES.MOTORBIKE ? 18 : 12) : 0,
+        speed: vehicleSpeed,
         bounds,
         color: levelCfg.railColor || '#dc2626'
       });
@@ -251,14 +298,18 @@ export const generateTrackChunk = (chunkIndex, currentLevel = 1) => {
       }
     });
 
-    // 32% powerup chance
+    // 32% powerup chance — expanded pool including new powers
     if (Math.random() < 0.32) {
       const types = [
         POWERUP_TYPES.MAGNET,
         POWERUP_TYPES.JETPACK,
         POWERUP_TYPES.MULTIPLIER_2X,
         POWERUP_TYPES.SUPER_SNEAKERS,
-        POWERUP_TYPES.HOVERBOARD
+        POWERUP_TYPES.HOVERBOARD,
+        POWERUP_TYPES.PLASMA_SHIELD,
+        POWERUP_TYPES.KINETIC_BLASTER,
+        POWERUP_TYPES.SPEED_BOOST,
+        POWERUP_TYPES.INVINCIBILITY
       ];
       const selectedType = types[Math.floor(Math.random() * types.length)];
       const targetLane = lanePositions[safeLaneIdx];
@@ -272,6 +323,19 @@ export const generateTrackChunk = (chunkIndex, currentLevel = 1) => {
       });
     }
 
+    // Coin Rain powerup special — rarer, higher levels
+    if (currentLevel >= 5 && Math.random() < 0.08) {
+      const targetLane = lanePositions[safeLaneIdx];
+      powerups.push({
+        id: `pw-${nextEntityId++}`,
+        type: POWERUP_TYPES.COIN_RAIN,
+        x: targetLane,
+        y: 1.25,
+        z: sectionZ - 20,
+        collected: false
+      });
+    }
+
     // 45% Mystery Gift Box chance
     if (Math.random() < 0.45) {
       const targetLane = lanePositions[safeLaneIdx];
@@ -280,6 +344,32 @@ export const generateTrackChunk = (chunkIndex, currentLevel = 1) => {
         x: targetLane,
         y: 1.1,
         z: sectionZ - 7,
+        collected: false
+      });
+    }
+  }
+
+  // Helicopter obstacle at aerial level — only in levels with helicopter in hurdleSet
+  if (hasHelicopter && chunkIndex > 2 && Math.random() < 0.45) {
+    const heliBounds = getObstacleBounds(OBSTACLE_TYPES.HELICOPTER);
+    const heliLane = lanePositions[Math.floor(Math.random() * 3)];
+    obstacles.push({
+      id: `heli-${nextEntityId++}`,
+      type: OBSTACLE_TYPES.HELICOPTER,
+      x: heliLane,
+      z: startZ - 25,
+      speed: 6, // slow forward movement
+      bounds: heliBounds,
+      color: '#ef4444',
+      isAerial: true
+    });
+    // Sky coins leading to helicopter (reward for navigating)
+    for (let i = 0; i < 4; i++) {
+      coins.push({
+        id: `coin-${nextEntityId++}`,
+        x: heliLane,
+        y: 5.5,
+        z: startZ - 10 - i * 3,
         collected: false
       });
     }

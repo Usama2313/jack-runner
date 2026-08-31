@@ -108,7 +108,13 @@ export const useGameStore = create((set, get) => {
       [POWERUP_TYPES.JETPACK]: 0,
       [POWERUP_TYPES.MULTIPLIER_2X]: 0,
       [POWERUP_TYPES.SUPER_SNEAKERS]: 0,
-      [POWERUP_TYPES.HOVERBOARD]: 0
+      [POWERUP_TYPES.HOVERBOARD]: 0,
+      [POWERUP_TYPES.ROBOT_REPAIR]: 0,
+      [POWERUP_TYPES.PLASMA_SHIELD]: 0,
+      [POWERUP_TYPES.KINETIC_BLASTER]: 0,
+      [POWERUP_TYPES.SPEED_BOOST]: 0,
+      [POWERUP_TYPES.COIN_RAIN]: 0,
+      [POWERUP_TYPES.INVINCIBILITY]: 0
     },
 
     // Persistent Player Profile & Inventory
@@ -161,6 +167,12 @@ export const useGameStore = create((set, get) => {
     },
 
     startGame: (levelOverride = null) => {
+      // Login gate — require authentication
+      const authUser = get().authUser;
+      if (!authUser) {
+        return; // Not logged in, MainMenu handles the prompt
+      }
+
       soundEngine.init();
       const isActivated = get().isActivated;
       const unlockedLevels = get().unlockedLevels || [1];
@@ -208,7 +220,13 @@ export const useGameStore = create((set, get) => {
           [POWERUP_TYPES.JETPACK]: 0,
           [POWERUP_TYPES.MULTIPLIER_2X]: 0,
           [POWERUP_TYPES.SUPER_SNEAKERS]: 0,
-          [POWERUP_TYPES.HOVERBOARD]: hasBoardBonus ? 25 : 0
+          [POWERUP_TYPES.HOVERBOARD]: hasBoardBonus ? 25 : 0,
+          [POWERUP_TYPES.ROBOT_REPAIR]: 0,
+          [POWERUP_TYPES.PLASMA_SHIELD]: 0,
+          [POWERUP_TYPES.KINETIC_BLASTER]: 0,
+          [POWERUP_TYPES.SPEED_BOOST]: 0,
+          [POWERUP_TYPES.COIN_RAIN]: 0,
+          [POWERUP_TYPES.INVINCIBILITY]: 0
         }
       });
 
@@ -495,7 +513,13 @@ export const useGameStore = create((set, get) => {
           [POWERUP_TYPES.JETPACK]: 0,
           [POWERUP_TYPES.MULTIPLIER_2X]: 0,
           [POWERUP_TYPES.SUPER_SNEAKERS]: 0,
-          [POWERUP_TYPES.HOVERBOARD]: 0
+          [POWERUP_TYPES.HOVERBOARD]: 0,
+          [POWERUP_TYPES.ROBOT_REPAIR]: 0,
+          [POWERUP_TYPES.PLASMA_SHIELD]: 0,
+          [POWERUP_TYPES.KINETIC_BLASTER]: 0,
+          [POWERUP_TYPES.SPEED_BOOST]: 0,
+          [POWERUP_TYPES.COIN_RAIN]: 0,
+          [POWERUP_TYPES.INVINCIBILITY]: 0
         }
       });
       soundEngine.startMusic();

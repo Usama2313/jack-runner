@@ -55,7 +55,10 @@ export const POWERUP_TYPES = {
   HOVERBOARD: 'HOVERBOARD',
   ROBOT_REPAIR: 'ROBOT_REPAIR',
   PLASMA_SHIELD: 'PLASMA_SHIELD',
-  KINETIC_BLASTER: 'KINETIC_BLASTER'
+  KINETIC_BLASTER: 'KINETIC_BLASTER',
+  SPEED_BOOST: 'SPEED_BOOST',
+  COIN_RAIN: 'COIN_RAIN',
+  INVINCIBILITY: 'INVINCIBILITY'
 };
 
 export const POWERUP_CONFIG = {
@@ -114,6 +117,27 @@ export const POWERUP_CONFIG = {
     color: '#f97316',
     icon: '💥',
     description: 'Fires energy blasts — smash through Fire, Water, Sand, Tornado & Thunder obstacles!'
+  },
+  [POWERUP_TYPES.SPEED_BOOST]: {
+    name: 'Turbo Overdrive',
+    duration: 5,
+    color: '#fbbf24',
+    icon: '⚡',
+    description: 'Maximum speed burst — rocket forward at top velocity for 5 seconds!'
+  },
+  [POWERUP_TYPES.COIN_RAIN]: {
+    name: 'Coin Rain',
+    duration: 3,
+    color: '#facc15',
+    icon: '💰',
+    description: 'Instantly rains 50 celestial rings onto the player!'
+  },
+  [POWERUP_TYPES.INVINCIBILITY]: {
+    name: 'Invincibility Star',
+    duration: 5,
+    color: '#ffffff',
+    icon: '⭐',
+    description: 'Full star power — completely immune to ALL obstacles for 5 seconds!'
   }
 };
 
@@ -122,8 +146,14 @@ export const OBSTACLE_TYPES = {
   TRAIN: 'TRAIN',                       // High-speed Cyber Express Bullet Train
   BUS: 'BUS',                           // Double-decker Cyber City Transit Bus
   MOTORBIKE: 'MOTORBIKE',               // Cyber Superbike / Motorcycle
+  AMBULANCE: 'AMBULANCE',               // Emergency Ambulance with flashing lights
+  POLICE_CAR: 'POLICE_CAR',             // Police patrol car with sirens
+  TRUCK: 'TRUCK',                       // Heavy freight truck
+  TAXI: 'TAXI',                         // Classic yellow taxi cab
+  SPORTS_CAR: 'SPORTS_CAR',             // Low-profile fast sports car
+  HELICOPTER: 'HELICOPTER',             // Aerial helicopter — hazard when Jetpack active
   BARRIER_LOW: 'BARRIER_LOW',           // Low Roadblock Guardrail (Jump over)
-  BARRIER_HIGH: 'BARRIER_HIGH',         // Overhead Overhead Traffic Sign / Arch (Slide under)
+  BARRIER_HIGH: 'BARRIER_HIGH',         // Overhead Traffic Sign / Arch (Slide under)
   CONCRETE_BARRIER: 'CONCRETE_BARRIER', // Concrete Highway K-Rail Barricade
   CONSTRUCTION: 'CONSTRUCTION',         // Flashing Highway Caution Barrier
   // Biome-specific futuristic hurdles:
@@ -134,7 +164,7 @@ export const OBSTACLE_TYPES = {
   TITAN_PISTON: 'TITAN_PISTON',         // Industrial crusher piston
   VOID_CRYSTAL: 'VOID_CRYSTAL',         // Dark matter anomaly monolith
   ROBOT_BARRIER: 'ROBOT_BARRIER',       // Autonomous police sentry barricade
-  // NEW: 5 Elemental Destruction Hurdles (destroys robot on 2nd hit):
+  // Elemental Destruction Hurdles (destroys robot on 2nd hit):
   FIRE_PILLAR: 'FIRE_PILLAR',           // 🔥 Roaring molten fire vortex — dodge or blast through
   WATER_SURGE: 'WATER_SURGE',           // 💧 Hydro tsunami wave — jump over or shield
   SAND_STORM: 'SAND_STORM',             // 🏜️ Whirling desert sand cyclone — slide under
@@ -166,7 +196,7 @@ export const LEVELS = [
     roadColor: '#374151',
     railColor: '#38bdf8',
     neonColor: '#ec4899',
-    hurdleSet: ['BARRIER_LOW', 'BUS', 'MOTORBIKE', 'TRAIN'],
+    hurdleSet: ['BARRIER_LOW', 'BUS', 'MOTORBIKE', 'TRAIN', 'TAXI'],
     label: '🗾 STAGE 1: Tokyo Shibuya Crossing',
     stagePerk: '🔰 Starter Matrix: Standard Speed & Balanced Traffic'
   },
@@ -181,7 +211,7 @@ export const LEVELS = [
     roadColor: '#374151',
     railColor: '#f59e0b',
     neonColor: '#3b82f6',
-    hurdleSet: ['BUS', 'CONCRETE_BARRIER', 'TRAIN', 'MOTORBIKE'],
+    hurdleSet: ['BUS', 'CONCRETE_BARRIER', 'TRAIN', 'MOTORBIKE', 'TAXI', 'POLICE_CAR'],
     label: '🗽 STAGE 2: Manhattan Expressway',
     stagePerk: '🚕 Transit Grid: +10% Magnet Pull Radius'
   },
@@ -196,7 +226,7 @@ export const LEVELS = [
     roadColor: '#525252',
     railColor: '#eab308',
     neonColor: '#facc15',
-    hurdleSet: ['MOTORBIKE', 'BARRIER_LOW', 'BUS', 'TRAIN'],
+    hurdleSet: ['MOTORBIKE', 'BARRIER_LOW', 'BUS', 'TRAIN', 'SPORTS_CAR', 'TRUCK'],
     label: '✨ STAGE 3: Dubai Golden Skyway',
     stagePerk: '🪙 Gold Rush: +15% Extra Celestial Ring Value'
   },
@@ -211,7 +241,7 @@ export const LEVELS = [
     roadColor: '#374151',
     railColor: '#ef4444',
     neonColor: '#38bdf8',
-    hurdleSet: ['BUS', 'BARRIER_HIGH', 'CONSTRUCTION', 'MOTORBIKE'],
+    hurdleSet: ['BUS', 'BARRIER_HIGH', 'CONSTRUCTION', 'MOTORBIKE', 'AMBULANCE', 'TAXI'],
     label: '🎡 STAGE 4: London Tower Bridge',
     stagePerk: '⚡ Bridge Surge: Longer Hoverboard Shield Time'
   },
@@ -226,7 +256,7 @@ export const LEVELS = [
     roadColor: '#374151',
     railColor: '#10b981',
     neonColor: '#34d399',
-    hurdleSet: ['MOTORBIKE', 'TESLA_COIL', 'BUS', 'TRAIN'],
+    hurdleSet: ['MOTORBIKE', 'TESLA_COIL', 'BUS', 'TRAIN', 'SPORTS_CAR', 'POLICE_CAR'],
     label: '🦁 STAGE 5: Singapore Marina Bay',
     stagePerk: '🔋 Bio-Plasma: Jetpack Fuel Duration +2s'
   },
@@ -241,7 +271,7 @@ export const LEVELS = [
     roadColor: '#4b5563',
     railColor: '#a855f7',
     neonColor: '#f43f5e',
-    hurdleSet: ['TRAIN', 'BARRIER_LOW', 'PLASMA_WALL', 'CONCRETE_BARRIER'],
+    hurdleSet: ['TRAIN', 'BARRIER_LOW', 'PLASMA_WALL', 'CONCRETE_BARRIER', 'TRUCK', 'AMBULANCE'],
     label: '🚇 STAGE 6: Berlin Skyline Autobahn',
     stagePerk: '🥷 Autobahn Rush: Faster Slide Under Bridge Recovery'
   },
@@ -256,7 +286,7 @@ export const LEVELS = [
     roadColor: '#4b5563',
     railColor: '#f43f5e',
     neonColor: '#facc15',
-    hurdleSet: ['MOTORBIKE', 'BUS', 'BARRIER_HIGH', 'TRAIN'],
+    hurdleSet: ['MOTORBIKE', 'BUS', 'BARRIER_HIGH', 'TRAIN', 'TAXI', 'SPORTS_CAR'],
     label: '🏮 STAGE 7: Hong Kong Victoria Peak',
     stagePerk: '💫 Neon Overdrive: Double 2X Multiplier Frequency'
   },
@@ -271,7 +301,7 @@ export const LEVELS = [
     roadColor: '#6b7280',
     railColor: '#60a5fa',
     neonColor: '#f472b6',
-    hurdleSet: ['BUS', 'ROBOT_BARRIER', 'CONSTRUCTION', 'MOTORBIKE'],
+    hurdleSet: ['BUS', 'ROBOT_BARRIER', 'CONSTRUCTION', 'MOTORBIKE', 'FIRE_PILLAR', 'TAXI'],
     label: '🗼 STAGE 8: Paris Arc de Triomphe',
     stagePerk: '🛡️ Kinetic Barrier: +1 Free Emergency Recovery Shield'
   },
@@ -286,7 +316,7 @@ export const LEVELS = [
     roadColor: '#374151',
     railColor: '#818cf8',
     neonColor: '#06b6d4',
-    hurdleSet: ['TESLA_COIL', 'MOTORBIKE', 'TRAIN', 'BUS'],
+    hurdleSet: ['TESLA_COIL', 'MOTORBIKE', 'TRAIN', 'BUS', 'FIRE_PILLAR', 'POLICE_CAR'],
     label: '🇰🇷 STAGE 9: Seoul Gangnam District',
     stagePerk: '⚡ Quantum EMP: Stumble duration reduced by 40%'
   },
@@ -301,7 +331,7 @@ export const LEVELS = [
     roadColor: '#4b5563',
     railColor: '#f97316',
     neonColor: '#fbbf24',
-    hurdleSet: ['MOTORBIKE', 'BUS', 'CONCRETE_BARRIER', 'TRAIN'],
+    hurdleSet: ['MOTORBIKE', 'BUS', 'CONCRETE_BARRIER', 'TRAIN', 'WATER_SURGE', 'SPORTS_CAR', 'HELICOPTER'],
     label: '🌴 STAGE 10: Los Angeles Sunset Highway',
     stagePerk: '🚀 Supersonic Thruster: Jetpack Speed +15%'
   },
@@ -316,7 +346,7 @@ export const LEVELS = [
     roadColor: '#0f172a',
     railColor: '#06b6d4',
     neonColor: '#38bdf8',
-    hurdleSet: ['BUS', 'ICE_SPIKE', 'BARRIER_LOW', 'TRAIN'],
+    hurdleSet: ['BUS', 'ICE_SPIKE', 'BARRIER_LOW', 'TRAIN', 'WATER_SURGE', 'THUNDER_STRIKE', 'HELICOPTER'],
     label: '🌊 STAGE 11: Sydney Harbour Cyberway',
     stagePerk: '🧲 Super Vortex: Automatic celestial ring attraction'
   },
@@ -331,7 +361,7 @@ export const LEVELS = [
     roadColor: '#292524',
     railColor: '#eab308',
     neonColor: '#ea580c',
-    hurdleSet: ['MAGMA_PYLON', 'MOTORBIKE', 'ROBOT_BARRIER', 'TRAIN'],
+    hurdleSet: ['MAGMA_PYLON', 'MOTORBIKE', 'ROBOT_BARRIER', 'TRAIN', 'FIRE_PILLAR', 'SAND_STORM', 'TRUCK'],
     label: '🏜️ STAGE 12: Cairo Cyber Pyramids',
     stagePerk: '☀️ Solar Flare: Score points increment +25%'
   },
@@ -346,7 +376,7 @@ export const LEVELS = [
     roadColor: '#1e293b',
     railColor: '#7dd3fc',
     neonColor: '#e0f2fe',
-    hurdleSet: ['ICE_SPIKE', 'BUS', 'CONCRETE_BARRIER', 'TRAIN'],
+    hurdleSet: ['ICE_SPIKE', 'BUS', 'CONCRETE_BARRIER', 'TRAIN', 'THUNDER_STRIKE', 'WATER_SURGE', 'HELICOPTER'],
     label: '❄️ STAGE 13: Toronto Frost Valley',
     stagePerk: '⛸️ Frost Glide: Frictionless jump and high aerial arcs'
   },
@@ -361,7 +391,7 @@ export const LEVELS = [
     roadColor: '#1f1315',
     railColor: '#f43f5e',
     neonColor: '#facc15',
-    hurdleSet: ['MOTORBIKE', 'PLASMA_WALL', 'BUS', 'TRAIN'],
+    hurdleSet: ['MOTORBIKE', 'PLASMA_WALL', 'BUS', 'TRAIN', 'FIRE_PILLAR', 'THUNDER_STRIKE', 'AMBULANCE'],
     label: '🏛️ STAGE 14: Rome Imperial Cyber Coliseum',
     stagePerk: '👑 Imperial Crown: +30% Ring Multiplier'
   },
@@ -376,7 +406,7 @@ export const LEVELS = [
     roadColor: '#0f172a',
     railColor: '#10b981',
     neonColor: '#facc15',
-    hurdleSet: ['BUS', 'MOTORBIKE', 'BARRIER_HIGH', 'TRAIN'],
+    hurdleSet: ['BUS', 'MOTORBIKE', 'BARRIER_HIGH', 'TRAIN', 'WATER_SURGE', 'TORNADO', 'HELICOPTER'],
     label: '🎭 STAGE 15: Rio Horizon Carnival',
     stagePerk: '🎉 Samba Reflex: Ultra-fast lane switching response'
   },
@@ -391,7 +421,7 @@ export const LEVELS = [
     roadColor: '#0f172a',
     railColor: '#2dd4bf',
     neonColor: '#a7f3d0',
-    hurdleSet: ['ICE_SPIKE', 'TESLA_COIL', 'TRAIN', 'MOTORBIKE'],
+    hurdleSet: ['ICE_SPIKE', 'TESLA_COIL', 'TRAIN', 'MOTORBIKE', 'THUNDER_STRIKE', 'TORNADO', 'HELICOPTER'],
     label: '🌌 STAGE 16: Reykjavik Aurora Glade',
     stagePerk: '✨ Aurora Field: Powerup durations extended by +3s'
   },
@@ -406,7 +436,7 @@ export const LEVELS = [
     roadColor: '#1e293b',
     railColor: '#ef4444',
     neonColor: '#38bdf8',
-    hurdleSet: ['BUS', 'CONSTRUCTION', 'MOTORBIKE', 'TRAIN'],
+    hurdleSet: ['BUS', 'CONSTRUCTION', 'MOTORBIKE', 'TRAIN', 'FIRE_PILLAR', 'WATER_SURGE', 'HELICOPTER', 'SPORTS_CAR'],
     label: '🌉 STAGE 17: San Francisco Neon Bay',
     stagePerk: '🚠 Cable Vault: Higher jumping ceiling over buses'
   },
@@ -421,7 +451,7 @@ export const LEVELS = [
     roadColor: '#18181b',
     railColor: '#d946ef',
     neonColor: '#f43f5e',
-    hurdleSet: ['VOID_CRYSTAL', 'MOTORBIKE', 'ROBOT_BARRIER', 'TRAIN'],
+    hurdleSet: ['VOID_CRYSTAL', 'MOTORBIKE', 'ROBOT_BARRIER', 'TRAIN', 'FIRE_PILLAR', 'THUNDER_STRIKE', 'TORNADO'],
     label: '⛩️ STAGE 18: Kyoto Cyber Shrine',
     stagePerk: '🌸 Blossom Dash: Ghost evasion through minor stumbles'
   },
@@ -436,7 +466,7 @@ export const LEVELS = [
     roadColor: '#1e293b',
     railColor: '#94a3b8',
     neonColor: '#f59e0b',
-    hurdleSet: ['TITAN_PISTON', 'BUS', 'CONCRETE_BARRIER', 'TRAIN'],
+    hurdleSet: ['TITAN_PISTON', 'BUS', 'CONCRETE_BARRIER', 'TRAIN', 'FIRE_PILLAR', 'SAND_STORM', 'HELICOPTER', 'TRUCK'],
     label: '🏙️ STAGE 19: Chicago Industrial Loop',
     stagePerk: '🦾 Titanium Plating: Immune to 1 stumble penalty'
   },
@@ -451,7 +481,7 @@ export const LEVELS = [
     roadColor: '#292524',
     railColor: '#ea580c',
     neonColor: '#fdba74',
-    hurdleSet: ['MAGMA_PYLON', 'MOTORBIKE', 'TITAN_PISTON', 'TRAIN'],
+    hurdleSet: ['MAGMA_PYLON', 'MOTORBIKE', 'TITAN_PISTON', 'TRAIN', 'FIRE_PILLAR', 'SAND_STORM', 'TORNADO', 'HELICOPTER'],
     label: '🏜️ STAGE 20: Cyber Sahara Overpass',
     stagePerk: '🔥 Overheat Boost: Ultra fast maximum running speed'
   },
@@ -466,7 +496,7 @@ export const LEVELS = [
     roadColor: '#1e293b',
     railColor: '#818cf8',
     neonColor: '#ec4899',
-    hurdleSet: ['PLASMA_WALL', 'BUS', 'TESLA_COIL', 'TRAIN'],
+    hurdleSet: ['PLASMA_WALL', 'BUS', 'TESLA_COIL', 'TRAIN', 'THUNDER_STRIKE', 'TORNADO', 'HELICOPTER', 'FIRE_PILLAR'],
     label: '🎨 STAGE 21: Barcelona Pulse Arc',
     stagePerk: '⚡ Pulse Arc: High-yield gift box drop frequency'
   },
@@ -481,7 +511,7 @@ export const LEVELS = [
     roadColor: '#0f172a',
     railColor: '#34d399',
     neonColor: '#06b6d4',
-    hurdleSet: ['MOTORBIKE', 'BARRIER_LOW', 'BUS', 'TRAIN'],
+    hurdleSet: ['MOTORBIKE', 'BARRIER_LOW', 'BUS', 'TRAIN', 'WATER_SURGE', 'FIRE_PILLAR', 'HELICOPTER', 'SPORTS_CAR'],
     label: '🚲 STAGE 22: Amsterdam Cyber Canals',
     stagePerk: '🛹 Glide Velocity: Plasma board lasts +10 seconds'
   },
@@ -496,7 +526,7 @@ export const LEVELS = [
     roadColor: '#18181b',
     railColor: '#e879f9',
     neonColor: '#facc15',
-    hurdleSet: ['MOTORBIKE', 'BUS', 'TESLA_COIL', 'TRAIN'],
+    hurdleSet: ['MOTORBIKE', 'BUS', 'TESLA_COIL', 'TRAIN', 'THUNDER_STRIKE', 'WATER_SURGE', 'TORNADO', 'HELICOPTER'],
     label: '🛺 STAGE 23: Bangkok Electric Riverway',
     stagePerk: '⚡ Voltage Flow: Magnet pulls powerups from distance'
   },
@@ -511,7 +541,7 @@ export const LEVELS = [
     roadColor: '#1e293b',
     railColor: '#10b981',
     neonColor: '#6ee7b7',
-    hurdleSet: ['ICE_SPIKE', 'CONCRETE_BARRIER', 'BUS', 'TRAIN'],
+    hurdleSet: ['ICE_SPIKE', 'CONCRETE_BARRIER', 'BUS', 'TRAIN', 'FIRE_PILLAR', 'THUNDER_STRIKE', 'HELICOPTER', 'TORNADO'],
     label: '🌲 STAGE 24: Vancouver Cyber Pines',
     stagePerk: '👟 Super Thrusters: 2x Airborne Hang-time'
   },
@@ -526,7 +556,7 @@ export const LEVELS = [
     roadColor: '#1e293b',
     railColor: '#38bdf8',
     neonColor: '#a855f7',
-    hurdleSet: ['VOID_CRYSTAL', 'TITAN_PISTON', 'MOTORBIKE', 'TRAIN'],
+    hurdleSet: ['VOID_CRYSTAL', 'TITAN_PISTON', 'MOTORBIKE', 'TRAIN', 'FIRE_PILLAR', 'THUNDER_STRIKE', 'SAND_STORM', 'HELICOPTER'],
     label: '🇨🇭 STAGE 25: Zurich Quantum Vaults',
     stagePerk: '💎 Vault Multiplier: 3x Celestial Ring Score'
   },
@@ -541,7 +571,7 @@ export const LEVELS = [
     roadColor: '#111827',
     railColor: '#f43f5e',
     neonColor: '#38bdf8',
-    hurdleSet: ['TRAIN', 'BUS', 'MOTORBIKE', 'PLASMA_WALL'],
+    hurdleSet: ['TRAIN', 'BUS', 'MOTORBIKE', 'PLASMA_WALL', 'FIRE_PILLAR', 'WATER_SURGE', 'THUNDER_STRIKE', 'HELICOPTER'],
     label: '🚅 STAGE 26: Shanghai Maglev Hyperway',
     stagePerk: '🚄 Hyper Maglev: Rapid distance score acceleration'
   },
@@ -556,7 +586,7 @@ export const LEVELS = [
     roadColor: '#1e1b4b',
     railColor: '#818cf8',
     neonColor: '#facc15',
-    hurdleSet: ['TITAN_PISTON', 'TESLA_COIL', 'VOID_CRYSTAL', 'TRAIN'],
+    hurdleSet: ['TITAN_PISTON', 'TESLA_COIL', 'VOID_CRYSTAL', 'TRAIN', 'FIRE_PILLAR', 'THUNDER_STRIKE', 'TORNADO', 'HELICOPTER'],
     label: '🚀 STAGE 27: Moscow Orbital Station',
     stagePerk: '🛰️ Zero Gravity: Sky rings generate continuously'
   },
@@ -571,7 +601,7 @@ export const LEVELS = [
     roadColor: '#292524',
     railColor: '#f97316',
     neonColor: '#38bdf8',
-    hurdleSet: ['MOTORBIKE', 'BUS', 'MAGMA_PYLON', 'TRAIN'],
+    hurdleSet: ['MOTORBIKE', 'BUS', 'MAGMA_PYLON', 'TRAIN', 'FIRE_PILLAR', 'WATER_SURGE', 'SAND_STORM', 'TORNADO', 'HELICOPTER'],
     label: '🇿🇦 STAGE 28: Cape Town Solar Peninsula',
     stagePerk: '🌅 Solar Overcharge: +40% All Multipliers'
   },
@@ -586,7 +616,7 @@ export const LEVELS = [
     roadColor: '#090d16',
     railColor: '#eab308',
     neonColor: '#ec4899',
-    hurdleSet: ['TRAIN', 'BUS', 'MOTORBIKE', 'TESLA_COIL', 'TITAN_PISTON'],
+    hurdleSet: ['TRAIN', 'BUS', 'MOTORBIKE', 'TESLA_COIL', 'TITAN_PISTON', 'FIRE_PILLAR', 'THUNDER_STRIKE', 'TORNADO', 'HELICOPTER'],
     label: '👑 STAGE 29: Neo Mega Zenith Metropolis',
     stagePerk: '👑 Grandmaster Core: Maximum starting score multipliers'
   },
@@ -601,7 +631,7 @@ export const LEVELS = [
     roadColor: '#000000',
     railColor: '#38bdf8',
     neonColor: '#f43f5e',
-    hurdleSet: ['VOID_CRYSTAL', 'MAGMA_PYLON', 'TESLA_COIL', 'TRAIN', 'BUS', 'MOTORBIKE'],
+    hurdleSet: ['VOID_CRYSTAL', 'MAGMA_PYLON', 'TESLA_COIL', 'TRAIN', 'BUS', 'MOTORBIKE', 'FIRE_PILLAR', 'THUNDER_STRIKE', 'WATER_SURGE', 'TORNADO', 'HELICOPTER'],
     label: '🌠 STAGE 30: Infinite Kinetic Singularity',
     stagePerk: '🏆 Godspeed: The Ultimate Kinetic Champion'
   }
@@ -674,18 +704,18 @@ export const HURDLE_HIT_PHRASES = [
 export const FREE_ROBOT_IDS = ['rex_brawler', 'jack', 'blitz'];
 
 export const CHARACTERS = [
-  // ─── 1. HUMAN ATHLETES (Real people from user prompt & image) ───
+  // ─── 1. HUMAN ATHLETES ───
   {
     id: 'rex_brawler',
     name: 'Rex Steel',
     title: 'The Neon Brawler Runner',
     avatar: '🏃‍♂️',
-    type: 'human_brawler', // Matches user provided image: white tank top, muscular, wristbands, joggers
+    type: 'human_brawler',
     color: '#38bdf8',
     accent: '#facc15',
-    shirtColor: '#f1f5f9', // Clean athletic white tank top
-    pantsColor: '#1e293b', // Dark athletic joggers
-    capColor: '#0f172a',   // Dark sculpted hair
+    shirtColor: '#f1f5f9',
+    pantsColor: '#1e293b',
+    capColor: '#0f172a',
     price: 0,
     priceLabel: 'FREE STARTER',
     unlocked: true,
@@ -797,7 +827,7 @@ export const CHARACTERS = [
     bonus: 'Double Points on All Rings & Gifts'
   },
 
-  // ─── 2. ROBOTS & CYBORGS (Few in thousands / Trial, rest in Lacs) ───
+  // ─── 2. ROBOTS & CYBORGS ───
   {
     id: 'blitz',
     name: 'Blitz Trial Bot',
@@ -913,42 +943,51 @@ export const CHARACTERS = [
   }
 ];
 
+// 12 Hoverboard Skins — purchaseable with coins
 export const HOVERBOARD_SKINS = [
-  { id: 'classic', name: 'Plasma Glide', color: '#8b5cf6', price: 0, unlocked: true },
-  { id: 'fire', name: 'Inferno Wave', color: '#ef4444', price: 300, unlocked: false },
-  { id: 'cyber', name: 'Cyan Vortex', color: '#06b6d4', price: 750, unlocked: false },
-  { id: 'gold', name: 'Celestial Gold', color: '#eab308', price: 1500, unlocked: false }
+  { id: 'classic',    name: 'Plasma Glide',      color: '#8b5cf6', price: 0,      unlocked: true,  icon: '🛹', desc: 'Starter board' },
+  { id: 'fire',       name: 'Inferno Wave',       color: '#ef4444', price: 300,    unlocked: false, icon: '🔥', desc: 'Blazing fire board' },
+  { id: 'cyber',      name: 'Cyan Vortex',        color: '#06b6d4', price: 750,    unlocked: false, icon: '🌀', desc: 'Cyber neon board' },
+  { id: 'gold',       name: 'Celestial Gold',     color: '#eab308', price: 1500,   unlocked: false, icon: '✨', desc: 'Golden prestige board' },
+  { id: 'ice',        name: 'Arctic Frost',       color: '#67e8f9', price: 2000,   unlocked: false, icon: '❄️', desc: 'Cryo frost board' },
+  { id: 'thunder',    name: 'Thunder Strike',     color: '#fbbf24', price: 2500,   unlocked: false, icon: '⚡', desc: 'Electric lightning board' },
+  { id: 'shadow',     name: 'Shadow Void',        color: '#6366f1', price: 3000,   unlocked: false, icon: '🌑', desc: 'Dark matter board' },
+  { id: 'neon',       name: 'Neon Overdrive',     color: '#ec4899', price: 3500,   unlocked: false, icon: '💜', desc: 'Pink neon racing board' },
+  { id: 'emerald',    name: 'Emerald Rush',       color: '#10b981', price: 4000,   unlocked: false, icon: '💚', desc: 'Toxic emerald board' },
+  { id: 'magma',      name: 'Magma Core',         color: '#f97316', price: 5000,   unlocked: false, icon: '🌋', desc: 'Volcanic magma board' },
+  { id: 'galaxy',     name: 'Galaxy Rider',       color: '#818cf8', price: 7500,   unlocked: false, icon: '🌌', desc: 'Galactic cosmic board' },
+  { id: 'singularity',name: 'Singularity Board',  color: '#f43f5e', price: 10000,  unlocked: false, icon: '🔴', desc: 'Ultimate singularity board' }
 ];
 
 export const MUSIC_PLAYLIST = [
-  { id: 'song-1', name: 'Victory Horizon (Main Theme)', type: 'instrumental', price: 0, level: 1, author: 'Epic Synth', isFree: true },
-  { id: 'song-2', name: 'Believe in Yourself', type: 'vocal', price: 30, level: 2, author: 'Chamber Grit' },
-  { id: 'song-3', name: 'Eye of the Gladiator', type: 'vocal', price: 30, level: 3, author: 'Metal Storm' },
-  { id: 'song-4', name: 'Rise Above the Grid', type: 'instrumental', price: 30, level: 4, author: 'Cyber Grid' },
-  { id: 'song-5', name: 'Limitless Power', type: 'vocal', price: 30, level: 5, author: 'Future Blast' },
-  { id: 'song-6', name: 'Autobahn Speed', type: 'instrumental', price: 30, level: 6, author: 'Kraft Drive' },
-  { id: 'song-7', name: 'Neon Dreams', type: 'vocal', price: 30, level: 7, author: 'Retro Arc' },
-  { id: 'song-8', name: 'Eiffel Summit', type: 'instrumental', price: 30, level: 8, author: 'Parisian Synth' },
-  { id: 'song-9', name: 'Gangnam Run', type: 'vocal', price: 30, level: 9, author: 'Seoul K-Pop' },
-  { id: 'song-10', name: 'Sunset Drive', type: 'instrumental', price: 30, level: 10, author: 'California Wave' },
-  { id: 'song-11', name: 'Harbour Cyberway', type: 'vocal', price: 30, level: 11, author: 'Sydney Vox' },
-  { id: 'song-12', name: 'Solar Flare Fissure', type: 'instrumental', price: 30, level: 12, author: 'Cairo Dunes' },
-  { id: 'song-13', name: 'Frost Valley Echo', type: 'vocal', price: 30, level: 13, author: 'Toronto Blizzard' },
-  { id: 'song-14', name: 'Coliseum Ascent', type: 'instrumental', price: 30, level: 14, author: 'Rome Gladiator' },
-  { id: 'song-15', name: 'Valkyrie Special Run', type: 'vocal', price: 30, level: 15, author: 'Olympic Queen' },
-  { id: 'song-16', name: 'Aurora Glade Whisper', type: 'instrumental', price: 30, level: 16, author: 'Reykjavik Ambient' },
-  { id: 'song-17', name: 'Alps Thrill Chase', type: 'vocal', price: 30, level: 17, author: 'Swiss Peaks' },
-  { id: 'song-18', name: 'Cyberpunk Redline', type: 'instrumental', price: 30, level: 18, author: 'Hong Kong Neon' },
-  { id: 'song-19', name: 'Bazaar Run', type: 'vocal', price: 30, level: 19, author: 'Istanbul Sitar' },
-  { id: 'song-20', name: 'Rainforest Sprinter', type: 'instrumental', price: 30, level: 20, author: 'Amazon Beat' },
-  { id: 'song-21', name: 'Taj Mahal Echoes', type: 'vocal', price: 30, level: 21, author: 'Delhi Beats' },
-  { id: 'song-22', name: 'Volcanic Core', type: 'instrumental', price: 30, level: 22, author: 'Magma Core' },
-  { id: 'song-23', name: 'Sky High Chase', type: 'vocal', price: 30, level: 23, author: 'Chicago Skyscraper' },
-  { id: 'song-24', name: 'Frozen Tundra', type: 'instrumental', price: 30, level: 24, author: 'Siberian Storm' },
-  { id: 'song-25', name: 'Carnival Jump', type: 'vocal', price: 30, level: 25, author: 'Rio Samba' },
-  { id: 'song-26', name: 'Sahara Heatwaves', type: 'instrumental', price: 30, level: 26, author: 'Desert Wind' },
-  { id: 'song-27', name: 'Tower Bridge Chase', type: 'vocal', price: 30, level: 27, author: 'London Punk' },
-  { id: 'song-28', name: 'Tokyo Overdrive', type: 'instrumental', price: 30, level: 28, author: 'Shibuya Crossing' },
-  { id: 'song-29', name: 'Samba Horizon', type: 'vocal', price: 30, level: 29, author: 'Rio Sunset' },
-  { id: 'song-30', name: 'Ultimate Apex Champion', type: 'instrumental', price: 30, level: 30, author: 'Valkyrie Theme' }
+  { id: 'song-1',  name: 'Victory Horizon (Main Theme)',  type: 'instrumental', price: 0,  level: 1,  author: 'Epic Synth',         isFree: true },
+  { id: 'song-2',  name: 'Believe in Yourself',           type: 'vocal',        price: 40, level: 2,  author: 'Chamber Grit' },
+  { id: 'song-3',  name: 'Eye of the Gladiator',          type: 'vocal',        price: 40, level: 3,  author: 'Metal Storm' },
+  { id: 'song-4',  name: 'Rise Above the Grid',           type: 'instrumental', price: 40, level: 4,  author: 'Cyber Grid' },
+  { id: 'song-5',  name: 'Limitless Power',               type: 'vocal',        price: 40, level: 5,  author: 'Future Blast' },
+  { id: 'song-6',  name: 'Autobahn Speed',                type: 'instrumental', price: 40, level: 6,  author: 'Kraft Drive' },
+  { id: 'song-7',  name: 'Neon Dreams',                   type: 'vocal',        price: 40, level: 7,  author: 'Retro Arc' },
+  { id: 'song-8',  name: 'Eiffel Summit',                 type: 'instrumental', price: 40, level: 8,  author: 'Parisian Synth' },
+  { id: 'song-9',  name: 'Gangnam Run',                   type: 'vocal',        price: 40, level: 9,  author: 'Seoul K-Pop' },
+  { id: 'song-10', name: 'Sunset Drive',                  type: 'instrumental', price: 40, level: 10, author: 'California Wave' },
+  { id: 'song-11', name: 'Harbour Cyberway',              type: 'vocal',        price: 40, level: 11, author: 'Sydney Vox' },
+  { id: 'song-12', name: 'Solar Flare Fissure',           type: 'instrumental', price: 40, level: 12, author: 'Cairo Dunes' },
+  { id: 'song-13', name: 'Frost Valley Echo',             type: 'vocal',        price: 40, level: 13, author: 'Toronto Blizzard' },
+  { id: 'song-14', name: 'Coliseum Ascent',               type: 'instrumental', price: 40, level: 14, author: 'Rome Gladiator' },
+  { id: 'song-15', name: 'Valkyrie Special Run',          type: 'vocal',        price: 40, level: 15, author: 'Olympic Queen' },
+  { id: 'song-16', name: 'Aurora Glade Whisper',          type: 'instrumental', price: 40, level: 16, author: 'Reykjavik Ambient' },
+  { id: 'song-17', name: 'Alps Thrill Chase',             type: 'vocal',        price: 40, level: 17, author: 'Swiss Peaks' },
+  { id: 'song-18', name: 'Cyberpunk Redline',             type: 'instrumental', price: 40, level: 18, author: 'Hong Kong Neon' },
+  { id: 'song-19', name: 'Bazaar Run',                    type: 'vocal',        price: 40, level: 19, author: 'Istanbul Sitar' },
+  { id: 'song-20', name: 'Rainforest Sprinter',           type: 'instrumental', price: 40, level: 20, author: 'Amazon Beat' },
+  { id: 'song-21', name: 'Taj Mahal Echoes',              type: 'vocal',        price: 40, level: 21, author: 'Delhi Beats' },
+  { id: 'song-22', name: 'Volcanic Core',                 type: 'instrumental', price: 40, level: 22, author: 'Magma Core' },
+  { id: 'song-23', name: 'Sky High Chase',                type: 'vocal',        price: 40, level: 23, author: 'Chicago Skyscraper' },
+  { id: 'song-24', name: 'Frozen Tundra',                 type: 'instrumental', price: 40, level: 24, author: 'Siberian Storm' },
+  { id: 'song-25', name: 'Carnival Jump',                 type: 'vocal',        price: 40, level: 25, author: 'Rio Samba' },
+  { id: 'song-26', name: 'Sahara Heatwaves',              type: 'instrumental', price: 40, level: 26, author: 'Desert Wind' },
+  { id: 'song-27', name: 'Tower Bridge Chase',            type: 'vocal',        price: 40, level: 27, author: 'London Punk' },
+  { id: 'song-28', name: 'Tokyo Overdrive',               type: 'instrumental', price: 40, level: 28, author: 'Shibuya Crossing' },
+  { id: 'song-29', name: 'Samba Horizon',                 type: 'vocal',        price: 40, level: 29, author: 'Rio Sunset' },
+  { id: 'song-30', name: 'Ultimate Apex Champion',        type: 'instrumental', price: 40, level: 30, author: 'Valkyrie Theme' }
 ];

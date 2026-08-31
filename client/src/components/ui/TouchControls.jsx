@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Gamepad2 } from 'lucide-react';
+import { POWERUP_TYPES } from '../../utils/constants';
 
 export const TouchControls = () => {
   const [showDpad, setShowDpad] = useState(false);
@@ -8,9 +9,25 @@ export const TouchControls = () => {
   const moveRight = useGameStore((s) => s.moveRight);
   const jump = useGameStore((s) => s.jump);
   const roll = useGameStore((s) => s.roll);
+  const activateHoverboard = useGameStore((s) => s.activateHoverboard);
+  const activePowerups = useGameStore((s) => s.activePowerups);
+  const isHoverboardActive = (activePowerups?.[POWERUP_TYPES.HOVERBOARD] || 0) > 0;
 
   return (
     <div className="touch-controls-wrapper">
+      {/* Floating Skateboard Action Button (Always Accessible for Mobile) */}
+      <button
+        className={`touch-board-btn ${isHoverboardActive ? 'active' : ''}`}
+        onPointerDown={(e) => {
+          e.preventDefault();
+          activateHoverboard();
+        }}
+        title="Activate Plasma Skateboard (or double tap screen)"
+      >
+        <span>🛹</span>
+        <span className="touch-board-label">{isHoverboardActive ? 'ACTIVE' : 'BOARD'}</span>
+      </button>
+
       {/* Floating Mini Toggle Button */}
       <button
         className={`touch-dpad-toggle-btn ${showDpad ? 'active' : ''}`}
@@ -20,7 +37,7 @@ export const TouchControls = () => {
         <Gamepad2 size={20} />
       </button>
 
-      {/* D-Pad Buttons (Hidden by default for clean full-screen touch swipes) */}
+      {/* D-Pad Buttons */}
       {showDpad && (
         <div className="touch-controls-container">
           <div className="touch-dpad">

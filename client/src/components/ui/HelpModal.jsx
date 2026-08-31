@@ -2,24 +2,51 @@ import React, { useState } from 'react';
 
 const HOW_TO_PLAY = [
   {
+    icon: '🎮',
+    title: 'Controls & Keys',
+    color: '#06b6d4',
+    tips: [
+      '⌨️ KEYBOARD: Arrow Keys ← → ↑ ↓ or WASD to move, jump & slide',
+      '⬆️ JUMP: Press UP Arrow / W / Space to jump over low hurdles',
+      '⬇️ SLIDE: Press DOWN Arrow / S to roll/slide under high obstacles',
+      '⬅️➡️ LANE SWITCH: Press LEFT/RIGHT Arrow or A/D to change lanes',
+      '🛹 SKATEBOARD: Press B key to activate your purchased skateboard skin during gameplay',
+      '🔢 POWER-UPS: Press keys 1-5 to quick-buy powerups during a run',
+      '⇥ TAB KEY: Cycle between available power-ups during gameplay',
+      '⏸️ PAUSE: Press ESC or P to pause the game',
+      '❓ HELP: Press ? key to open this help screen anytime',
+      '📱 MOBILE SWIPE: Swipe LEFT/RIGHT to change lanes, UP to jump, DOWN to slide',
+      '📱 MOBILE BUTTONS: Tap on-screen touch buttons for Jump, Slide, Left, Right',
+      '📱 SKATEBOARD (Mobile): Tap the 🛹 button on the HUD to activate your board',
+      '💡 TIP: After purchasing a skateboard from the SHOP, use it by pressing B (PC) or tapping 🛹 (Mobile)!'
+    ]
+  },
+  {
     icon: '🏃',
-    title: 'Running & Controls',
+    title: 'Running Basics',
     color: '#38bdf8',
     tips: [
-      '📱 Mobile: Swipe LEFT/RIGHT to change lanes, swipe UP to jump, swipe DOWN to slide/roll',
-      '⌨️ PC: Arrow Keys or WASD — Left/Right to switch lanes, Up/Space to jump, Down/S to roll',
-      '🎮 D-Pad: Tap on-screen arrows (hidden in landscape mobile view)',
-      'You automatically run forward — dodge everything in your path!'
+      'Your robot automatically runs forward — dodge everything in your path!',
+      'Switch between 3 lanes (Left, Center, Right) to avoid obstacles',
+      'Collect golden Celestial Rings (💍) to earn coins & boost your score',
+      'Your speed increases as you run further — stay alert!',
+      'The Robot Destroyer is always chasing you from behind!'
     ]
   },
   {
     icon: '🚧',
-    title: 'Standard Hurdles',
+    title: 'Vehicle & Standard Hurdles',
     color: '#facc15',
     tips: [
       '🚂 TRAIN: Dodge by switching lanes — fastest moving obstacle!',
       '🚌 BUS: Switch lane or jump over low buses',
       '🏍️ MOTORBIKE: Weave through or jump',
+      '🚑 AMBULANCE: Fast emergency vehicle — switch lanes quickly!',
+      '🚓 POLICE CAR: Patrol car with sirens — dodge left or right!',
+      '🚛 TRUCK: Heavy freight — must lane switch, too tall to jump!',
+      '🚕 TAXI: Classic cab — jump or lane switch',
+      '🏎️ SPORTS CAR: Low-profile speedster — jump or dodge!',
+      '🚁 HELICOPTER: Aerial hazard — only hits you when using JETPACK!',
       '🔲 LOW BARRIER: Jump over it',
       '🔲 HIGH BARRIER: Roll/Slide under it',
       '⚙️ CONSTRUCTION: Any direction dodge works'
@@ -30,12 +57,13 @@ const HOW_TO_PLAY = [
     title: 'Elemental Hurdles (DANGER!)',
     color: '#ef4444',
     tips: [
-      '🔥 FIRE PILLAR: Jump over or activate Plasma Shield/Kinetic Blaster to destroy it',
-      '💧 WATER SURGE: Jump UP high over the wave — sliding into it causes damage',
-      '🏜️ SAND STORM: Roll/slide UNDER the storm cloud — jumping into it damages you',
-      '🌪️ TORNADO: Switch lane AWAY quickly — it pulls you in if you\'re too close',
-      '⚡ THUNDER STRIKE: ONLY a Plasma Shield or Kinetic Blaster destroys it — otherwise dodge!',
-      '⚠️ WARNING: Elemental hurdles are 2-hit destroyers — see Robot Damage below!'
+      '🔥 FIRE PILLAR: Roaring fire vortex — jump over or blast with Shield/Blaster!',
+      '💧 WATER SURGE: Tsunami wave — jump UP high over it!',
+      '🏜️ SAND STORM: Whirling cyclone — roll/slide UNDER it!',
+      '🌪️ TORNADO: Spinning twister — switch lane AWAY quickly!',
+      '⚡ THUNDER STRIKE: Lightning arc — ONLY Shield or Blaster destroys it!',
+      '⚠️ WARNING: Elemental hurdles cause 2-hit destruction — see Robot Damage below!',
+      '💡 Higher stages have MORE elemental hurdles and combinations!'
     ]
   },
   {
@@ -55,14 +83,17 @@ const HOW_TO_PLAY = [
     title: 'Robot Powers & Gifts',
     color: '#a855f7',
     tips: [
-      '🧲 RING MAGNET: Auto-collects all coins from all 3 lanes',
-      '🚀 KINETIC JETPACK: Fly above all obstacles for 8 seconds',
+      '🧲 RING MAGNET: Auto-collects all coins from all 3 lanes (10s)',
+      '🚀 KINETIC JETPACK: Fly above all obstacles for 8 seconds — watch for helicopters!',
       '⚡ 2X SCORE BOOST: Double all points for 14 seconds',
-      '👟 KINETIC THRUSTERS: Jump 50% higher to clear tall obstacles',
-      '🛹 PLASMA BOARD: Absorbs 1 crash — your safety net!',
+      '👟 KINETIC THRUSTERS: Jump 50% higher to clear tall obstacles (12s)',
+      '🛹 PLASMA BOARD: Absorbs 1 crash — your safety net! (25s)',
       '🔧 NANO REPAIR KIT: Fixes cracked armor + 6s invulnerability',
-      '🛡️ PLASMA SHIELD: Creates force field — DESTROYS elemental hurdles on contact!',
-      '💥 KINETIC BLASTER: Fires energy — SMASHES through Fire, Water, Sand, Tornado & Thunder!'
+      '🛡️ PLASMA SHIELD: Creates force field — DESTROYS elemental hurdles on contact! (8s)',
+      '💥 KINETIC BLASTER: Fires energy — SMASHES Fire, Water, Sand, Tornado & Thunder! (6s)',
+      '⚡ TURBO OVERDRIVE: Maximum speed burst — rocket forward for 5 seconds!',
+      '💰 COIN RAIN: Instantly rains 50 celestial rings onto you! (3s)',
+      '⭐ INVINCIBILITY STAR: Full star power — immune to ALL obstacles for 5 seconds!'
     ]
   },
   {
@@ -83,9 +114,10 @@ const HOW_TO_PLAY = [
     color: '#34d399',
     tips: [
       '🆓 FREE ROBOTS: Jack (Kinetic Pioneer), Neon Striker, Blitz Runner — free for all!',
-      '💰 PREMIUM ROBOTS (17 total): Require VIP activation or admin unlock',
-      '⭐ Get VIP: Complete the payment via JazzCash or ask the admin to activate your account',
-      'Each robot has unique stat bonuses — higher-tier robots have better abilities!'
+      '💰 PREMIUM ROBOTS: Require Rs. 40 payment OR VIP activation to unlock',
+      '⭐ Get VIP: Complete the payment via JazzCash — unlocks ALL robots, songs & stages!',
+      'Each robot has unique stat bonuses — higher-tier robots have better abilities!',
+      '📱 After unlocking, select your robot from the main menu character wheel'
     ]
   },
   {
@@ -94,10 +126,10 @@ const HOW_TO_PLAY = [
     color: '#fbbf24',
     tips: [
       '🌏 30 World Stages: Tokyo → New York → Dubai → Space Singularity',
-      '🔐 Stage 1 is free — all higher stages require VIP or admin stage unlock',
+      '🔐 Stage 1 is free — higher stages require Rs. 40 each or VIP for all',
       '⬆️ Each stage increases speed, adds more complex obstacle patterns',
-      '🏆 Complete stages to earn bonus coins and unlock new biomes',
-      'Admin can unlock any stages for you — contact via the Admin Panel'
+      '🏆 Complete a stage to unlock the next one (payment still required)',
+      '💡 You CANNOT skip to the next stage without completing the current one AND paying!'
     ]
   },
   {
@@ -110,6 +142,19 @@ const HOW_TO_PLAY = [
       '🏅 Your best score is saved and uploaded to the global leaderboard',
       '🔗 Login with email to sync scores online and compete worldwide',
       'Challenge friends — share your leaderboard rank!'
+    ]
+  },
+  {
+    icon: '💳',
+    title: 'Payment & Pricing',
+    color: '#10b981',
+    tips: [
+      '💵 All items cost Rs. 40 each — Stages, Robots, Songs',
+      '👑 VIP Full Access costs Rs. 1,000 — unlocks EVERYTHING',
+      '📱 Pay via JazzCash to +92 321 1808390 (Syed Usama)',
+      '📸 Send payment screenshot on WhatsApp: +973 3237 7688 or +92 321 1808390',
+      '🔑 After payment, admin verifies and activates your purchase instantly!',
+      '⚠️ You MUST login/register before you can play or purchase anything'
     ]
   }
 ];

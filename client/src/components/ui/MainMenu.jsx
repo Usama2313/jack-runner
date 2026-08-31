@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { CHARACTERS, LEVELS } from '../../utils/constants';
-import { Play, Trophy, ShoppingBag, MapPin, User, Volume2, VolumeX, HelpCircle } from 'lucide-react';
+import { Play, Trophy, ShoppingBag, MapPin, User, Volume2, VolumeX, HelpCircle, LogIn } from 'lucide-react';
 import { LevelSelectModal } from './LevelSelectModal';
 import { HelpModal } from './HelpModal';
 
@@ -26,10 +26,32 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
 
   const [showLevelSelect, setShowLevelSelect] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const safeLevel = parseValidLevel(currentLevel);
   const activeChar = CHARACTERS.find((c) => c.id === selectedCharacter) || CHARACTERS[0];
   const levelInfo = LEVELS[safeLevel - 1] || LEVELS[0];
+
+  // Login gate - user must be authenticated to play
+  const requireLogin = () => {
+    if (!authUser) {
+      setShowLoginPrompt(true);
+      setTimeout(() => setShowLoginPrompt(false), 3000);
+      onOpenAuth();
+      return true;
+    }
+    return false;
+  };
+
+  const handlePlay = () => {
+    if (requireLogin()) return;
+    startGame(safeLevel);
+  };
+
+  const handleOpenShop = () => {
+    if (requireLogin()) return;
+    onOpenShop();
+  };
 
   return (
     <>
@@ -40,6 +62,7 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
             <User size={18} />
             <span>{authUser ? authUser.username : username}</span>
             {!authUser && <span className="menu-guest-badge">Guest</span>}
+            {authUser && <span className="menu-online-badge">Online</span>}
           </div>
 
           <div className="menu-header-right">
@@ -52,7 +75,7 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
               <MapPin size={16} color="#38bdf8" />
               <span>STAGE {safeLevel}/30</span>
             </div>
-            <div className="menu-coins-pill" onClick={onOpenShop}>
+            <div className="menu-coins-pill" onClick={handleOpenShop}>
               <span>💍</span>
               <span>{(totalCoins || 0).toLocaleString()}</span>
             </div>
@@ -65,13 +88,28 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
           </div>
         </div>
 
+        {/* Login Required Prompt */}
+        {showLoginPrompt && !authUser && (
+          <div className="login-required-banner">
+            <LogIn size={18} />
+            <span>⚠️ Please LOGIN or REGISTER first to play the game!</span>
+          </div>
+        )}
+
         {/* 💰 Pricing Banner */}
         <div className="menu-stage-price-banner">
           <span>🎮 STAGE 1 FREE!</span>
-          <span className="menu-stage-price-badge">🔓 Stage: Rs. 40</span>
-          <span className="menu-stage-price-badge">🤖 Robot: Rs. 40</span>
-          <span className="menu-stage-price-badge">🎵 Song: Rs. 30</span>
+          <span className="menu-stage-price-badge">🔓 All Items: Rs. 40</span>
+          <span className="menu-stage-price-badge">🤖 Robots + 🎵 Songs + 🗺️ Stages</span>
           <span>JazzCash → Syed Usama · +923211808390</span>
+        </div>
+
+        {/* WhatsApp Screenshot Info */}
+        <div className="menu-whatsapp-banner">
+          <span>📱 After payment, send screenshot on WhatsApp:</span>
+          <a href="https://wa.me/97332377688" target="_blank" rel="noopener noreferrer" className="whatsapp-link">+973 3237 7688</a>
+          <span>or</span>
+          <a href="https://wa.me/923211808390" target="_blank" rel="noopener noreferrer" className="whatsapp-link">+92 321 1808390</a>
         </div>
 
         {/* Hero Title */}
@@ -136,16 +174,16 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
 
         {/* Action Buttons */}
         <div className="menu-actions-grid">
-          <button className="menu-play-btn" onClick={() => startGame(safeLevel)}>
+          <button className="menu-play-btn" onClick={handlePlay}>
             <Play size={32} fill="currentColor" />
-            <span>START RUN (STAGE {safeLevel})</span>
+            <span>{authUser ? `START RUN (STAGE ${safeLevel})` : 'LOGIN TO PLAY'}</span>
           </button>
           <div className="menu-sub-actions">
             <button className="menu-secondary-btn" onClick={() => setShowLevelSelect(true)}>
               <MapPin size={20} />
               <span>30 STAGES</span>
             </button>
-            <button className="menu-secondary-btn" onClick={onOpenShop}>
+            <button className="menu-secondary-btn" onClick={handleOpenShop}>
               <ShoppingBag size={20} />
               <span>SHOP</span>
             </button>
@@ -160,7 +198,41 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
           </div>
         </div>
 
-        {/* Controls Hint */}
+        {/* Controls Label */}
+        <div className="menu-controls-label">
+          <div className="controls-label-title">🎮 CONTROLS</div>
+          <div className="controls-label-grid">
+            <div className="control-item">
+              <span className="control-key">← → ↑ ↓</span>
+              <span className="control-desc">Move / Jump / Slide</span>
+            </div>
+            <div className="control-item">
+              <span className="control-key">W A S D</span>
+              <span className="control-desc">Alternative Move</span>
+            </div>
+            <div className="control-item">
+              <span className="control-key">B</span>
+              <span className="control-desc">Activate Skateboard</span>
+            </div>
+            <div className="control-item">
+              <span className="control-key">Tab / 1-5</span>
+              <span className="control-desc">Switch Power-ups</span>
+            </div>
+            <div className="control-item">
+              <span className="control-key">Swipe</span>
+              <span className="control-desc">Mobile Controls</span>
+            </div>
+            <div className="control-item">
+              <span className="control-key">ESC / P</span>
+              <span className="control-desc">Pause Game</span>
+            </div>
+          </div>
+          <div className="controls-purchase-note">
+            💡 After purchasing a Skateboard skin, press <strong>B</strong> (or tap the 🛹 button on mobile) to ride it during gameplay!
+          </div>
+        </div>
+
+        {/* Footer Controls Hint */}
         <div className="menu-controls-hint">
           <span>🎮 CONTROLS: <strong>ARROW KEYS / WASD / SWIPE</strong> to Move, Jump &amp; Slide • <strong>B</strong> for Plasma Board • <strong>ESC</strong> to Pause • <strong>?</strong> for Help</span>
         </div>

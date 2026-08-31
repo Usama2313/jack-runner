@@ -228,4 +228,46 @@ router.post('/delete-song', requireAdmin, (req, res) => {
   }
 });
 
+// POST /api/admin/grant-coins
+router.post('/grant-coins', requireAdmin, (req, res) => {
+  try {
+    const { identifier, amount } = req.body;
+    if (!identifier || !amount) return res.status(400).json({ error: 'identifier and amount required' });
+    const result = db.grantCoins(identifier, amount);
+    if (!result.success) return res.status(404).json({ error: result.error });
+    res.json({ success: true, message: `Granted ${amount} coins to '${identifier}'!`, coins: result.coins });
+  } catch (err) {
+    console.error('Grant coins error:', err);
+    res.status(500).json({ error: 'Failed to grant coins' });
+  }
+});
+
+// POST /api/admin/unlock-robot
+router.post('/unlock-robot', requireAdmin, (req, res) => {
+  try {
+    const { identifier, robotId } = req.body;
+    if (!identifier || !robotId) return res.status(400).json({ error: 'identifier and robotId required' });
+    const result = db.unlockRobotForUser(identifier, robotId);
+    if (!result.success) return res.status(404).json({ error: result.error });
+    res.json({ success: true, message: `Robot '${robotId}' unlocked for '${identifier}'!`, unlocked_robots: result.unlocked_robots });
+  } catch (err) {
+    console.error('Unlock robot error:', err);
+    res.status(500).json({ error: 'Failed to unlock robot' });
+  }
+});
+
+// POST /api/admin/unlock-song-for-user
+router.post('/unlock-song-for-user', requireAdmin, (req, res) => {
+  try {
+    const { identifier, songId } = req.body;
+    if (!identifier || !songId) return res.status(400).json({ error: 'identifier and songId required' });
+    const result = db.unlockSongForUser(identifier, songId);
+    if (!result.success) return res.status(404).json({ error: result.error });
+    res.json({ success: true, message: `Song '${songId}' unlocked for '${identifier}'!`, unlocked_songs: result.unlocked_songs });
+  } catch (err) {
+    console.error('Unlock song error:', err);
+    res.status(500).json({ error: 'Failed to unlock song' });
+  }
+});
+
 module.exports = router;

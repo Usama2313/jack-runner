@@ -77,7 +77,14 @@ export const LevelSelectModal = ({ onClose }) => {
                       ? `linear-gradient(135deg, rgba(30,27,75,0.9), rgba(15,23,42,0.9))`
                       : undefined
                   }}
-                  onClick={() => handleLevelClick(lvl.id, isUnlocked)}
+                  onClick={() => {
+                    if (isUnlocked) {
+                      handleLevelClick(lvl.id, true);
+                    } else {
+                      // Locked — trigger payment
+                      useGameStore.getState().triggerPayment('stage', lvl.id, 40);
+                    }
+                  }}
                 >
                   <div className="level-card-top">
                     <span className="level-num-badge" style={{ backgroundColor: lvl.neonColor || '#38bdf8' }}>
@@ -90,7 +97,10 @@ export const LevelSelectModal = ({ onClose }) => {
                         <CheckCircle2 size={16} color="#10b981" />
                       )
                     ) : (
-                      <Lock size={16} color="#64748b" />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Lock size={16} color="#64748b" />
+                        <span style={{ fontSize: '0.65rem', color: '#facc15', fontWeight: '800' }}>Rs.40</span>
+                      </div>
                     )}
                   </div>
 
@@ -107,10 +117,15 @@ export const LevelSelectModal = ({ onClose }) => {
                     <div className="color-pip" style={{ backgroundColor: lvl.neonColor }} />
                   </div>
 
-                  {isUnlocked && (
+                  {isUnlocked ? (
                     <button className="level-play-mini-btn">
                       <Play size={14} />
                       <span>{isSelected ? 'SELECTED' : 'PLAY'}</span>
+                    </button>
+                  ) : (
+                    <button className="level-play-mini-btn" style={{ background: 'rgba(250,204,21,0.15)', borderColor: '#facc15', color: '#facc15' }}>
+                      <Lock size={14} />
+                      <span>UNLOCK Rs.40</span>
                     </button>
                   )}
                 </div>

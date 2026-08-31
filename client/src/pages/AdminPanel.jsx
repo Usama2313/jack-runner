@@ -325,6 +325,74 @@ export const AdminPanel = () => {
     setLoading(false);
   };
 
+  // Grant Coins & Unlock specific items state
+  const [grantCoinsAmount, setGrantCoinsAmount] = useState(50000);
+  const [selectedRobot, setSelectedRobot] = useState('valkyrie');
+  const [selectedSongToGrant, setSelectedSongToGrant] = useState('song-2');
+
+  const handleGrantCoins = async (targetId, amount) => {
+    const target = targetId || identifier;
+    const finalAmount = amount !== undefined ? amount : grantCoinsAmount;
+    if (!target) {
+      setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
+    }
+    setLoading(true); setMessage('');
+    const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/grant-coins`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+        body: JSON.stringify({ identifier: String(target).trim(), amount: Number(finalAmount) })
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error || 'Done'); setStatusType(data.success ? 'success' : 'error');
+      if (data.success) fetchUsers(t);
+    } catch { setMessage('Network error'); setStatusType('error'); }
+    setLoading(false);
+  };
+
+  const handleUnlockRobot = async (targetId, robotId) => {
+    const target = targetId || identifier;
+    const finalRobot = robotId || selectedRobot;
+    if (!target) {
+      setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
+    }
+    setLoading(true); setMessage('');
+    const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/unlock-robot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+        body: JSON.stringify({ identifier: String(target).trim(), robotId: String(finalRobot) })
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error || 'Done'); setStatusType(data.success ? 'success' : 'error');
+      if (data.success) fetchUsers(t);
+    } catch { setMessage('Network error'); setStatusType('error'); }
+    setLoading(false);
+  };
+
+  const handleUnlockSongForUser = async (targetId, songId) => {
+    const target = targetId || identifier;
+    const finalSong = songId || selectedSongToGrant;
+    if (!target) {
+      setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
+    }
+    setLoading(true); setMessage('');
+    const t = authToken || localStorage.getItem('admin_auth_token') || MASTER_KEY;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/unlock-song-for-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+        body: JSON.stringify({ identifier: String(target).trim(), songId: String(finalSong) })
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error || 'Done'); setStatusType(data.success ? 'success' : 'error');
+      if (data.success) fetchUsers(t);
+    } catch { setMessage('Network error'); setStatusType('error'); }
+    setLoading(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('admin_auth_token');
     setAuthToken(''); setIsLoggedIn(false); setAdminInfo(null); setUsers([]);
@@ -845,21 +913,110 @@ export const AdminPanel = () => {
               </button>
             </div>
 
-            {/* VIP Activation */}
-            <div style={{ background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.25)', borderRadius: '16px', padding: '20px' }}>
-              <h3 style={{ color: '#facc15', fontWeight: '800', fontSize: '0.95rem', marginBottom: '12px' }}>⭐ VIP Premium Access</h3>
-              <p style={{ color: '#94a3b8', fontSize: '0.82rem', marginBottom: '16px' }}>
-                VIP activates full game access: all robots, unlimited gifts, all 30 stages.
+            {/* Grant Celestial Coins */}
+            <div style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '16px', padding: '20px' }}>
+              <h3 style={{ color: '#34d399', fontWeight: '800', fontSize: '0.95rem', marginBottom: '12px' }}>🪙 Grant Celestial Coins</h3>
+              <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '12px' }}>
+                Add instant bonus coins balance to the target player's account.
               </p>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', marginBottom: '16px' }}>
-                <input type="checkbox" checked={activate} onChange={e => setActivate(e.target.checked)}
-                  style={{ width: '18px', height: '18px', accentColor: '#facc15', cursor: 'pointer' }} />
-                <span style={{ color: '#fef08a', fontSize: '0.9rem', fontWeight: '700' }}>
-                  {activate ? '✅ Grant Full Premium Access' : '❌ Revoke Premium (Downgrade to Free)'}
-                </span>
-              </label>
-              <button style={s.btn('linear-gradient(135deg, #a16207, #facc15)')} onClick={handleActivate} disabled={loading}>
-                {loading ? '⏳ Processing...' : '🛡️ Update VIP Status'}
+              <label style={s.label}>AMOUNT OF COINS</label>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+                <input
+                  style={{ ...s.input, width: '130px', fontWeight: '800', textAlign: 'center', fontSize: '1.1rem' }}
+                  type="number"
+                  value={grantCoinsAmount}
+                  onChange={e => setGrantCoinsAmount(Number(e.target.value))}
+                />
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {[10000, 50000, 100000, 500000].map(amt => (
+                    <button
+                      key={amt}
+                      onClick={() => setGrantCoinsAmount(amt)}
+                      style={{
+                        background: grantCoinsAmount === amt ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.06)',
+                        border: `1px solid ${grantCoinsAmount === amt ? '#10b981' : 'rgba(255,255,255,0.1)'}`,
+                        color: grantCoinsAmount === amt ? '#fff' : '#94a3b8',
+                        padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem'
+                      }}
+                    >
+                      +{(amt/1000)}k
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                style={s.btn('linear-gradient(135deg, #059669, #10b981)')}
+                onClick={() => handleGrantCoins()}
+                disabled={loading}
+              >
+                {loading ? '⏳ Adding Coins...' : `🪙 Grant ${(grantCoinsAmount).toLocaleString()} Coins to Player`}
+              </button>
+            </div>
+
+            {/* Unlock Specific Robot */}
+            <div style={{ background: 'rgba(236,72,153,0.05)', border: '1px solid rgba(236,72,153,0.25)', borderRadius: '16px', padding: '20px' }}>
+              <h3 style={{ color: '#ec4899', fontWeight: '800', fontSize: '0.95rem', marginBottom: '12px' }}>🤖 Unlock Robot / Runner</h3>
+              <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '12px' }}>
+                Authorize an individual robot model for the user without requiring VIP.
+              </p>
+              <label style={s.label}>SELECT ROBOT MODEL</label>
+              <select
+                style={{ ...s.input, marginBottom: '14px', background: 'rgba(15,23,42,0.9)' }}
+                value={selectedRobot}
+                onChange={e => setSelectedRobot(e.target.value)}
+              >
+                <option value="rex_brawler">🏃‍♂️ Rex Steel (Neon Brawler)</option>
+                <option value="jack">🏃 Kinetic Jack (Starter Hero)</option>
+                <option value="maya_blade">🏃‍♀️ Maya Blade (Neon Parkour)</option>
+                <option value="kai_street">🥷 Kai Shadow (Urban Master)</option>
+                <option value="leo_thunder">⚡ Leo Thunder (Martial Arts)</option>
+                <option value="elena_valkyrie">👑 Elena Valkyrie (Track Champion)</option>
+                <option value="alex_grandmaster">🏆 Alex Zenith (Grandmaster)</option>
+                <option value="blitz">🤖 Blitz Trial Bot</option>
+                <option value="aerobot">🤖 Kinetic AeroBot (Flight)</option>
+                <option value="cyber_ninja">🥷 Cyber Ninja</option>
+                <option value="titan_prime">🦾 Titan Prime (Armor Shield)</option>
+                <option value="phantom">👻 Phantom Runner</option>
+                <option value="valkyrie">⚡ Valkyrie Gold (Supersonic)</option>
+              </select>
+              <button
+                style={s.btn('linear-gradient(135deg, #be185d, #ec4899)')}
+                onClick={() => handleUnlockRobot()}
+                disabled={loading}
+              >
+                {loading ? '⏳ Unlocking...' : `🤖 Unlock Robot for User`}
+              </button>
+            </div>
+
+            {/* Unlock Specific Song */}
+            <div style={{ background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: '16px', padding: '20px' }}>
+              <h3 style={{ color: '#c084fc', fontWeight: '800', fontSize: '0.95rem', marginBottom: '12px' }}>🎵 Unlock Song Track</h3>
+              <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: '12px' }}>
+                Authorize a specific background music track for the user.
+              </p>
+              <label style={s.label}>SELECT MUSIC TRACK</label>
+              <select
+                style={{ ...s.input, marginBottom: '14px', background: 'rgba(15,23,42,0.9)' }}
+                value={selectedSongToGrant}
+                onChange={e => setSelectedSongToGrant(e.target.value)}
+              >
+                <option value="song-1">Song 1: Cyber Odyssey (Free)</option>
+                <option value="song-2">Song 2: Tokyo Neon Drift</option>
+                <option value="song-3">Song 3: Golden Dubai Sunrise</option>
+                <option value="song-4">Song 4: London Cyber Bass</option>
+                <option value="song-5">Song 5: Singapore Marina Dream</option>
+                <option value="song-6">Song 6: Berlin Autobahn Drive</option>
+                <option value="song-7">Song 7: Hong Kong Night Lights</option>
+                <option value="song-8">Song 8: Paris Electro Synth</option>
+                <option value="song-9">Song 9: Sydney Harbour Beat</option>
+                <option value="song-10">Song 10: Rio Kinetic Festival</option>
+              </select>
+              <button
+                style={s.btn('linear-gradient(135deg, #6b21a8, #a855f7)')}
+                onClick={() => handleUnlockSongForUser()}
+                disabled={loading}
+              >
+                {loading ? '⏳ Unlocking...' : `🎵 Unlock Song for User`}
               </button>
             </div>
           </div>

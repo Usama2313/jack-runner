@@ -1,25 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { API_BASE } from '../../config/api';
-import { Lock, X, Check, Copy, Smartphone, Sparkles, Send, ShieldCheck } from 'lucide-react';
+import { Lock, X, Check, Copy, Send, ShieldCheck, MessageCircle } from 'lucide-react';
 
 export const PaymentModal = () => {
   const showPaymentModal = useGameStore((s) => s.showPaymentModal);
   const setShowPaymentModal = useGameStore((s) => s.setShowPaymentModal);
-  const setActivated = useGameStore((s) => s.setActivated);
-  const isActivated = useGameStore((s) => s.isActivated);
   const authUser = useGameStore((s) => s.authUser);
 
   // Dynamic payment info from state store
   const paymentItemType = useGameStore((s) => s.paymentItemType) || 'vip';
   const paymentItemId = useGameStore((s) => s.paymentItemId);
-  const paymentAmount = useGameStore((s) => s.paymentAmount) || 1000;
+  const paymentAmount = useGameStore((s) => s.paymentAmount) || 40;
 
   const [tid, setTid] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState(''); // '', 'submitting', 'submitted', 'error'
   const [errorMessage, setErrorMessage] = useState('');
+  const [referenceNumber, setReferenceNumber] = useState('');
 
   // Sync email input with logged-in user
   useEffect(() => {
@@ -27,6 +26,17 @@ export const PaymentModal = () => {
       setEmailInput(authUser.email);
     }
   }, [authUser]);
+
+  // Generate unique reference number on mount
+  useEffect(() => {
+    if (showPaymentModal) {
+      const ref = 'KJ-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+      setReferenceNumber(ref);
+      setStatus('');
+      setTid('');
+      setErrorMessage('');
+    }
+  }, [showPaymentModal]);
 
   if (!showPaymentModal) return null;
 
@@ -60,7 +70,8 @@ export const PaymentModal = () => {
           itemType: paymentItemType,
           itemId: paymentItemId,
           amount: paymentAmount,
-          tid: tid.trim()
+          tid: tid.trim(),
+          referenceNumber: referenceNumber
         })
       });
       const data = await res.json();
@@ -73,38 +84,25 @@ export const PaymentModal = () => {
     }
   };
 
-  const handleDemoBypass = () => {
-    if (paymentItemType === 'vip') {
-      setActivated(true);
-    } else if (paymentItemType === 'stage') {
-      const unlocked = useGameStore.getState().unlockedLevels || [1];
-      const newUnlocked = Array.from(new Set([...unlocked, Number(paymentItemId)]));
-      useGameStore.setState({ unlockedLevels: newUnlocked });
-      localStorage.setItem('kinetic_unlocked_levels', JSON.stringify(newUnlocked));
-    } else if (paymentItemType === 'song') {
-      const unlocked = useGameStore.getState().unlockedSongs || ['song-1'];
-      const newUnlocked = Array.from(new Set([...unlocked, String(paymentItemId)]));
-      useGameStore.setState({ unlockedSongs: newUnlocked });
-      localStorage.setItem('kinetic_unlocked_songs', JSON.stringify(newUnlocked));
-    } else if (paymentItemType === 'character') {
-      const unlocked = useGameStore.getState().unlockedCharacters || ['jack'];
-      const newUnlocked = Array.from(new Set([...unlocked, String(paymentItemId)]));
-      useGameStore.setState({ unlockedCharacters: newUnlocked, selectedCharacter: String(paymentItemId) });
-      localStorage.setItem('kinetic_unlocked_chars', JSON.stringify(newUnlocked));
-      localStorage.setItem('kinetic_selected_char', String(paymentItemId));
-    }
-    setShowPaymentModal(false);
-    setStatus('');
-    setTid('');
-  };
-
   // Get item display name
   const getItemName = () => {
-    if (paymentItemType === 'stage') return `Stage ${paymentItemId} Access — Rs. 40`;
-    if (paymentItemType === 'song') return `Background Song Unlock — Rs. 30`;
-    if (paymentItemType === 'character') return `Premium Robot Unlock — Rs. 40`;
+    if (paymentItemType === 'stage') return `Stage ${paymentItemId} Access`;
+    if (paymentItemType === 'song') return `Background Song Unlock`;
+    if (paymentItemType === 'character') return `Premium Robot Unlock`;
     return 'Full VIP Game Activation';
   };
+
+  const getPrice = () => {
+    if (paymentItemType === 'vip') return 1000;
+    return 40;
+  };
+
+  const actualPrice = getPrice();
+
+  // WhatsApp message with reference
+  const whatsappMessage = encodeURIComponent(
+    `Hi! I've made a payment for Kinetic Jack Runner.\n\nItem: ${getItemName()}\nAmount: Rs. ${actualPrice}\nReference #: ${referenceNumber}\nTID: ${tid || '(pending)'}\nEmail: ${authUser?.email || emailInput || '(not set)'}\n\nPlease verify and activate my account.`
+  );
 
   return (
     <div className="modal-backdrop payment-modal-backdrop" onClick={() => setShowPaymentModal(false)}>
@@ -127,19 +125,26 @@ export const PaymentModal = () => {
           </div>
 
           <p className="payment-desc">
-            You are unlocking <strong>{getItemName()}</strong>. 
+            You are unlocking <strong>{getItemName()} — Rs. {actualPrice}</strong>. 
             Send the exact payment to our official JazzCash account to authorize access.
           </p>
+
+          {/* Reference Number Display */}
+          <div className="reference-number-box">
+            <span className="ref-label">YOUR REFERENCE #</span>
+            <span className="ref-number">{referenceNumber}</span>
+            <span className="ref-note">Save this reference number! Include it when sending screenshot.</span>
+          </div>
 
           {/* Payment Card Info */}
           <div className="jazzcash-card">
             <div className="jc-logo-row">
               <span className="jc-brand">JazzCash Mobile</span>
-              <span className="jc-fee">Rs. {paymentAmount.toLocaleString()} Only</span>
+              <span className="jc-fee">Rs. {actualPrice.toLocaleString()} Only</span>
             </div>
 
             <div className="jc-instructions">
-              <p>Transfer <strong>Rs. {paymentAmount.toLocaleString()}</strong> to the following JazzCash Mobile Account:</p>
+              <p>Transfer <strong>Rs. {actualPrice.toLocaleString()}</strong> to the following JazzCash Mobile Account:</p>
               
               <div className="account-number-box">
                 <span className="account-label">ACCOUNT NUMBER:</span>
@@ -156,6 +161,33 @@ export const PaymentModal = () => {
                 <span>Account Title: <strong>Syed Usama</strong></span>
               </div>
             </div>
+          </div>
+
+          {/* WhatsApp Screenshot Section */}
+          <div className="whatsapp-section">
+            <div className="whatsapp-title">
+              <MessageCircle size={18} />
+              <span>Send Payment Screenshot via WhatsApp</span>
+            </div>
+            <div className="whatsapp-buttons">
+              <a 
+                href={`https://wa.me/97332377688?text=${whatsappMessage}`}
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="whatsapp-btn"
+              >
+                📱 +973 3237 7688
+              </a>
+              <a 
+                href={`https://wa.me/923211808390?text=${whatsappMessage}`}
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="whatsapp-btn"
+              >
+                📱 +92 321 1808390
+              </a>
+            </div>
+            <p className="whatsapp-note">Include your Reference # <strong>{referenceNumber}</strong> with the screenshot</p>
           </div>
 
           {/* Transaction Verification Form */}
@@ -201,7 +233,7 @@ export const PaymentModal = () => {
                 <p className="error-message" style={{ color: '#ef4444', fontSize: '0.8rem', margin: '4px 0 0' }}>{errorMessage}</p>
               )}
               <p className="form-note">
-                * Submit the TID. Admin will verify the transaction and unlock your item in the panel instantly!
+                * Submit the TID. Admin will verify the transaction and unlock your item via the dashboard.
               </p>
             </form>
           ) : (
@@ -209,19 +241,14 @@ export const PaymentModal = () => {
               <ShieldCheck size={42} color="#10b981" />
               <h3>Verification Request Sent!</h3>
               <p>
-                Your TID is submitted for verification. The admin will verify the payment and authorize your email address shortly. 
-                For testing/review, click below to bypass and activate instantly!
+                Your TID and Reference # <strong>{referenceNumber}</strong> have been submitted for verification. 
+                The admin will verify the payment and authorize your account shortly.
+              </p>
+              <p style={{ color: '#facc15', fontWeight: '700', marginTop: '8px' }}>
+                📱 Don't forget to send the payment screenshot on WhatsApp!
               </p>
             </div>
           )}
-
-          {/* Tester/Bypass Row */}
-          <div className="tester-action-row">
-            <button className="demo-bypass-btn" onClick={handleDemoBypass}>
-              <Sparkles size={16} />
-              <span>Simulate Admin Activation (Free Demo)</span>
-            </button>
-          </div>
         </div>
       </div>
     </div>
