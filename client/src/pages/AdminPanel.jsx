@@ -93,6 +93,7 @@ export const AdminPanel = () => {
     setLoginLoading(true);
     try {
       let token = '';
+      let data = {};
       if (loginMode === 'key') {
         const keyVal = loginKey.trim();
         const res = await fetch(`${API_BASE}/api/admin/login`, {
@@ -100,8 +101,18 @@ export const AdminPanel = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ adminKey: keyVal })
         });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || 'Invalid master key');
+        const rawText = await res.text();
+        if (!res.ok) {
+          throw new Error(`Login failed: ${rawText || 'No details'}`);
+        }
+        if (rawText && rawText.trim()) {
+          try {
+            data = JSON.parse(rawText);
+          } catch {
+            throw new Error('Malformed JSON from login');
+          }
+        }
+        if (!data.success) throw new Error(data.error || 'Invalid master key');
         token = data.token || keyVal;
         setAdminInfo(data.admin || { email: 'admin@jackrunner.com', username: 'JackAdmin' });
       } else {
@@ -110,8 +121,18 @@ export const AdminPanel = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: loginEmail, password: loginPassword })
         });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || 'Invalid credentials');
+        const rawText = await res.text();
+        if (!res.ok) {
+          throw new Error(`Login failed: ${rawText || 'No details'}`);
+        }
+        if (rawText && rawText.trim()) {
+          try {
+            data = JSON.parse(rawText);
+          } catch {
+            throw new Error('Malformed JSON from login');
+          }
+        }
+        if (!data.success) throw new Error(data.error || 'Invalid credentials');
         token = data.token;
         setAdminInfo(data.admin);
       }
