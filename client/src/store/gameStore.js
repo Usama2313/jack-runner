@@ -158,8 +158,9 @@ export const useGameStore = create((set, get) => {
     },
     // Reset the game state for a fresh start after Game Over
     resetGame: () => {
-      const current = get().currentLevel;
-      // Clear run-specific transient states
+      // ALWAYS start from level 1 for a fresh run (unless a specific design choice is made)
+      const startLevel = 1;
+      // Reset transient state for a new game session
       set({
         isDead: false,
         isCaptured: false,
@@ -169,10 +170,12 @@ export const useGameStore = create((set, get) => {
         activeMysteryBox: null,
         mysteryBoxCount: 0,
         isMysteryBoxPaused: false,
-        approachingHurdle: null
+        approachingHurdle: null,
+        // Reset level timer and ensure we start at the first level
+        currentLevel: startLevel
       });
-      // Start the game for the current level
-      get().startGame(current);
+      // Invoke startGame with the first level to apply payment gating if needed
+      get().startGame(startLevel);
     },
 
     triggerPayment: (itemType, itemId, amount) => {
@@ -499,6 +502,12 @@ export const useGameStore = create((set, get) => {
 
       const levelCfg = LEVELS[next - 1] || LEVELS[LEVELS.length - 1];
       setStorage('kinetic_current_level', next);
+
+      // Ensure the newly unlocked level is recorded in unlockedLevels (if not already present)
+      const unlocked = get().unlockedLevels || [1];
+      if (!unlocked.includes(next)) {
+        set({ unlockedLevels: [...unlocked, next] });
+      }
 
       set({
         currentLevel: next,
