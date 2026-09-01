@@ -161,6 +161,7 @@ export const AdminPanel = () => {
     }
   }, []);
 
+  // Fetch data when tab or login state changes
   useEffect(() => {
     if (isLoggedIn) {
       const t = authToken || localStorage.getItem('admin_auth_token') || 'admin2026';
@@ -173,6 +174,30 @@ export const AdminPanel = () => {
       }
     }
   }, [activeTab, isLoggedIn]);
+
+  // Periodically refresh the user list while the admin panel is open on the Users tab
+  useEffect(() => {
+    if (!isLoggedIn || activeTab !== 'users') return;
+    const intervalId = setInterval(() => {
+      const t = authToken || localStorage.getItem('admin_auth_token') || 'admin2026';
+      fetchUsers(t);
+    }, 30000); // 30 seconds
+    return () => clearInterval(intervalId);
+  }, [isLoggedIn, activeTab, authToken]);
+
+  // Listen for logout/registration flag to refresh user list instantly
+  useEffect(() => {
+    const storageHandler = (e) => {
+      if (e.key === 'admin_refresh_needed') {
+        if (isLoggedIn && activeTab === 'users') {
+          const t = authToken || localStorage.getItem('admin_auth_token') || 'admin2026';
+          fetchUsers(t);
+        }
+      }
+    };
+    window.addEventListener('storage', storageHandler);
+    return () => window.removeEventListener('storage', storageHandler);
+  }, [isLoggedIn, activeTab, authToken]);
 
   const verifyToken = async (tokenToVerify) => {
     const t = tokenToVerify || authToken || localStorage.getItem('admin_auth_token');

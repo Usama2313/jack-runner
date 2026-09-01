@@ -33,6 +33,8 @@ export const AuthModal = ({ onClose }) => {
   const handleLogout = () => {
     setAuth(null, null);
     setUsername_('Kinetic Jack');
+    // Signal admin panel to refresh user list
+    localStorage.setItem('admin_refresh_needed', Date.now().toString());
     onClose();
   };
 

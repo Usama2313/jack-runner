@@ -33,7 +33,7 @@
 body, html {
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
   background-color: var(--bg-dark);
   color: var(--text-main);
   font-family: var(--font-main);
@@ -44,7 +44,7 @@ body, html {
   width: 100%;
   height: 100%;
   position: relative;
-  overflow: hidden;
+  overflow: auto;
 }
 
 /* =========================================================
@@ -423,7 +423,7 @@ body, html {
   height: 4px;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 999px;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .hud-pw-pill-fill {
@@ -1363,7 +1363,7 @@ body, html {
   display: flex;
   flex-direction: column;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(56, 189, 248, 0.2);
-  overflow: hidden;
+  overflow: auto;
   animation: pop-modal 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -2036,7 +2036,7 @@ body, html {
   height: 8px;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 999px;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .hud-timer-bar-fill {
@@ -2488,7 +2488,7 @@ body, html {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .level-grid-card:hover:not(.locked) {
@@ -2534,7 +2534,7 @@ body, html {
   font-weight: 800;
   color: #ffffff;
   white-space: nowrap;
-  overflow: hidden;
+  overflow: auto;
   text-overflow: ellipsis;
 }
 
@@ -2624,7 +2624,7 @@ body, html {
   text-align: center;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(168, 85, 247, 0.5);
   position: relative;
-  overflow: hidden;
+  overflow: auto;
   animation: pop-modal 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -3127,7 +3127,7 @@ body, html {
   border: 2px solid rgba(244, 63, 94, 0.4);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(244, 63, 94, 0.15);
   border-radius: 20px;
-  overflow: hidden;
+  overflow: auto;
   animation: modal-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
