@@ -841,6 +841,27 @@ export const useGameStore = create((set, get) => {
       }
     },
 
+    setUnlockedLevels: (unlockedLevels) => {
+      set({ unlockedLevels });
+      setStorage('kinetic_unlocked_levels', unlockedLevels);
+    },
+    setIsActivated: (isActivated) => {
+      set({ isActivated });
+      setStorage('kinetic_is_activated', isActivated);
+    },
+    setTotalCoins: (totalCoins) => {
+      set({ totalCoins });
+      setStorage('kinetic_total_coins', totalCoins);
+    },
+    setUnlockedCharacters: (unlockedCharacters) => {
+      set({ unlockedCharacters });
+      setStorage('kinetic_unlocked_chars', unlockedCharacters);
+    },
+    setUnlockedSongs: (unlockedSongs) => {
+      set({ unlockedSongs });
+      setStorage('kinetic_unlocked_songs', unlockedSongs);
+    },
+
     setLeaderboard: (leaderboard) => set({ leaderboard }),
     setOnlineCount: (count) => set({ onlineCount: count })
   };

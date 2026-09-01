@@ -72,13 +72,19 @@ const getInitialUsers = () => {
     }
   ];
 
-  // Merge with local accounts
+  // Merge with local accounts (updates existing items or appends new ones)
   localAccounts.forEach(acc => {
-    if (!defaultList.some(u => u.email === acc.email)) {
+    const idx = defaultList.findIndex(u => 
+      (u.email && acc.email && u.email.toLowerCase() === acc.email.toLowerCase()) || 
+      String(u.id) === String(acc.id)
+    );
+    if (idx !== -1) {
+      defaultList[idx] = { ...defaultList[idx], ...acc };
+    } else {
       defaultList.push({
         id: acc.id || defaultList.length + 1,
         email: acc.email,
-        username: acc.username || acc.email.split('@')[0],
+        username: acc.username || (acc.email ? acc.email.split('@')[0] : 'Runner'),
         is_admin: acc.is_admin || false,
         is_activated: acc.is_activated || false,
         unlocked_levels: acc.unlocked_levels || [1],
@@ -91,19 +97,28 @@ const getInitialUsers = () => {
   });
 
   // Merge active user if present
-  if (activeUser && activeUser.email && !defaultList.some(u => u.email === activeUser.email)) {
-    defaultList.push({
-      id: activeUser.id || defaultList.length + 1,
-      email: activeUser.email,
-      username: activeUser.username || activeUser.email.split('@')[0],
-      is_admin: activeUser.is_admin || false,
-      is_activated: activeUser.is_activated || false,
-      unlocked_levels: activeUser.unlocked_levels || [1],
-      unlocked_songs: activeUser.unlocked_songs || ['song-1'],
-      unlocked_robots: activeUser.unlocked_robots || ['jack'],
-      coins: activeUser.coins || 2500,
-      created_at: new Date().toISOString()
-    });
+  if (activeUser && (activeUser.email || activeUser.username)) {
+    const idx = defaultList.findIndex(u => 
+      (activeUser.email && u.email && u.email.toLowerCase() === activeUser.email.toLowerCase()) || 
+      (activeUser.username && u.username && u.username.toLowerCase() === activeUser.username.toLowerCase()) ||
+      String(u.id) === String(activeUser.id)
+    );
+    if (idx !== -1) {
+      defaultList[idx] = { ...defaultList[idx], ...activeUser };
+    } else {
+      defaultList.push({
+        id: activeUser.id || defaultList.length + 1,
+        email: activeUser.email || `${activeUser.username}@runner.game`,
+        username: activeUser.username || (activeUser.email ? activeUser.email.split('@')[0] : 'Runner'),
+        is_admin: activeUser.is_admin || false,
+        is_activated: activeUser.is_activated || false,
+        unlocked_levels: activeUser.unlocked_levels || [1],
+        unlocked_songs: activeUser.unlocked_songs || ['song-1'],
+        unlocked_robots: activeUser.unlocked_robots || ['jack'],
+        coins: activeUser.coins || 2500,
+        created_at: new Date().toISOString()
+      });
+    }
   }
 
   return defaultList;
@@ -348,65 +363,96 @@ export const AdminPanel = () => {
 
   // ─── Local state updater helper ────────────────────────────
   const syncLocalPlayerChanges = (targetIdent, updates) => {
-    const cleanTarget = String(targetIdent || '').trim().toLowerCase();
-    
-    // Check if target is current player in store
-    const currentUsername = useGameStore.getState().username;
-    const currentAuthUser = useGameStore.getState().authUser;
-    const isCurrentPlayer = !cleanTarget || 
-      cleanTarget === 'all' ||
-      cleanTarget === (currentUsername || '').toLowerCase() ||
-      (currentAuthUser && (cleanTarget === String(currentAuthUser.id) || cleanTarget === (currentAuthUser.email || '').toLowerCase()));
+    try {
+      const cleanTarget = String(targetIdent || '').trim().toLowerCase();
+      
+      // Check if target is current player in store
+      const currentUsername = useGameStore.getState().username;
+      const currentAuthUser = useGameStore.getState().authUser;
+      const isCurrentPlayer = !cleanTarget || 
+        cleanTarget === 'all' ||
+        cleanTarget === (currentUsername || '').toLowerCase() ||
+        (currentAuthUser && (cleanTarget === String(currentAuthUser.id) || cleanTarget === (currentAuthUser.email || '').toLowerCase()));
 
-    if (isCurrentPlayer) {
-      if (updates.unlocked_levels) {
-        useGameStore.getState().setUnlockedLevels(updates.unlocked_levels);
-        localStorage.setItem('kinetic_unlocked_levels', JSON.stringify(updates.unlocked_levels));
-      }
-      if (typeof updates.is_activated === 'boolean') {
-        useGameStore.getState().setIsActivated(updates.is_activated);
-        localStorage.setItem('kinetic_is_activated', JSON.stringify(updates.is_activated));
-      }
-      if (updates.coins !== undefined) {
-        useGameStore.getState().setTotalCoins(updates.coins);
-        localStorage.setItem('kinetic_total_coins', JSON.stringify(updates.coins));
-      }
-      if (updates.unlocked_robots) {
-        const existing = useGameStore.getState().unlockedCharacters || ['jack'];
-        const merged = Array.from(new Set([...existing, ...updates.unlocked_robots]));
-        useGameStore.getState().setUnlockedCharacters(merged);
-        localStorage.setItem('kinetic_unlocked_chars', JSON.stringify(merged));
-      }
-      if (updates.unlocked_songs) {
-        const existing = useGameStore.getState().unlockedSongs || ['song-1'];
-        const merged = Array.from(new Set([...existing, ...updates.unlocked_songs]));
-        useGameStore.getState().setUnlockedSongs(merged);
-        localStorage.setItem('kinetic_unlocked_songs', JSON.stringify(merged));
-      }
-    }
-
-    // Also update in accounts list
-    const accounts = getLocalAccounts();
-    let accountUpdated = false;
-    accounts.forEach(acc => {
-      if (cleanTarget === 'all' || 
-          String(acc.id) === cleanTarget || 
-          (acc.email && acc.email.toLowerCase() === cleanTarget) ||
-          (acc.username && acc.username.toLowerCase() === cleanTarget)) {
-        if (updates.unlocked_levels) acc.unlocked_levels = updates.unlocked_levels;
-        if (typeof updates.is_activated === 'boolean') acc.is_activated = updates.is_activated;
-        if (updates.coins !== undefined) acc.coins = (acc.coins || 0) + updates.coins;
+      if (isCurrentPlayer) {
+        if (updates.unlocked_levels) {
+          useGameStore.getState().setUnlockedLevels(updates.unlocked_levels);
+          try { localStorage.setItem('kinetic_unlocked_levels', JSON.stringify(updates.unlocked_levels)); } catch {}
+        }
+        if (typeof updates.is_activated === 'boolean') {
+          useGameStore.getState().setIsActivated(updates.is_activated);
+          try { localStorage.setItem('kinetic_is_activated', JSON.stringify(updates.is_activated)); } catch {}
+        }
+        if (updates.coins !== undefined) {
+          useGameStore.getState().setTotalCoins(updates.coins);
+          try { localStorage.setItem('kinetic_total_coins', JSON.stringify(updates.coins)); } catch {}
+        }
         if (updates.unlocked_robots) {
-          acc.unlocked_robots = Array.from(new Set([...(acc.unlocked_robots || ['jack']), ...updates.unlocked_robots]));
+          const existing = useGameStore.getState().unlockedCharacters || ['jack'];
+          const merged = Array.from(new Set([...existing, ...updates.unlocked_robots]));
+          useGameStore.getState().setUnlockedCharacters(merged);
+          try { localStorage.setItem('kinetic_unlocked_chars', JSON.stringify(merged)); } catch {}
         }
         if (updates.unlocked_songs) {
-          acc.unlocked_songs = Array.from(new Set([...(acc.unlocked_songs || ['song-1']), ...updates.unlocked_songs]));
+          const existing = useGameStore.getState().unlockedSongs || ['song-1'];
+          const merged = Array.from(new Set([...existing, ...updates.unlocked_songs]));
+          useGameStore.getState().setUnlockedSongs(merged);
+          try { localStorage.setItem('kinetic_unlocked_songs', JSON.stringify(merged)); } catch {}
         }
-        accountUpdated = true;
+
+        // Also update stored authUser object
+        try {
+          const rawAuth = localStorage.getItem('kinetic_auth_user');
+          if (rawAuth) {
+            const parsedAuth = JSON.parse(rawAuth);
+            if (updates.unlocked_levels) parsedAuth.unlocked_levels = updates.unlocked_levels;
+            if (typeof updates.is_activated === 'boolean') parsedAuth.is_activated = updates.is_activated;
+            if (updates.coins !== undefined) parsedAuth.coins = updates.coins;
+            if (updates.unlocked_robots) parsedAuth.unlocked_robots = Array.from(new Set([...(parsedAuth.unlocked_robots || ['jack']), ...updates.unlocked_robots]));
+            if (updates.unlocked_songs) parsedAuth.unlocked_songs = Array.from(new Set([...(parsedAuth.unlocked_songs || ['song-1']), ...updates.unlocked_songs]));
+            localStorage.setItem('kinetic_auth_user', JSON.stringify(parsedAuth));
+            useGameStore.setState({ authUser: parsedAuth });
+          }
+        } catch {}
       }
-    });
-    if (accountUpdated) {
+
+      // Also update or insert in local accounts list
+      const accounts = getLocalAccounts();
+      let accountFound = false;
+      accounts.forEach(acc => {
+        if (cleanTarget === 'all' || 
+            String(acc.id) === cleanTarget || 
+            (acc.email && acc.email.toLowerCase() === cleanTarget) ||
+            (acc.username && acc.username.toLowerCase() === cleanTarget)) {
+          if (updates.unlocked_levels) acc.unlocked_levels = updates.unlocked_levels;
+          if (typeof updates.is_activated === 'boolean') acc.is_activated = updates.is_activated;
+          if (updates.coins !== undefined) acc.coins = updates.coins;
+          if (updates.unlocked_robots) {
+            acc.unlocked_robots = Array.from(new Set([...(acc.unlocked_robots || ['jack']), ...updates.unlocked_robots]));
+          }
+          if (updates.unlocked_songs) {
+            acc.unlocked_songs = Array.from(new Set([...(acc.unlocked_songs || ['song-1']), ...updates.unlocked_songs]));
+          }
+          accountFound = true;
+        }
+      });
+
+      if (!accountFound && cleanTarget && cleanTarget !== 'all') {
+        accounts.push({
+          id: accounts.length + 10,
+          email: cleanTarget.includes('@') ? cleanTarget : `${cleanTarget}@runner.game`,
+          username: cleanTarget.includes('@') ? cleanTarget.split('@')[0] : cleanTarget,
+          unlocked_levels: updates.unlocked_levels || [1],
+          is_activated: typeof updates.is_activated === 'boolean' ? updates.is_activated : false,
+          coins: updates.coins || 2500,
+          unlocked_robots: updates.unlocked_robots || ['jack'],
+          unlocked_songs: updates.unlocked_songs || ['song-1'],
+          created_at: new Date().toISOString()
+        });
+      }
       saveLocalAccounts(accounts);
+    } catch (err) {
+      console.warn('syncLocalPlayerChanges warning:', err);
     }
   };
 
@@ -685,38 +731,41 @@ export const AdminPanel = () => {
     let success = false;
 
     try {
-      const res = await fetch(`${API_BASE}/api/admin/unlock-levels`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
-        body: JSON.stringify({ identifier: identifier.trim(), levels: levelArray })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setMessage(data.message || `Unlocked stages for '${identifier}'!`);
-          setStatusType('success');
-          success = true;
-          fetchUsers(t);
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/unlock-levels`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+          body: JSON.stringify({ identifier: identifier.trim(), levels: levelArray })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setMessage(data.message || `Unlocked stages for '${identifier}'!`);
+            setStatusType('success');
+            success = true;
+            fetchUsers(t);
+          }
         }
-      }
-    } catch {}
+      } catch {}
 
-    // Synchronize locally regardless
-    syncLocalPlayerChanges(identifier.trim(), { unlocked_levels: levelArray });
-    setUsers(prev => prev.map(u => {
-      if (String(u.id) === identifier.trim() || 
-          (u.email && u.email.toLowerCase() === identifier.trim().toLowerCase()) ||
-          (u.username && u.username.toLowerCase() === identifier.trim().toLowerCase())) {
-        return { ...u, unlocked_levels: levelArray };
-      }
-      return u;
-    }));
+      // Synchronize locally regardless
+      syncLocalPlayerChanges(identifier.trim(), { unlocked_levels: levelArray });
+      setUsers(prev => prev.map(u => {
+        if (String(u.id) === identifier.trim() || 
+            (u.email && u.email.toLowerCase() === identifier.trim().toLowerCase()) ||
+            (u.username && u.username.toLowerCase() === identifier.trim().toLowerCase())) {
+          return { ...u, unlocked_levels: levelArray };
+        }
+        return u;
+      }));
 
-    if (!success) {
-      setMessage(`✅ Unlocked stages [${levelArray.join(', ')}] for '${identifier}'!`);
-      setStatusType('success');
+      if (!success) {
+        setMessage(`✅ Unlocked stages [${levelArray.join(', ')}] for '${identifier}'!`);
+        setStatusType('success');
+      }
+    } finally {
+      setLoadingUnlock(false);
     }
-    setLoadingUnlock(false);
   };
 
   const handleSetStageCount = async (targetId, count) => {
@@ -738,41 +787,44 @@ export const AdminPanel = () => {
     let success = false;
 
     try {
-      const res = await fetch(`${API_BASE}/api/admin/set-stage-count`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
-        body: JSON.stringify({ identifier: String(target).trim(), stageCount: Number(finalCount) })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setMessage(data.message || `Set ${finalCount} stages for '${target}'!`);
-          setStatusType('success');
-          success = true;
-          fetchUsers(t);
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/set-stage-count`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+          body: JSON.stringify({ identifier: String(target).trim(), stageCount: Number(finalCount) })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setMessage(data.message || `Set ${finalCount} stages for '${target}'!`);
+            setStatusType('success');
+            success = true;
+            fetchUsers(t);
+          }
         }
-      }
-    } catch {}
+      } catch {}
 
-    // Synchronize locally
-    syncLocalPlayerChanges(target, { unlocked_levels: stages });
-    setUsers(prev => prev.map(u => {
-      if (String(u.id) === String(target).trim() || 
-          (u.email && u.email.toLowerCase() === String(target).trim().toLowerCase()) ||
-          (u.username && u.username.toLowerCase() === String(target).trim().toLowerCase())) {
-        return { ...u, unlocked_levels: stages };
-      }
-      return u;
-    }));
+      // Synchronize locally
+      syncLocalPlayerChanges(target, { unlocked_levels: stages });
+      setUsers(prev => prev.map(u => {
+        if (String(u.id) === String(target).trim() || 
+            (u.email && u.email.toLowerCase() === String(target).trim().toLowerCase()) ||
+            (u.username && u.username.toLowerCase() === String(target).trim().toLowerCase())) {
+          return { ...u, unlocked_levels: stages };
+        }
+        return u;
+      }));
 
-    if (!success) {
-      setMessage(`✅ Set ${finalCount} stages allowed for '${target}' (Stages 1 to ${finalCount})!`);
-      setStatusType('success');
-    }
-    if (isRowAction) {
-      setLoadingRowStage(prev => ({ ...prev, [String(target)]: false }));
-    } else {
-      setLoadingStage(false);
+      if (!success) {
+        setMessage(`✅ Set ${finalCount} stages allowed for '${target}' (Stages 1 to ${finalCount})!`);
+        setStatusType('success');
+      }
+    } finally {
+      if (isRowAction) {
+        setLoadingRowStage(prev => ({ ...prev, [String(target)]: false }));
+      } else {
+        setLoadingStage(false);
+      }
     }
   };
 
@@ -788,38 +840,41 @@ export const AdminPanel = () => {
     let success = false;
 
     try {
-      const res = await fetch(`${API_BASE}/api/admin/activate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
-        body: JSON.stringify({ identifier: String(target).trim(), activated: finalAct })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setMessage(data.message || `VIP status updated for '${target}'!`);
-          setStatusType('success');
-          success = true;
-          fetchUsers(t);
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/activate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+          body: JSON.stringify({ identifier: String(target).trim(), activated: finalAct })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setMessage(data.message || `VIP status updated for '${target}'!`);
+            setStatusType('success');
+            success = true;
+            fetchUsers(t);
+          }
         }
-      }
-    } catch {}
+      } catch {}
 
-    // Synchronize locally
-    syncLocalPlayerChanges(target, { is_activated: finalAct });
-    setUsers(prev => prev.map(u => {
-      if (String(u.id) === String(target).trim() || 
-          (u.email && u.email.toLowerCase() === String(target).trim().toLowerCase()) ||
-          (u.username && u.username.toLowerCase() === String(target).trim().toLowerCase())) {
-        return { ...u, is_activated: finalAct };
-      }
-      return u;
-    }));
+      // Synchronize locally
+      syncLocalPlayerChanges(target, { is_activated: finalAct });
+      setUsers(prev => prev.map(u => {
+        if (String(u.id) === String(target).trim() || 
+            (u.email && u.email.toLowerCase() === String(target).trim().toLowerCase()) ||
+            (u.username && u.username.toLowerCase() === String(target).trim().toLowerCase())) {
+          return { ...u, is_activated: finalAct };
+        }
+        return u;
+      }));
 
-    if (!success) {
-      setMessage(`✅ User '${target}' VIP status set to: ${finalAct ? 'ACTIVATED (Full Game Unlocked)' : 'DEACTIVATED'}`);
-      setStatusType('success');
+      if (!success) {
+        setMessage(`✅ User '${target}' VIP status set to: ${finalAct ? 'ACTIVATED (Full Game Unlocked)' : 'DEACTIVATED'}`);
+        setStatusType('success');
+      }
+    } finally {
+      setLoadingActivate(prev => ({ ...prev, [String(target)]: false }));
     }
-    setLoadingActivate(prev => ({ ...prev, [String(target)]: false }));
   };
 
   const handleGrantCoins = async (targetId, amount) => {
@@ -833,38 +888,41 @@ export const AdminPanel = () => {
     let success = false;
 
     try {
-      const res = await fetch(`${API_BASE}/api/admin/grant-coins`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
-        body: JSON.stringify({ identifier: String(target).trim(), amount: Number(finalAmount) })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setMessage(data.message || `Granted ${finalAmount} coins!`);
-          setStatusType('success');
-          success = true;
-          fetchUsers(t);
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/grant-coins`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+          body: JSON.stringify({ identifier: String(target).trim(), amount: Number(finalAmount) })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setMessage(data.message || `Granted ${finalAmount} coins!`);
+            setStatusType('success');
+            success = true;
+            fetchUsers(t);
+          }
         }
-      }
-    } catch {}
+      } catch {}
 
-    // Synchronize locally
-    syncLocalPlayerChanges(target, { coins: Number(finalAmount) });
-    setUsers(prev => prev.map(u => {
-      if (String(u.id) === String(target).trim() || 
-          (u.email && u.email.toLowerCase() === String(target).trim().toLowerCase()) ||
-          (u.username && u.username.toLowerCase() === String(target).trim().toLowerCase())) {
-        return { ...u, coins: (u.coins || 0) + Number(finalAmount) };
-      }
-      return u;
-    }));
+      // Synchronize locally
+      syncLocalPlayerChanges(target, { coins: Number(finalAmount) });
+      setUsers(prev => prev.map(u => {
+        if (String(u.id) === String(target).trim() || 
+            (u.email && u.email.toLowerCase() === String(target).trim().toLowerCase()) ||
+            (u.username && u.username.toLowerCase() === String(target).trim().toLowerCase())) {
+          return { ...u, coins: (u.coins || 0) + Number(finalAmount) };
+        }
+        return u;
+      }));
 
-    if (!success) {
-      setMessage(`✅ Granted ${Number(finalAmount).toLocaleString()} Coins to '${target}'!`);
-      setStatusType('success');
+      if (!success) {
+        setMessage(`✅ Granted ${Number(finalAmount).toLocaleString()} Coins to '${target}'!`);
+        setStatusType('success');
+      }
+    } finally {
+      setLoadingCoins(false);
     }
-    setLoadingCoins(false);
   };
 
   const handleUnlockRobot = async (targetId, robotId) => {
@@ -878,29 +936,32 @@ export const AdminPanel = () => {
     let success = false;
 
     try {
-      const res = await fetch(`${API_BASE}/api/admin/unlock-robot`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
-        body: JSON.stringify({ identifier: String(target).trim(), robotId: String(finalRobot) })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setMessage(data.message || `Robot '${finalRobot}' unlocked!`);
-          setStatusType('success');
-          success = true;
-          fetchUsers(t);
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/unlock-robot`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+          body: JSON.stringify({ identifier: String(target).trim(), robotId: String(finalRobot) })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setMessage(data.message || `Robot '${finalRobot}' unlocked!`);
+            setStatusType('success');
+            success = true;
+            fetchUsers(t);
+          }
         }
-      }
-    } catch {}
+      } catch {}
 
-    // Synchronize locally
-    syncLocalPlayerChanges(target, { unlocked_robots: [String(finalRobot)] });
-    if (!success) {
-      setMessage(`✅ Robot character '${finalRobot}' unlocked for '${target}'!`);
-      setStatusType('success');
+      // Synchronize locally
+      syncLocalPlayerChanges(target, { unlocked_robots: [String(finalRobot)] });
+      if (!success) {
+        setMessage(`✅ Robot character '${finalRobot}' unlocked for '${target}'!`);
+        setStatusType('success');
+      }
+    } finally {
+      setLoadingRobot(false);
     }
-    setLoadingRobot(false);
   };
 
   const handleUnlockSongForUser = async (targetId, songId) => {
@@ -914,29 +975,32 @@ export const AdminPanel = () => {
     let success = false;
 
     try {
-      const res = await fetch(`${API_BASE}/api/admin/unlock-song-for-user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
-        body: JSON.stringify({ identifier: String(target).trim(), songId: String(finalSong) })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setMessage(data.message || `Song '${finalSong}' unlocked!`);
-          setStatusType('success');
-          success = true;
-          fetchUsers(t);
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/unlock-song-for-user`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${t}`, 'x-admin-key': t },
+          body: JSON.stringify({ identifier: String(target).trim(), songId: String(finalSong) })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setMessage(data.message || `Song '${finalSong}' unlocked!`);
+            setStatusType('success');
+            success = true;
+            fetchUsers(t);
+          }
         }
-      }
-    } catch {}
+      } catch {}
 
-    // Synchronize locally
-    syncLocalPlayerChanges(target, { unlocked_songs: [String(finalSong)] });
-    if (!success) {
-      setMessage(`✅ Song track '${finalSong}' unlocked for '${target}'!`);
-      setStatusType('success');
+      // Synchronize locally
+      syncLocalPlayerChanges(target, { unlocked_songs: [String(finalSong)] });
+      if (!success) {
+        setMessage(`✅ Song track '${finalSong}' unlocked for '${target}'!`);
+        setStatusType('success');
+      }
+    } finally {
+      setLoadingSong(false);
     }
-    setLoadingSong(false);
   };
 
   const handleLogout = () => {
