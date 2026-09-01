@@ -33,8 +33,8 @@ export const AuthModal = ({ onClose }) => {
   const handleLogout = () => {
     setAuth(null, null);
     setUsername_('Kinetic Jack');
-    // Signal admin panel to refresh user list
-    localStorage.setItem('admin_refresh_needed', Date.now().toString());
+    // Notify AdminPanel immediately (same-tab CustomEvent)
+    window.dispatchEvent(new CustomEvent('admin_refresh_users'));
     onClose();
   };
 
@@ -137,6 +137,8 @@ export const AuthModal = ({ onClose }) => {
         setAuth(data.user, data.token);
         setSuccessMsg(`Welcome, ${data.user.username}! 🎮`);
         onlineSuccess = true;
+        // Notify AdminPanel immediately
+        window.dispatchEvent(new CustomEvent('admin_refresh_users'));
         setTimeout(() => onClose(), 1200);
       } else if (data && data.error && !res.ok) {
         throw new Error(data.error);
@@ -156,6 +158,8 @@ export const AuthModal = ({ onClose }) => {
         const user = handleOfflineAuthFallback(isRegister, cleanEmail, cleanUsername, cleanPassword);
         setSuccessMsg(`Welcome, ${user.username}! 🎮 (Ready to Play)`);
         onlineSuccess = true;
+        // Notify AdminPanel immediately
+        window.dispatchEvent(new CustomEvent('admin_refresh_users'));
         setTimeout(() => onClose(), 1000);
       } catch (fallbackErr) {
         setError(fallbackErr.message || 'Authentication error.');
