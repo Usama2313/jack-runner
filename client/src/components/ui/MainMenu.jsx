@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/gameStore';
 import { CHARACTERS, LEVELS } from '../../utils/constants';
-import { Play, Trophy, ShoppingBag, MapPin, User, Volume2, VolumeX, HelpCircle, LogIn } from 'lucide-react';
+import { Play, Trophy, ShoppingBag, MapPin, User, Volume2, VolumeX, HelpCircle, LogIn, Shield } from 'lucide-react';
 import { LevelSelectModal } from './LevelSelectModal';
 import { HelpModal } from './HelpModal';
+
 
 const parseValidLevel = (val) => {
   const num = typeof val === 'number' ? val : Number(val);
@@ -11,6 +13,7 @@ const parseValidLevel = (val) => {
 };
 
 export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
+  const navigate = useNavigate();
   const startGame = useGameStore((s) => s.startGame);
   const highscore = useGameStore((s) => s.highscore);
   const totalCoins = useGameStore((s) => s.totalCoins);
@@ -79,6 +82,9 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
               <span>💍</span>
               <span>{(totalCoins || 0).toLocaleString()}</span>
             </div>
+            <button className="menu-icon-btn admin-btn" onClick={() => navigate('/admin')} title="Admin Portal">
+              <Shield size={18} color="#ec4899" />
+            </button>
             <button className="menu-icon-btn" onClick={toggleMute} title="Mute/Unmute Audio">
               {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
             </button>
@@ -87,6 +93,7 @@ export const MainMenu = ({ onOpenLeaderboard, onOpenShop, onOpenAuth }) => {
             </button>
           </div>
         </div>
+
 
         {/* Login Required Prompt */}
         {showLoginPrompt && !authUser && (
