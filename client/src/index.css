@@ -4284,3 +4284,45 @@ body, html {
 
 
 
+@media (max-width: 480px) {
+  /* HUD Adjustments */
+  .hud-top-bar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .hud-left-group,
+  .hud-center-group,
+  .hud-right-group {
+    justify-content: center;
+  }
+  .hud-score-card,
+  .hud-coins-pill,
+  .hud-coins-val {
+    font-size: 0.8rem;
+  }
+  /* Modal adjustments */
+  .modal-container,
+  .payment-modal-container {
+    width: 90% !important;
+    max-height: 80vh !important;
+  }
+  /* Touch Controls */
+  .touch-board-btn {
+    width: 70px;
+    height: 70px;
+    bottom: 120px;
+  }
+  .touch-controls-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .touch-dpad {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .touch-btn {
+    width: 48px;
+    height: 48px;
+  }
+}
