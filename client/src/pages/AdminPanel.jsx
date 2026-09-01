@@ -133,7 +133,15 @@ export const AdminPanel = () => {
   const [activate, setActivate] = useState(true);
   const [message, setMessage] = useState('');
   const [statusType, setStatusType] = useState('info');
-  const [loading, setLoading] = useState(false);
+  // Per-action loading states so each button works independently
+  const [loadingStage, setLoadingStage] = useState(false);
+  const [loadingUnlock, setLoadingUnlock] = useState(false);
+  const [loadingCoins, setLoadingCoins] = useState(false);
+  const [loadingRobot, setLoadingRobot] = useState(false);
+  const [loadingSong, setLoadingSong] = useState(false);
+  const [loadingActivate, setLoadingActivate] = useState({});
+  const [loadingRowStage, setLoadingRowStage] = useState({});
+  const [loading, setLoading] = useState(false); // kept for songs tab add/delete
   const [activeTab, setActiveTab] = useState('users');
 
   // Payments & Songs Management State
@@ -671,7 +679,7 @@ export const AdminPanel = () => {
     if (!identifier.trim()) {
       setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
     }
-    setLoading(true); setMessage('');
+    setLoadingUnlock(true); setMessage('');
     const t = authToken || localStorage.getItem('admin_auth_token') || 'admin2026';
     const levelArray = levels.split(',').map(l => Number(l.trim())).filter(l => !isNaN(l) && l > 0);
     let success = false;
@@ -708,7 +716,7 @@ export const AdminPanel = () => {
       setMessage(`✅ Unlocked stages [${levelArray.join(', ')}] for '${identifier}'!`);
       setStatusType('success');
     }
-    setLoading(false);
+    setLoadingUnlock(false);
   };
 
   const handleSetStageCount = async (targetId, count) => {
@@ -717,7 +725,14 @@ export const AdminPanel = () => {
     if (!target) {
       setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
     }
-    setLoading(true); setMessage('');
+    // Use per-row loading if called from the table, else use dedicated stage loading
+    const isRowAction = !!targetId;
+    if (isRowAction) {
+      setLoadingRowStage(prev => ({ ...prev, [String(target)]: true }));
+    } else {
+      setLoadingStage(true);
+    }
+    setMessage('');
     const t = authToken || localStorage.getItem('admin_auth_token') || 'admin2026';
     const stages = Array.from({ length: Math.max(1, Math.min(30, Number(finalCount))) }, (_, i) => i + 1);
     let success = false;
@@ -754,7 +769,11 @@ export const AdminPanel = () => {
       setMessage(`✅ Set ${finalCount} stages allowed for '${target}' (Stages 1 to ${finalCount})!`);
       setStatusType('success');
     }
-    setLoading(false);
+    if (isRowAction) {
+      setLoadingRowStage(prev => ({ ...prev, [String(target)]: false }));
+    } else {
+      setLoadingStage(false);
+    }
   };
 
   const handleActivate = async (targetId, actVal) => {
@@ -763,7 +782,8 @@ export const AdminPanel = () => {
     if (!target) {
       setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
     }
-    setLoading(true); setMessage('');
+    setLoadingActivate(prev => ({ ...prev, [String(target)]: true }));
+    setMessage('');
     const t = authToken || localStorage.getItem('admin_auth_token') || 'admin2026';
     let success = false;
 
@@ -799,7 +819,7 @@ export const AdminPanel = () => {
       setMessage(`✅ User '${target}' VIP status set to: ${finalAct ? 'ACTIVATED (Full Game Unlocked)' : 'DEACTIVATED'}`);
       setStatusType('success');
     }
-    setLoading(false);
+    setLoadingActivate(prev => ({ ...prev, [String(target)]: false }));
   };
 
   const handleGrantCoins = async (targetId, amount) => {
@@ -808,7 +828,7 @@ export const AdminPanel = () => {
     if (!target) {
       setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
     }
-    setLoading(true); setMessage('');
+    setLoadingCoins(true); setMessage('');
     const t = authToken || localStorage.getItem('admin_auth_token') || 'admin2026';
     let success = false;
 
@@ -844,7 +864,7 @@ export const AdminPanel = () => {
       setMessage(`✅ Granted ${Number(finalAmount).toLocaleString()} Coins to '${target}'!`);
       setStatusType('success');
     }
-    setLoading(false);
+    setLoadingCoins(false);
   };
 
   const handleUnlockRobot = async (targetId, robotId) => {
@@ -853,7 +873,7 @@ export const AdminPanel = () => {
     if (!target) {
       setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
     }
-    setLoading(true); setMessage('');
+    setLoadingRobot(true); setMessage('');
     const t = authToken || localStorage.getItem('admin_auth_token') || 'admin2026';
     let success = false;
 
@@ -880,7 +900,7 @@ export const AdminPanel = () => {
       setMessage(`✅ Robot character '${finalRobot}' unlocked for '${target}'!`);
       setStatusType('success');
     }
-    setLoading(false);
+    setLoadingRobot(false);
   };
 
   const handleUnlockSongForUser = async (targetId, songId) => {
@@ -889,7 +909,7 @@ export const AdminPanel = () => {
     if (!target) {
       setMessage('Please enter a user email, username, or ID'); setStatusType('error'); return;
     }
-    setLoading(true); setMessage('');
+    setLoadingSong(true); setMessage('');
     const t = authToken || localStorage.getItem('admin_auth_token') || 'admin2026';
     let success = false;
 
@@ -916,7 +936,7 @@ export const AdminPanel = () => {
       setMessage(`✅ Song track '${finalSong}' unlocked for '${target}'!`);
       setStatusType('success');
     }
-    setLoading(false);
+    setLoadingSong(false);
   };
 
   const handleLogout = () => {
@@ -1181,23 +1201,40 @@ export const AdminPanel = () => {
                         <td style={s.td}>{u.is_admin ? <span style={{ color: '#ec4899', fontWeight: '700' }}>⚡ Admin</span> : '—'}</td>
                         <td style={s.td}>
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-                            {[5, 10, 15, 30].map(cnt => (
-                              <button
-                                key={cnt}
-                                onClick={() => handleSetStageCount(u.email || u.username, cnt)}
-                                style={{
-                                  background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.3)',
-                                  color: '#7dd3fc', padding: '3px 7px', borderRadius: '6px', cursor: 'pointer',
-                                  fontSize: '0.72rem', fontWeight: '700'
-                                }}
-                              >
-                                {cnt === 30 ? '🔓 All 30' : `+${cnt} Lvl`}
-                              </button>
-                            ))}
-                            <button onClick={() => quickActivate(u.email || u.username)} style={{
-                              background: 'rgba(250,204,21,0.15)', border: '1px solid #facc15', color: '#facc15',
-                              padding: '3px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.72rem', fontWeight: '700'
-                            }}>⭐ VIP</button>
+                            {[5, 10, 15, 30].map(cnt => {
+                              const rowKey = `${u.email || u.username}_${cnt}`;
+                              const isRowLoading = !!loadingRowStage[String(u.email || u.username)];
+                              return (
+                                <button
+                                  key={cnt}
+                                  disabled={isRowLoading}
+                                  onClick={() => handleSetStageCount(u.email || u.username, cnt)}
+                                  style={{
+                                    background: isRowLoading ? 'rgba(56,189,248,0.05)' : 'rgba(56,189,248,0.12)',
+                                    border: '1px solid rgba(56,189,248,0.3)',
+                                    color: isRowLoading ? '#334155' : '#7dd3fc',
+                                    padding: '3px 7px', borderRadius: '6px', cursor: isRowLoading ? 'not-allowed' : 'pointer',
+                                    fontSize: '0.72rem', fontWeight: '700'
+                                  }}
+                                >
+                                  {isRowLoading ? '⏳' : (cnt === 30 ? '🔓 All 30' : `+${cnt} Lvl`)}
+                                </button>
+                              );
+                            })}
+                            <button
+                              disabled={!!loadingActivate[String(u.email || u.username)]}
+                              onClick={() => quickActivate(u.email || u.username)}
+                              style={{
+                                background: loadingActivate[String(u.email || u.username)] ? 'rgba(250,204,21,0.05)' : 'rgba(250,204,21,0.15)',
+                                border: '1px solid #facc15',
+                                color: loadingActivate[String(u.email || u.username)] ? '#334155' : '#facc15',
+                                padding: '3px 8px', borderRadius: '6px',
+                                cursor: loadingActivate[String(u.email || u.username)] ? 'not-allowed' : 'pointer',
+                                fontSize: '0.72rem', fontWeight: '700'
+                              }}
+                            >
+                              {loadingActivate[String(u.email || u.username)] ? '⏳' : '⭐ VIP'}
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -1410,9 +1447,9 @@ export const AdminPanel = () => {
               <button
                 style={s.btn('linear-gradient(135deg, #0284c7, #38bdf8)')}
                 onClick={() => handleSetStageCount()}
-                disabled={loading}
+                disabled={loadingStage}
               >
-                {loading ? '⏳ Updating Stages...' : `⚡ Allow ${stageCountInput} Stages for User`}
+                {loadingStage ? '⏳ Updating Stages...' : `⚡ Allow ${stageCountInput} Stages for User`}
               </button>
             </div>
 
@@ -1438,8 +1475,8 @@ export const AdminPanel = () => {
                   );
                 })}
               </div>
-              <button style={s.btn('linear-gradient(135deg, #0284c7, #38bdf8)')} onClick={handleUnlock} disabled={loading}>
-                {loading ? '⏳ Processing...' : '⚡ Apply Stage Unlocks'}
+              <button style={s.btn('linear-gradient(135deg, #0284c7, #38bdf8)')} onClick={handleUnlock} disabled={loadingUnlock}>
+                {loadingUnlock ? '⏳ Processing...' : '⚡ Apply Stage Unlocks'}
               </button>
             </div>
 
@@ -1477,9 +1514,9 @@ export const AdminPanel = () => {
               <button
                 style={s.btn('linear-gradient(135deg, #059669, #10b981)')}
                 onClick={() => handleGrantCoins()}
-                disabled={loading}
+                disabled={loadingCoins}
               >
-                {loading ? '⏳ Adding Coins...' : `🪙 Grant ${(grantCoinsAmount).toLocaleString()} Coins to Player`}
+                {loadingCoins ? '⏳ Adding Coins...' : `🪙 Grant ${(grantCoinsAmount).toLocaleString()} Coins to Player`}
               </button>
             </div>
 
@@ -1512,9 +1549,9 @@ export const AdminPanel = () => {
               <button
                 style={s.btn('linear-gradient(135deg, #be185d, #ec4899)')}
                 onClick={() => handleUnlockRobot()}
-                disabled={loading}
+                disabled={loadingRobot}
               >
-                {loading ? '⏳ Unlocking...' : `🤖 Unlock Robot for User`}
+                {loadingRobot ? '⏳ Unlocking...' : `🤖 Unlock Robot for User`}
               </button>
             </div>
 
@@ -1544,9 +1581,9 @@ export const AdminPanel = () => {
               <button
                 style={s.btn('linear-gradient(135deg, #6b21a8, #a855f7)')}
                 onClick={() => handleUnlockSongForUser()}
-                disabled={loading}
+                disabled={loadingSong}
               >
-                {loading ? '⏳ Unlocking...' : `🎵 Unlock Song for User`}
+                {loadingSong ? '⏳ Unlocking...' : `🎵 Unlock Song for User`}
               </button>
             </div>
           </div>
